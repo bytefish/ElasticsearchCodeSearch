@@ -1,9 +1,7 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Elastic.Clients.Elasticsearch.QueryDsl;
-using Elastic.Clients.Elasticsearch.Aggregations;
 using Elastic.Clients.Elasticsearch.IndexManagement;
-using Elastic.Clients.Elasticsearch.Mapping;
 using ElasticsearchFulltextExample.Web.Logging;
 using ElasticsearchFulltextExample.Web.Elasticsearch.Model;
 using Elastic.Clients.Elasticsearch;
@@ -12,7 +10,6 @@ using Elastic.Clients.Elasticsearch.Core.Search;
 using Elastic.Transport;
 using Microsoft.Extensions.Options;
 using ElasticsearchFulltextExample.Web.Options;
-using System.Runtime.CompilerServices;
 
 namespace ElasticsearchFulltextExample.Web.Elasticsearch
 {

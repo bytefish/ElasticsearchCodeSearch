@@ -2,11 +2,6 @@
 
 using ElasticsearchFulltextExample.Web.Elasticsearch;
 using ElasticsearchFulltextExample.Web.Logging;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ElasticsearchFulltextExample.Web.Hosting
 {
@@ -25,7 +20,6 @@ namespace ElasticsearchFulltextExample.Web.Hosting
         {
             _logger.TraceMethodEntry();
 
-            // Now we can wait for the Shards to boot up
             var healthTimeout = TimeSpan.FromSeconds(60);
 
             if (_logger.IsDebugEnabled())
@@ -45,6 +39,8 @@ namespace ElasticsearchFulltextExample.Web.Hosting
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
+            _logger.TraceMethodEntry();
+
             return Task.CompletedTask;
         }
     }
