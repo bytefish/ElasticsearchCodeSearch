@@ -38,38 +38,19 @@ function Git-ForceDeleteRepository {
     Remove-Item -LiteralPath $Directory -Force -Recurse
 }
 
-function Get-LatestCommitDate {
+
+function Git-LatestCommitDate {
     param (
         [Parameter(Mandatory)]
         [string]$Directory,
         
         [Parameter(Mandatory)]
-        [string]$File
+        [string]$Filename
     )
     
     $latestCommitDate = git --git-dir "$Directory/.git" log -1  --date=format-local:'%Y-%m-%d %H:%M:%S' --format="%ad" -- $File 2>&1
     
     return $latestCommitDate
-}
-
-function Send-FileIndexRequest {
-    param (
-        [Parameter(Mandatory)]
-        [string]$Endpoint,
-
-        [Parameter(Mandatory)]
-        [string]$Repository,
-
-        [Parameter(Mandatory)]
-        [string]$File,
-       
-        [Parameter(Mandatory)]
-        [string]$LatestCommitDate,
-        
-        [Parameter(Mandatory)]
-        [string]$Content
-    )
-    
 }
 
 # The organization (or user) we are going to index all repositories 
@@ -78,7 +59,7 @@ $organization = "microsoft"
 
 # The Url, where the Index Service is running at. This is the ASP.NET 
 # Core WebAPI, which is responsible to send the indexing requests ...
-$indexServiceUrl = ""
+$codeSearchIndexUrl = "http://localhost:5000/api/index"
 
 # This is where we are going to clone the temporary Git repositories to, 
 # which will be created for reading the file content and sending it to 
@@ -103,16 +84,19 @@ $repositories | ForEach-Object -parallel {
     # when we have hit an error of are stuck.
     try {
         
+        $repositoryName = $_.name
+        
         # Repository Path.
-        $repositoryDirectory = $baseDirectory + "\" + $_.name
+        $repositoryDirectory = $baseDirectory + "\" + $repositoryName
             
-        # Get all files in the repositrory:
-        $files = Git-BuildFileList -Directory $repositoryDirectory
+        # Get all files in the repositrory using the GIT CLI. This command 
+        # returns relative filenames starting at the Repository Path.
+        $relativeFilenames = Git-BuildFileList -Directory $repositoryDirectory
 
         # We want to create Bulk Requests, so we don't send a million
         # Requests to the Elasticsearch API. .NET 6 now comes with a 
         # Enumerable#Chunk to partition data, let's use it.
-        $chunks =  [System.Linq.Enumerable]::Chunk($files, 100)
+        $chunks =  [System.Linq.Enumerable]::Chunk($relativeFilenames, 100)
         
         # Process all File Chunks in Parallel. This allows us to send 
         # Bulk Requests to the Elasticsearch API, without complex code 
@@ -121,50 +105,65 @@ $repositories | ForEach-Object -parallel {
 
             # Holds the File Index Data, that we are going to send 
             # to Elasticsearch for indexing.
-            $fileIndexDataList = @()
+            $codeSearchDocumentList = @()
             
             # Each Chunk contains a list of files.
-            foreach($file in $_) {
+            foreach($relativeFilename ile in $_) {
+                
+                # We need the absolute filename for the Powershell Utility functions,
+                # so we concatenate the path to the repository with the relative filename 
+                # as returned by git.
+                $absoluteFilename = $repositoryDirectory + "\" + $relativeFilename
                 
                 # Read the Content, that should be indexed, we may 
                 # exceed memory limits, on very large files, but who 
                 # cares...
-                $content = Get-Content -Path "$repository\$file"
+                $content = Get-Content -Path $absoluteFilename
+             
+                # We need a unique identifier. I failed to extract the 
+                # GIT Blob Hash from the GIT CLI, so I am just calculating 
+                # the MD5 Hash...
+                $md5Hash = Get-FileHash $absoluteFilename
                 
                 # Get the latest Commit Date from the File, so we 
                 # can later sort by commit date, which is the only 
                 # reason for building this thing...
-                $latestCommitDate = Get-LatestCommitDate -Directory $repositoryDirectory -File $file
+                $latestCommitDate = Get-LatestCommitDate -Directory $repositoryDirectory -Filename $relativeFilename
                 
-                $fileIndexData = @{
-                    Filename = $file
+                # This is the 
+                $codeSearchDocument = @{
+                    Id = $md5Hash
+                    Owner = $owner
+                    Repository = $repository
+                    Filename = $relativeFilename
                     Content = $content
                     LatestCommitDate = $LatestCommitDate
                 }
                 
-                $fileIndexDataList += $fileIndexData
+                $codeSearchDocumentList += $codeSearchDocument
             }
             
             # Build the actual HTTP Request.
-            $fileIndexRequest = @{
+            $codeSearchIndexRequest = @{
                 Method = "POST"
-                Uri = $indexServiceUrl
-                Body = ($fileIndexDataList | Convert-ToJson)
+                Uri = $codeSearchIndexUrl
+                Body = ($codeSearchDocumentList | Convert-ToJson)
                 ContentType = "application/json"
+                StatusCodeVariable = 'statusCode'
             }
             
             Write-Host "[REQ]"
-            Write-Host "[REQ] File Index Request"
+            Write-Host "[REQ] Code Search Index Request"
             Write-Host "[REQ]"
             Write-Host "[REQ]   URL:            $indexServiceUrl"
-            Write-Host "[REQ]   File Count:     $($fileIndexDataList.Length)"
+            Write-Host "[REQ]   File Count:     $($codeSearchDocumentList.Length)"
             Write-Host "[REQ]"
 
             # And Invoke it
-            $fileIndexResponse = Invoke-RestMethod @fileIndexRequest
-            
-            
-            
+            $codeSearchIndexResponse = Invoke-RestMethod @codeSearchIndexRequest
+                       
+            Write-Host "[RES]    HTTP Status:    $statusCode"  -ForegroundColor Green
+        
         } -ThrottleLimit 25
     }
     finally {
