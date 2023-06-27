@@ -8,7 +8,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddCors();
 
-builder.Services.AddOptions<ElasticCodeSearchOptions>("Elasticsearch");
+// Add Options
+builder.Services.AddOptions();
+builder.Services.Configure<ElasticCodeSearchOptions>(builder.Configuration.GetSection("Elasticsearch"));
+
 builder.Services.AddSingleton<ElasticCodeSearchClient>();
 
 builder.Services.AddControllers();
