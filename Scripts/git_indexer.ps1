@@ -57,9 +57,7 @@ $repositories | ForEach-Object -Parallel {
         
             git clone $repositoryUrl $repositoryDirectory
         }
-        
-        
-        
+                
         # Get all files in the repositrory using the GIT CLI. This command 
         # returns relative filenames starting at the Repository Path.
         $relativeFilenames = git --git-dir "$repositoryDirectory/.git" ls-files 2>&1 
@@ -92,6 +90,7 @@ $repositories | ForEach-Object -Parallel {
         # ...
         $chunks | ForEach-Object -Parallel {  
 
+            # We need the variables from the outer scope...
             $codeSearchIndexUrl = $using:codeSearchIndexUrl
             $repositoryDirectory = $using:repositoryDirectory
             $repositoryOwner = $using:repositoryOwner
@@ -168,7 +167,5 @@ $repositories | ForEach-Object -Parallel {
     }
     finally {
         Write-Host "Deleting GIT Repository: $repositoryDirectory ..."
-        
-        #Remove-Item -LiteralPath $repositoryDirectory -Force -Recurse
     }
 } -ThrottleLimit 1
