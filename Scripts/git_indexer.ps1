@@ -51,16 +51,14 @@ $repositories | ForEach-Object -Parallel {
     try {
         
         if(Test-Path $repositoryDirectory) {
-            
-            Write-Host "[$repositoryName] Directory '$repositoryDirectory' already exists. Deleting ...."
-            
-            #Remove-Item -LiteralPath $repositoryDirectory -Force -Recurse
+            Write-Host "[$repositoryName] Directory '$repositoryDirectory' already exists. Not Cloning ...."
+        } else {
+            Write-Host "[$repositoryName]: Repository does not exist. Cloning to '$repositoryDirectory' ..."
+        
+            git clone $repositoryUrl $repositoryDirectory
         }
         
-        Write-Host "[$repositoryName]: Cloning to '$repositoryDirectory' ..."
         
-        # Clone the Repository to the target directory.
-        git clone $repositoryUrl $repositoryDirectory
         
         # Get all files in the repositrory using the GIT CLI. This command 
         # returns relative filenames starting at the Repository Path.
@@ -93,7 +91,6 @@ $repositories | ForEach-Object -Parallel {
         # Bulk Requests to the Elasticsearch API, without complex code 
         # ...
         $chunks | ForEach-Object -Parallel {  
-
 
             $codeSearchIndexUrl = $using:codeSearchIndexUrl
             $repositoryDirectory = $using:repositoryDirectory
