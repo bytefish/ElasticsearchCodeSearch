@@ -86,7 +86,7 @@ namespace ElasticsearchFulltextExample.Web.Elasticsearch
                             .WordDelimiterGraph("word_delimiter_graph_filter", filter => filter
                                 .PreserveOriginal(true)
                             )
-                        )             
+                        )
                     )
                  )
                 .Mappings(mapping => mapping
