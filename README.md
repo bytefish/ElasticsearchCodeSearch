@@ -8,8 +8,9 @@ The Git Repositories are read by a Powershell script in `Scripts\git_indexer.ps1
 which sends the data to be indexed to an ASP.NET Core Backend. The ASP.NET Core 
 Backend then sends a Bulk Indexing Request to the Elasticsearch server.
 
-You'll need to adjust the Username, Password and CertificateFingerprint for your 
-Elasticsearch instance.
+You'll need to adjust the `Username`, `Password` and `CertificateFingerprint` for 
+your Elasticsearch instance. See the Elasticsearch "Getting Started" guide on how 
+to obtain these values.
 
 ```json
 {
@@ -31,7 +32,7 @@ Elasticsearch instance.
 }
 ```
 
-By default it sorts all matches by their latest commit date, that has been extracted 
+By default the Backend sorts all matches by their latest commit date, that has been extracted 
 from the git repository.
 
 This is an Open Source project, feel free to contribute!

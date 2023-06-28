@@ -4,7 +4,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace ElasticsearchFulltextExample.Web.Contracts
+namespace ElasticsearchCodeSearch.Dto
 {
     /// <summary>
     /// A code document, which should be indexed and searchable by Elasticsearch. 

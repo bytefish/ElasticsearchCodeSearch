@@ -1,14 +1,14 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Elastic.Clients.Elasticsearch;
-using ElasticsearchFulltextExample.Web.Contracts;
-using ElasticsearchFulltextExample.Web.Elasticsearch;
-using ElasticsearchFulltextExample.Web.Elasticsearch.Model;
-using ElasticsearchFulltextExample.Web.Logging;
+using ElasticsearchCodeSearch.Dto;
+using ElasticsearchCodeSearch.Elasticsearch;
+using ElasticsearchCodeSearch.Elasticsearch.Model;
+using ElasticsearchCodeSearch.Logging;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 
-namespace ElasticsearchFulltextExample.Web.Controllers
+namespace ElasticsearchCodeSearch.Controllers
 {
     public class IndexController : Controller
     {
@@ -33,7 +33,7 @@ namespace ElasticsearchFulltextExample.Web.Controllers
 
                 var bulkIndexResponse = await _client.BulkIndexAsync(documents, cancellationToken);
 
-                if(!bulkIndexResponse.IsSuccess())
+                if (!bulkIndexResponse.IsSuccess())
                 {
                     return BadRequest($"ElasticSearch Indexing failed with Errors");
                 }
@@ -77,13 +77,13 @@ namespace ElasticsearchFulltextExample.Web.Controllers
 
         private string? GetContentFromBase64(string? source)
         {
-            if(string.IsNullOrWhiteSpace(source))
+            if (string.IsNullOrWhiteSpace(source))
             {
                 return source;
             }
 
             var contentBytes = Convert.FromBase64String(source);
-            
+
             return Encoding.UTF8.GetString(contentBytes);
         }
     }

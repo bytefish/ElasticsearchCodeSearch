@@ -1,6 +1,6 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace ElasticsearchFulltextExample.Web.Elasticsearch.Model
+namespace ElasticsearchCodeSearch.Elasticsearch.Model
 {
     /// <summary>
     /// Sourcecode Document, which is going to be indexed.
@@ -16,7 +16,7 @@ namespace ElasticsearchFulltextExample.Web.Elasticsearch.Model
         /// Owner (User or Organization).
         /// </summary>
         public required string Owner { get; set; }
-        
+
         /// <summary>
         /// Repository.
         /// </summary>

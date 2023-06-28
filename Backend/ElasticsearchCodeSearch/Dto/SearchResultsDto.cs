@@ -2,7 +2,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace ElasticsearchFulltextExample.Web.Contracts
+namespace ElasticsearchCodeSearch.Dto
 {
     public class SearchResultsDto
     {

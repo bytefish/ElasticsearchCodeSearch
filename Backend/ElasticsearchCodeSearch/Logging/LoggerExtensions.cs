@@ -2,7 +2,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace ElasticsearchFulltextExample.Web.Logging
+namespace ElasticsearchCodeSearch.Logging
 {
     public static class LoggerExtensions
     {
@@ -38,7 +38,7 @@ namespace ElasticsearchFulltextExample.Web.Logging
 
         public static void TraceMethodEntry<TLoggerType>(this ILogger<TLoggerType> logger, [CallerMemberName] string callerMemberName = "")
         {
-            if(logger.IsTraceEnabled())
+            if (logger.IsTraceEnabled())
             {
                 logger.LogTrace("Method Entry: {Method}", callerMemberName);
             }

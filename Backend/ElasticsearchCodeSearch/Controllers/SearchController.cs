@@ -1,13 +1,13 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Elastic.Clients.Elasticsearch;
-using ElasticsearchFulltextExample.Web.Contracts;
-using ElasticsearchFulltextExample.Web.Elasticsearch;
-using ElasticsearchFulltextExample.Web.Elasticsearch.Model;
-using ElasticsearchFulltextExample.Web.Logging;
+using ElasticsearchCodeSearch.Dto;
+using ElasticsearchCodeSearch.Elasticsearch;
+using ElasticsearchCodeSearch.Elasticsearch.Model;
+using ElasticsearchCodeSearch.Logging;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ElasticsearchFulltextExample.Web.Controllers
+namespace ElasticsearchCodeSearch.Controllers
 {
     public class SearchController : Controller
     {
@@ -38,9 +38,9 @@ namespace ElasticsearchFulltextExample.Web.Controllers
 
             List<SearchResultDto> results = new List<SearchResultDto>();
 
-            foreach(var hit in searchResponse.Hits)
+            foreach (var hit in searchResponse.Hits)
             {
-                if(hit.Source == null)
+                if (hit.Source == null)
                 {
                     continue;
                 }
@@ -69,7 +69,7 @@ namespace ElasticsearchFulltextExample.Web.Controllers
         {
             _logger.TraceMethodEntry();
 
-            if(highlight == null)
+            if (highlight == null)
             {
                 return null;
             }

@@ -1,8 +1,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using ElasticsearchFulltextExample.Web.Elasticsearch;
-using ElasticsearchFulltextExample.Web.Hosting;
-using ElasticsearchFulltextExample.Web.Options;
+using ElasticsearchCodeSearch.Elasticsearch;
+using ElasticsearchCodeSearch.Hosting;
+using ElasticsearchCodeSearch.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 

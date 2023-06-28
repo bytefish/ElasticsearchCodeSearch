@@ -2,18 +2,18 @@
 
 using Elastic.Clients.Elasticsearch.QueryDsl;
 using Elastic.Clients.Elasticsearch.IndexManagement;
-using ElasticsearchFulltextExample.Web.Logging;
-using ElasticsearchFulltextExample.Web.Elasticsearch.Model;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Cluster;
 using Elastic.Clients.Elasticsearch.Core.Search;
 using Elastic.Transport;
 using Microsoft.Extensions.Options;
-using ElasticsearchFulltextExample.Web.Options;
 using Elastic.Clients.Elasticsearch.Mapping;
 using Elastic.Clients.Elasticsearch.Analysis;
+using ElasticsearchCodeSearch.Options;
+using ElasticsearchCodeSearch.Logging;
+using ElasticsearchCodeSearch.Elasticsearch.Model;
 
-namespace ElasticsearchFulltextExample.Web.Elasticsearch
+namespace ElasticsearchCodeSearch.Elasticsearch
 {
     public class ElasticCodeSearchClient
     {
@@ -40,7 +40,7 @@ namespace ElasticsearchFulltextExample.Web.Elasticsearch
                 _logger.LogDebug("ExistsResponse DebugInformation: {DebugInformation}", indexExistsResponse.DebugInformation);
             }
 
-            if(indexExistsResponse == null)
+            if (indexExistsResponse == null)
             {
                 throw new Exception();
             }
@@ -72,7 +72,7 @@ namespace ElasticsearchFulltextExample.Web.Elasticsearch
                         .Analyzers(analyzers => analyzers
                             .Custom("code_analyzer", custom => custom
                                 .Tokenizer("whitespace")
-                                .Filter(new[] 
+                                .Filter(new[]
                                 {
                                     "word_delimiter_graph_filter",
                                     "flatten_graph",
@@ -92,7 +92,7 @@ namespace ElasticsearchFulltextExample.Web.Elasticsearch
                 .Mappings(mapping => mapping
                         .Properties<CodeSearchDocument>(properties => properties
                             .Text(properties => properties.Id)
-                            .Text(properties => properties.Owner, x=> x
+                            .Text(properties => properties.Owner, x => x
                                 .Analyzer("code_analyzer")
                                 .TermVector(TermVectorOption.WithPositionsOffsetsPayloads)
                                 .Store(true))
@@ -100,7 +100,7 @@ namespace ElasticsearchFulltextExample.Web.Elasticsearch
                             .Text(properties => properties.Filename)
                             .Text(properties => properties.Content)
                             .Date(properties => properties.LatestCommitDate))), cancellationToken);
-            
+
             _logger.LogDebug("CreateIndexResponse DebugInformation: {DebugInformation}", createIndexResponse.DebugInformation);
 
             return createIndexResponse;
@@ -111,7 +111,7 @@ namespace ElasticsearchFulltextExample.Web.Elasticsearch
             _logger.TraceMethodEntry();
 
             var deleteResponse = await _client.DeleteAsync<CodeSearchDocument>(documentId, x => x.Index(_indexName), cancellationToken);
-            
+
             _logger.LogDebug("DeleteResponse DebugInformation: {DebugInformation}", deleteResponse.DebugInformation);
 
             return deleteResponse;
@@ -122,7 +122,7 @@ namespace ElasticsearchFulltextExample.Web.Elasticsearch
             _logger.TraceMethodEntry();
 
             var getResponse = await _client.GetAsync<CodeSearchDocument>(documentId, x => x.Index(_indexName), cancellationToken);
-            
+
             _logger.LogDebug("GetResponse DebugInformation: {DebugInformation}", getResponse.DebugInformation);
 
             return getResponse;
@@ -139,7 +139,7 @@ namespace ElasticsearchFulltextExample.Web.Elasticsearch
             };
 
             var clusterHealthResponse = await _client.Cluster.HealthAsync(healthRequest, cancellationToken: cancellationToken);
-            
+
             _logger.LogDebug("ClusterHealthResponse DebugInformation: {DebugInformation}", clusterHealthResponse.DebugInformation);
 
             return clusterHealthResponse;

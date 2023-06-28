@@ -1,9 +1,9 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using ElasticsearchFulltextExample.Web.Elasticsearch;
-using ElasticsearchFulltextExample.Web.Logging;
+using ElasticsearchCodeSearch.Elasticsearch;
+using ElasticsearchCodeSearch.Logging;
 
-namespace ElasticsearchFulltextExample.Web.Hosting
+namespace ElasticsearchCodeSearch.Hosting
 {
     /// <summary>
     /// Used to create the Elasticsearch index at Startup.
@@ -32,7 +32,7 @@ namespace ElasticsearchFulltextExample.Web.Hosting
 
             var clusterHealthResponse = await _elasticsearchClient.WaitForClusterAsync(healthTimeout, cancellationToken);
 
-            if(!clusterHealthResponse.IsValidResponse)
+            if (!clusterHealthResponse.IsValidResponse)
             {
                 _logger.LogError("Invalid Request to get Cluster Health: {DebugInformation}", clusterHealthResponse.DebugInformation);
             }
