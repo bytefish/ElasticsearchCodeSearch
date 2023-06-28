@@ -65,7 +65,6 @@ namespace ElasticsearchFulltextExample.Web.Controllers
             };
         }
 
-
         private IReadOnlyCollection<string>? GetMatches(IReadOnlyDictionary<string, IReadOnlyCollection<string>>? highlight)
         {
             _logger.TraceMethodEntry();
@@ -77,12 +76,12 @@ namespace ElasticsearchFulltextExample.Web.Controllers
 
             List<string> results = new List<string>();
 
-            if (highlight.TryGetValue(Infer.Field<CodeSearchDocument>(x => x.Content).Name, out var matchesForContent))
+            if (highlight.TryGetValue("content", out var matchesForContent))
             {
                 results.AddRange(matchesForContent);
             }
 
-            if (highlight.TryGetValue(Infer.Field<CodeSearchDocument>(x => x.Filename).Name, out var matchesForFilename))
+            if (highlight.TryGetValue("filename", out var matchesForFilename))
             {
                 results.AddRange(matchesForFilename);
             }

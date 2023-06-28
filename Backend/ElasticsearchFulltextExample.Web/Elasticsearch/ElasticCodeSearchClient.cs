@@ -10,6 +10,8 @@ using Elastic.Clients.Elasticsearch.Core.Search;
 using Elastic.Transport;
 using Microsoft.Extensions.Options;
 using ElasticsearchFulltextExample.Web.Options;
+using Elastic.Clients.Elasticsearch.Mapping;
+using Elastic.Clients.Elasticsearch.Analysis;
 
 namespace ElasticsearchFulltextExample.Web.Elasticsearch
 {
@@ -64,14 +66,40 @@ namespace ElasticsearchFulltextExample.Web.Elasticsearch
         {
             _logger.TraceMethodEntry();
 
-            var createIndexResponse = await _client.Indices.CreateAsync(_indexName, descriptor => descriptor.Mappings(mapping => mapping
-                    .Properties<CodeSearchDocument>(properties => properties
-                        .Text(properties => properties.Id)
-                        .Text(properties => properties.Owner)
-                        .Text(properties => properties.Repository)
-                        .Text(properties => properties.Filename)
-                        .Text(properties => properties.Content)
-                        .Date(properties => properties.LatestCommitDate))), cancellationToken);
+            var createIndexResponse = await _client.Indices.CreateAsync(_indexName, descriptor => descriptor
+                .Settings(settings => settings.
+                    Analysis(analysis => analysis
+                        .Analyzers(analyzers => analyzers
+                            .Custom("code_analyzer", custom => custom
+                                .Tokenizer("whitespace")
+                                .Filter(new[] 
+                                {
+                                    "word_delimiter_graph_filter",
+                                    "flatten_graph",
+                                    "lowercase",
+                                    "asciifolding",
+                                    "remove_duplicates"
+                                })
+                            )
+                        )
+                        .TokenFilters(filters => filters
+                            .WordDelimiterGraph("word_delimiter_graph_filter", filter => filter
+                                .PreserveOriginal(true)
+                            )
+                        )             
+                    )
+                 )
+                .Mappings(mapping => mapping
+                        .Properties<CodeSearchDocument>(properties => properties
+                            .Text(properties => properties.Id)
+                            .Text(properties => properties.Owner, x=> x
+                                .Analyzer("code_analyzer")
+                                .TermVector(TermVectorOption.WithPositionsOffsetsPayloads)
+                                .Store(true))
+                            .Text(properties => properties.Repository)
+                            .Text(properties => properties.Filename)
+                            .Text(properties => properties.Content)
+                            .Date(properties => properties.LatestCommitDate))), cancellationToken);
             
             _logger.LogDebug("CreateIndexResponse DebugInformation: {DebugInformation}", createIndexResponse.DebugInformation);
 
@@ -160,19 +188,15 @@ namespace ElasticsearchFulltextExample.Web.Elasticsearch
                 .Query(q => q.MultiMatch(mm => mm
                     .Query(query)
                     .Type(TextQueryType.BoolPrefix)
-                    .Fields(Infer.Field<CodeSearchDocument>(d => d.Id))))
+                    .Fields(new[]
+                    {
+                        Infer.Field<CodeSearchDocument>(d => d.Content),
+                        Infer.Field<CodeSearchDocument>(d => d.Filename)
+                    }))
+                )
                 // Setup the Highlighters:
                 .Highlight(highlight => highlight
                     .Fields(fields => fields
-                        .Add(Infer.Field<CodeSearchDocument>(f => f.Content), new HighlightField 
-                        {
-                            Fragmenter = HighlighterFragmenter.Span,
-                            PreTags = new[] { "<strong>" },
-                            PostTags = new[] { "</strong>" },   
-                            FragmentSize = 150, 
-                            NoMatchSize = 150,  
-                            NumberOfFragments = 5,  
-                        })
                         .Add(Infer.Field<CodeSearchDocument>(f => f.Content), new HighlightField
                         {
                             Fragmenter = HighlighterFragmenter.Span,
@@ -181,6 +205,16 @@ namespace ElasticsearchFulltextExample.Web.Elasticsearch
                             FragmentSize = 150,
                             NoMatchSize = 150,
                             NumberOfFragments = 5,
+                        })
+                        .Add(Infer.Field<CodeSearchDocument>(f => f.Filename), new HighlightField
+                        {
+                            Fragmenter = HighlighterFragmenter.Span,
+                            PreTags = new[] { "<strong>" },
+                            PostTags = new[] { "</strong>" },
+                            FragmentSize = 150,
+                            NoMatchSize = 150,
+                            NumberOfFragments = 5,
+                            MaxAnalyzedOffset = 1000000
                         })
                     )
                 )

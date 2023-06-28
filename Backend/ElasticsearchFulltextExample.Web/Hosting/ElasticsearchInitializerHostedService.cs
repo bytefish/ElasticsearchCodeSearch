@@ -5,6 +5,9 @@ using ElasticsearchFulltextExample.Web.Logging;
 
 namespace ElasticsearchFulltextExample.Web.Hosting
 {
+    /// <summary>
+    /// Used to create the Elasticsearch index at Startup.
+    /// </summary>
     public class ElasticsearchInitializerHostedService : IHostedService
     {
         private readonly ElasticCodeSearchClient _elasticsearchClient;
