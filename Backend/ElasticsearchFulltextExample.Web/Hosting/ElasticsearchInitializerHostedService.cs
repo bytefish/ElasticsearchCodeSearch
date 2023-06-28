@@ -27,7 +27,12 @@ namespace ElasticsearchFulltextExample.Web.Hosting
                 _logger.LogDebug("Waiting for at least 1 Node and at least 1 Active Shard, with a Timeout of {HealthTimeout} seconds.", healthTimeout.TotalSeconds);
             }
 
-            await _elasticsearchClient.WaitForClusterAsync(healthTimeout, cancellationToken);
+            var clusterHealthResponse = await _elasticsearchClient.WaitForClusterAsync(healthTimeout, cancellationToken);
+
+            if(!clusterHealthResponse.IsValidResponse)
+            {
+                _logger.LogError("Invalid Request to get Cluster Health: {DebugInformation}", clusterHealthResponse.DebugInformation);
+            }
 
             var indexExistsResponse = await _elasticsearchClient.IndexExistsAsync(cancellationToken);
 

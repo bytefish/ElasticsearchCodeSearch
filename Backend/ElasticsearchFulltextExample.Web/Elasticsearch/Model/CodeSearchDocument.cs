@@ -30,7 +30,7 @@ namespace ElasticsearchFulltextExample.Web.Elasticsearch.Model
         /// <summary>
         /// The Data of the Document.
         /// </summary>
-        public required string Content { get; set; }
+        public required string? Content { get; set; } = null;
 
         /// <summary>
         /// Latest Commit Date.

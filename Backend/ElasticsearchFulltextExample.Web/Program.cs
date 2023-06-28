@@ -1,6 +1,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using ElasticsearchFulltextExample.Web.Elasticsearch;
+using ElasticsearchFulltextExample.Web.Hosting;
 using ElasticsearchFulltextExample.Web.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,7 +13,11 @@ builder.Services.AddCors();
 builder.Services.AddOptions();
 builder.Services.Configure<ElasticCodeSearchOptions>(builder.Configuration.GetSection("Elasticsearch"));
 
+// Add Client
 builder.Services.AddSingleton<ElasticCodeSearchClient>();
+
+// Add Hosted Services
+builder.Services.AddHostedService<ElasticsearchInitializerHostedService>();
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();

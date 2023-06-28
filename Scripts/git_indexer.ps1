@@ -5,19 +5,20 @@
     
 #>
 
+
 # The organization (or user) we are going to index all repositories 
 # from. This should be passed as a parameter in a later version ...
 $organization = "microsoft"
 
 # We want to index repositories with a maximum of 700 MB initially, so we 
 # filter all large directories ...
-$maxDiskUsageInKilobytes = 10 * 1024
+$maxDiskUsageInKilobytes = 100 * 1024
 
 # Get all GitHub Repositories for an organization or a user, using the GitHub CLI.
 $repositories = gh repo list $Organization --json id,name,owner,nameWithOwner,languages,url,sshUrl,diskUsage
                      | ConvertFrom-Json                                         
                      | Where-Object {$_.diskUsage -lt $maxDiskUsageInKilobytes} 
-                                        
+ 
 # Index all files of the organization or user, cloning is going to take some time, 
 # so we should probably be able to clone and process 4 repositories in parallel. We 
 # need to check if it reduces the waiting time ...
@@ -43,7 +44,37 @@ $repositories | ForEach-Object -Parallel {
     
     # Repository Path.
     $repositoryDirectory = "$baseDirectory\$repositoryName"
-                
+    
+    # Extensions allowed for processing.
+    $allowedExtensions = (".txt",
+        ".csv",
+        ".tsv",
+        ".ts", 
+        ".tsx", 
+        ".html", 
+        ".htm",
+        ".css",
+        ".scss",
+        ".sass",
+        ".txt", 
+        ".cs", 
+        ".razor", 
+        ".cshtml", 
+        ".json", 
+        ".csproj", 
+        ".xml",
+        ".sln",
+        ".java",
+        ".js",
+        ".jsx",
+        ".c",
+        ".h",
+        ".hpp",
+        ".cpp",
+        ".md",
+        ".gitignore",
+        ".editorconfig")
+       
     Write-Host "Processing '$repositoryName' ..."
     
     # Wrap the whole thing in a try / catch, so we always delete the repositories, 
@@ -60,16 +91,35 @@ $repositories | ForEach-Object -Parallel {
                 
         # Get all files in the repositrory using the GIT CLI. This command 
         # returns relative filenames starting at the Repository Path.
-        $relativeFilenames = git --git-dir "$repositoryDirectory/.git" ls-files 2>&1 
+        $relativeFilenamesFromGit = git --git-dir "$repositoryDirectory/.git" ls-files 2>&1 
             | % {$_ -Split "`r`n"}
+            
+        # We get all files, but images and so on are probably too large to index. I want 
+        # to start by whitelisting some extensions. If this leads to crappy results, we 
+        # will try blacklisting ...
+        $relativeFilenames = @()
+        
+        foreach($relativeFilename in $relativeFilenamesFromGit) {
+            # We need to get the Extension for the given File, so we can add it.
+            # This ignores all files like CHANGELOG, README, ... we may need some 
+            # additional logic here.
+            $extension = [System.IO.Path]::GetExtension($relativeFilename)    
+            
+            # If the extension is in the whitelist of extensions, we add it 
+            # to the files to process. This should filter out excessively large 
+            # binary blobs, that we don't want to index anyway.
+            if($allowedExtensions -contains $extension) {
+                $relativeFilenames += $relativeFilename
+            }
+        }
 
-        Write-Host "[$repositoryName] '$($relativeFilenames.Length)' Files to Process ..."
+        Write-Host "[$repositoryName] '$($relativeFilenames.Length)' files to Process ..."
         
         # We want to create Bulk Requests, so we don't send a million
         # Requests to the Elasticsearch API. We will use Skip and Take, 
         # probably not efficient, but who cares.
         $batches = @()
-        $batchSize = 20
+        $batchSize = 30
         
         for($batchStartIdx = 0; $batchStartIdx -lt $relativeFilenames.Length; $batchStartIdx += $batchSize) {
             
@@ -82,7 +132,7 @@ $repositories | ForEach-Object -Parallel {
                 RepositoryUrl = $repositoryUrl
                 RepositoryDirectory = $repositoryDirectory
                 CodeSearchIndexUrl = $codeSearchIndexUrl
-                Elements = ($relativeFilenames
+                Elements = @($relativeFilenames
                     | Select-Object -Skip $batchStartIdx
                     | Select-Object -First $batchSize)
             }
@@ -115,15 +165,63 @@ $repositories | ForEach-Object -Parallel {
             # Each batch contains a list of files.
             foreach($relativeFilename in $batch.Elements) {
                 
+                # Apparently git sometimes returns " around the Filenames,
+                # "optimistically" we trim it at the begin and end, and 
+                # hope it works...
+                $relativeFilename = $relativeFilename.Trim("`"")
+                
                 # We need the absolute filename for the Powershell Utility functions,
                 # so we concatenate the path to the repository with the relative filename 
                 # as returned by git.
                 $absoluteFilename = "{0}\{1}" -f $repositoryDirectory,$relativeFilename
                 
+                # Sometimes there is an issue, that the files returned by git are empty 
+                # directories on Windows. Who knows, why? We don't want to index them, 
+                # because they won't have content.
+                #
+                # We could filter this out in the pipe, but better we print the problematic 
+                # filenames for further investigation
+                if(Test-Path -Path $absoluteFilename -PathType Container) {
+                    Write-Host "[ERR] The given Filename is a directory: '$absoluteFilename'" -ForegroundColor Red
+                    
+                    continue
+                }
+                
+                # Totally valid, that GIT returns garbage! Probably a file isn't on disk 
+                # actually, who knows how all this stuff behaves anyway? What should we 
+                # do here? Best we can do... print the problem and call it a day.
+                if((Test-Path $absoluteFilename) -eq $false) {
+                    Write-Host "[ERR] The given Filename does not exist: '$absoluteFilename'" -ForegroundColor Red
+                    
+                    continue
+                }
+                
                 # Read the Content, that should be indexed, we may 
                 # exceed memory limits, on very large files, but who 
                 # cares...
-                $content = Get-Content -Path $absoluteFilename -Raw
+                $content  = $null
+                
+                try {
+                    $content = Get-Content -Path $absoluteFilename -Raw -ErrorAction Stop
+                } catch {
+                    Write-Host ("[ERR] Failed to read file content: " + $_.Exception.Message) -ForegroundColor Red
+                    
+                    continue
+                }
+                
+                if($content) {
+                    $contentBytes = [System.Text.Encoding]::UTF8.GetBytes($content)
+                    $contentBase64 = [System.Convert]::ToBase64String($contentBytes)
+                    
+                     # We have at most 30 Megabytes in a request, everything else is excessive. How 
+                    # fast will we reach it with Base64 encoding? What do I know. Could we split 
+                    # the text? Probably...                   
+                    if([System.Text.Encoding]::UTF8.GetByteCount($contentBase64) -gt (1 * 1024 * 1024)) {
+                        Write-Host "[ERR] The given content exceeds the max Content Size: '$absoluteFilename'" -ForegroundColor Red
+                        continue
+                    }
+                }
+                
                 
                 # We need a unique identifier. I failed to extract the 
                 # GIT Blob Hash from the GIT CLI, so I am just calculating 
@@ -141,41 +239,47 @@ $repositories | ForEach-Object -Parallel {
                     owner = $repositoryOwner
                     repository = $repositoryName
                     filename = $relativeFilename
-                    content = $content
+                    content = $contentBase64 
                     latestCommitDate = $latestCommitDate
                 }
                                 
                 $codeSearchDocumentList += , $codeSearchDocument
             }
-                        
+
             # Build the actual HTTP Request.
             $codeSearchIndexRequest = @{
                 Method = "POST"
                 Uri = $codeSearchIndexUrl
-                Body = ($codeSearchDocumentList | ConvertTo-Json)
+                Body = ConvertTo-Json $codeSearchDocumentList # Don't use a Pipe here, so Single Arrays become a JSON array too
                 ContentType = "application/json"
                 StatusCodeVariable = 'statusCode'
             }
             
-            Write-Host "[REQ]"
-            Write-Host "[REQ] Code Search Index Request"
-            Write-Host "[REQ]"
-            Write-Host "[REQ]   URL:            $codeSearchIndexUrl"
-            Write-Host "[REQ]   File Count:     $($codeSearchDocumentList.Length)"
-            Write-Host "[REQ]"
+            $requestMessage = ("[$repositoryName][REQ] Code Search Index Request`n" +
+                               "[$repositoryName][REQ]`n" +
+                               "[$repositoryName][REQ]   URL:            $codeSearchIndexUrl`n" +
+                               "[$repositoryName][REQ]   File Count:     $($codeSearchDocumentList.Length)`n" + 
+                               "[$repositoryName][REQ]`n")
 
             try {
                 # And Invoke it
                 $codeSearchIndexResponse = Invoke-RestMethod @codeSearchIndexRequest
                            
-                Write-Host "[RES]    HTTP Status:    $statusCode"  -ForegroundColor Green
+                Write-Host ($requestMessage + "[$repositoryName][RES]    HTTP Status:    $statusCode") -ForegroundColor Green
             } catch {
-                Write-Host "[ERR] Request failed with Error Message: " $_.Exception.Message -ForegroundColor Red
+                
+                Write-Host (ConvertTo-Json $codeSearchDocumentList)
+                
+                Write-Host ($requestMessage + "[ERR] Request failed with Error Message: " + $_.Exception.Message) -ForegroundColor Red
             }
         
-        } -ThrottleLimit 1
+        } -ThrottleLimit 10
     }
     finally {
         Write-Host "Deleting GIT Repository: $repositoryDirectory ..."
+        
+        if($repositoryDirectory.StartsWith("C:\Temp")) {
+            Remove-Item -LiteralPath $repositoryDirectory -Force -Recurse
+        }
     }
 } -ThrottleLimit 1

@@ -6,6 +6,7 @@ using ElasticsearchFulltextExample.Web.Elasticsearch;
 using ElasticsearchFulltextExample.Web.Elasticsearch.Model;
 using ElasticsearchFulltextExample.Web.Logging;
 using Microsoft.AspNetCore.Mvc;
+using System.Text;
 
 namespace ElasticsearchFulltextExample.Web.Controllers
 {
@@ -69,9 +70,21 @@ namespace ElasticsearchFulltextExample.Web.Controllers
                 Owner = source.Owner,
                 Repository = source.Repository,
                 Filename = source.Filename,
-                Content = source.Content,
+                Content = GetContentFromBase64(source.Content),
                 LatestCommitDate = source.LatestCommitDate,
             };
+        }
+
+        private string? GetContentFromBase64(string? source)
+        {
+            if(string.IsNullOrWhiteSpace(source))
+            {
+                return source;
+            }
+
+            var contentBytes = Convert.FromBase64String(source);
+            
+            return Encoding.UTF8.GetString(contentBytes);
         }
     }
 }

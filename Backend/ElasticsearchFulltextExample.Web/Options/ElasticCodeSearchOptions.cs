@@ -16,5 +16,20 @@ namespace ElasticsearchFulltextExample.Web.Options
         /// Index to use for Code Search.
         /// </summary>
         public required string IndexName { get; set; }
+
+        /// <summary>
+        /// Username.
+        /// </summary>
+        public required string Username { get; set; }
+
+        /// <summary>
+        /// Password.
+        /// </summary>
+        public required string Password { get; set; }
+
+        /// <summary>
+        /// Certificate Fingerprint for trusting the Certificate.
+        /// </summary>
+        public required string CertificateFingerprint { get; set; }
     }
 }

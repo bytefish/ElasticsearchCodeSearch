@@ -24,7 +24,7 @@ namespace ElasticsearchFulltextExample.Web.Elasticsearch
         {
             _logger = logger;
             _indexName = options.Value.IndexName;
-            _client = CreateClient(options.Value.Uri);
+            _client = CreateClient(options.Value);
         }
 
         public async Task<Elastic.Clients.Elasticsearch.IndexManagement.ExistsResponse> IndexExistsAsync(CancellationToken cancellationToken)
@@ -104,10 +104,9 @@ namespace ElasticsearchFulltextExample.Web.Elasticsearch
         {
             _logger.TraceMethodEntry();
 
-            var healthRequest = new HealthRequest
+            var healthRequest = new HealthRequest()
             {
-                WaitForNodes = 1,
-                WaitForActiveShards = 1,
+                WaitForActiveShards = "1",
                 Timeout = timeout
             };
 
@@ -192,14 +191,13 @@ namespace ElasticsearchFulltextExample.Web.Elasticsearch
                 }), cancellationToken);
         }
 
-        private static ElasticsearchClient CreateClient(string uriString)
+        public virtual ElasticsearchClient CreateClient(ElasticCodeSearchOptions options)
         {
-            var connectionUri = new Uri(uriString);
-            
-            var connectionPool = new SingleNodePool(connectionUri);
-            var connectionSettings = new ElasticsearchClientSettings(connectionPool);
+            var settings = new ElasticsearchClientSettings(new Uri(options.Uri))
+                .CertificateFingerprint(options.CertificateFingerprint)
+                .Authentication(new BasicAuthentication(options.Username, options.Password));
 
-            return new ElasticsearchClient(connectionSettings);
+            return new ElasticsearchClient(settings);
         }
     }
 }
