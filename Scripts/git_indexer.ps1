@@ -1,10 +1,7 @@
 <#
 .SYNOPSIS
     Example Script for Sending Indexing Requests to an ElasticSearch Service.
-.DESCRIPTION
-    
 #>
-
 
 # The organization (or user) we are going to index all repositories 
 # from. This should be passed as a parameter in a later version ...
@@ -81,6 +78,7 @@ $repositories | ForEach-Object -Parallel {
     # when we have hit an error of are stuck.
     try {
         
+        # If the Repository already exists, we don't need to clone it again...
         if(Test-Path $repositoryDirectory) {
             Write-Host "[$repositoryName] Directory '$repositoryDirectory' already exists. Not Cloning ...."
         } else {
@@ -210,10 +208,19 @@ $repositories | ForEach-Object -Parallel {
                 }
                 
                 if($content) {
+                    # Get the Content as UTF8 Bytes, which will be encoded as 
+                    # Base64 and decoded on the other side, so we don't have to 
+                    # deal with JSON issues serializing the text content.
                     $contentBytes = [System.Text.Encoding]::UTF8.GetBytes($content)
+                    
+                    # Why do we need Base64 at all? Because the ConvertTo-Json cmdlet 
+                    # has all kinds of Bugs, when it is used with the Content returned 
+                    # by Get-Content. 
+                    #
+                    # I was too lazy to find out ...
                     $contentBase64 = [System.Convert]::ToBase64String($contentBytes)
                     
-                     # We have at most 30 Megabytes in a request, everything else is excessive. How 
+                    # We have at most 30 Megabytes in a request, everything else is excessive. How 
                     # fast will we reach it with Base64 encoding? What do I know. Could we split 
                     # the text? Probably...                   
                     if([System.Text.Encoding]::UTF8.GetByteCount($contentBase64) -gt (1 * 1024 * 1024)) {
@@ -221,7 +228,6 @@ $repositories | ForEach-Object -Parallel {
                         continue
                     }
                 }
-                
                 
                 # We need a unique identifier. I failed to extract the 
                 # GIT Blob Hash from the GIT CLI, so I am just calculating 
@@ -233,7 +239,12 @@ $repositories | ForEach-Object -Parallel {
                 # reason for building this thing...
                 $latestCommitDate = git --git-dir "$repositoryDirectory\.git" log -1  --date=iso-strict --format="%ad" -- $relativeFilename 2>&1
                                 
-                # This is the 
+                # This is the Document, which will be included in the 
+                # bulk request to Elasticsearch. We will append it to 
+                # a list. 
+                # 
+                # Since the Content should be a maximum of 1 MB, we should be on 
+                # the safe side to not have the memory exploding.
                 $codeSearchDocument = @{
                     id = $md5Hash
                     owner = $repositoryOwner
@@ -242,7 +253,8 @@ $repositories | ForEach-Object -Parallel {
                     content = $contentBase64 
                     latestCommitDate = $latestCommitDate
                 }
-                                
+                        
+                # Holds all documents to be included in the Bulk Request.
                 $codeSearchDocumentList += , $codeSearchDocument
             }
 
@@ -257,15 +269,17 @@ $repositories | ForEach-Object -Parallel {
             
             $requestMessage = ("[$repositoryName][REQ] Code Search Index Request`n" +
                                "[$repositoryName][REQ]`n" +
-                               "[$repositoryName][REQ]   URL:            $codeSearchIndexUrl`n" +
-                               "[$repositoryName][REQ]   File Count:     $($codeSearchDocumentList.Length)`n" + 
+                               "[$repositoryName][REQ]     URL:            $codeSearchIndexUrl`n" +
+                               "[$repositoryName][REQ]     File Count:     $($codeSearchDocumentList.Length)`n" + 
                                "[$repositoryName][REQ]`n")
 
             try {
-                # And Invoke it
+                # Invokes the Requests, which will error out on HTTP Status Code >= 400, 
+                # so we need to wrap it in a try / catch block. We can then extract the 
+                # error message.
                 $codeSearchIndexResponse = Invoke-RestMethod @codeSearchIndexRequest
                            
-                Write-Host ($requestMessage + "[$repositoryName][RES]    HTTP Status:    $statusCode") -ForegroundColor Green
+                Write-Host ($requestMessage + "[$repositoryName][RES]     HTTP Status:    $statusCode") -ForegroundColor Green
             } catch {
                 
                 Write-Host (ConvertTo-Json $codeSearchDocumentList)
