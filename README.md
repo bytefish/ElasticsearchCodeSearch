@@ -1,4 +1,4 @@
-# EntityFramework Core Experiments #
+# Elasticsearch Code Search Experiments #
 
 This repository is an Elasticsearch experiment to see how to build a very simple 
 code search. I wanted to learn about Powershell and the recent updates to the 
