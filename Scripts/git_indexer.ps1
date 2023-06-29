@@ -21,64 +21,107 @@ $repositories = gh repo list $Organization --json id,name,owner,nameWithOwner,la
 # need to check if it reduces the waiting time ...
 $repositories | ForEach-Object -Parallel {
 
+    # Rename, so we know what we are operating on.
+    $repository = $_    
+
     # The Url, where the Index Service is running at. This is the ASP.NET 
     # Core WebAPI, which is responsible to send the indexing requests ...
     $codeSearchIndexUrl = "http://localhost:5000/api/index"
-
+    
     # This is where we are going to clone the temporary Git repositories to, 
     # which will be created for reading the file content and sending it to 
     # the ElasticSearch instance.
     $baseDirectory = "C:\Temp"
 
     # Repository Name.
-    $repositoryName = $_.name
+    $repositoryName = $repository.name
     
     # Repository URL.
-    $repositoryUrl = $_.url
+    $repositoryUrl = $repository.url
 
     # Repository URL.
-    $repositoryOwner = $_.owner.login
+    $repositoryOwner = $repository.owner.login
     
     # Repository Path.
     $repositoryDirectory = "$baseDirectory\$repositoryName"
     
+    # Files allowed for processing.
+    $allowedFilenames = (
+        ".gitignore",
+        ".editorconfig",
+        "README",
+        "CHANGELOG"
+    )
+    
     # Extensions allowed for processing.
-    $allowedExtensions = (".txt",
-        ".csv",
-        ".tsv",
-        ".ts", 
-        ".tsx", 
-        ".html", 
-        ".htm",
+    $allowedExtensions = (
+        # C / C++
+        ".c",
+        ".cpp",
+        ".h",
+        ".hpp",
+        # .NET
+        ".cs", 
+        ".cshtml", 
+        ".csproj", 
+        ".fs",
+        ".razor", 
+        ".sln",
+        # CSS
         ".css",
         ".scss",
         ".sass",
-        ".txt", 
-        ".cs", 
-        ".razor", 
-        ".cshtml", 
+        # CSV / TSV
+        ".csv",
+        ".tsv",
+        # HTML
+        ".html", 
+        ".htm",
+        # JSON
         ".json", 
-        ".csproj", 
-        ".xml",
-        ".sln",
-        ".java",
+        # JavaScript
         ".js",
         ".jsx",
-        ".c",
-        ".h",
-        ".hpp",
-        ".cpp",
+        ".spec.js",
+        ".config.js",
+        # Typescript
+        ".ts", 
+        ".tsx", 
+        # TXT
+        ".txt", 
+        # Powershell
+        ".ps1",
+        # Python
+        ".py",
+        # Configuration
+        ".ini",
+        ".config",
+        # XML
+        ".xml",
+        ".xsl",
+        ".xsd",
+        ".dtd",
+        ".wsdl",
+        # Markdown
         ".md",
-        ".gitignore",
-        ".editorconfig")
+        ".markdown",
+        # reStructured Text
+        ".rst",
+        # LaTeX
+        ".tex",
+        ".bib",
+        ".bbx",
+        ".cbx"
+    )
        
-    Write-Host "Processing '$repositoryName' ..."
+    Write-Host "[$repositoryName] Processing started ..."
     
-    # Wrap the whole thing in a try / catch, so we always delete the repositories, 
-    # when we have hit an error of are stuck.
+    # Wrap the whole thing in a try - finally, so we always delete the repositories.
     try {
         
-        # If the Repository already exists, we don't need to clone it again...
+        # If the Repository already exists, we don't need to clone it again. This could be problematic, 
+        # when the Repository has been updated in between, but the idea is to re-index the entire 
+        # organization in case of error.
         if(Test-Path $repositoryDirectory) {
             Write-Host "[$repositoryName] Directory '$repositoryDirectory' already exists. Not Cloning ...."
         } else {
@@ -98,15 +141,22 @@ $repositories | ForEach-Object -Parallel {
         $relativeFilenames = @()
         
         foreach($relativeFilename in $relativeFilenamesFromGit) {
+            
+            # Get the filename from the relative Path, we use it to check 
+            # against a set of whitelisted files, which we can read the data 
+            # from.
+            $filename = [System.IO.Path]::GetFileName($relativeFilename)
+            
             # We need to get the Extension for the given File, so we can add it.
             # This ignores all files like CHANGELOG, README, ... we may need some 
             # additional logic here.
             $extension = [System.IO.Path]::GetExtension($relativeFilename)    
             
-            # If the extension is in the whitelist of extensions, we add it 
-            # to the files to process. This should filter out excessively large 
-            # binary blobs, that we don't want to index anyway.
-            if($allowedExtensions -contains $extension) {
+            # If the filename or extension is allowed, we are adding it to the 
+            # list of files to process. Don't add duplicate files.
+            if($allowedFilenames -contains $filename) {
+                $relativeFilenames += $relativeFilename
+            } elseif($allowedExtensions -contains $extension) {
                 $relativeFilenames += $relativeFilename
             }
         }
@@ -145,8 +195,7 @@ $repositories | ForEach-Object -Parallel {
         # Bulk Requests to the Elasticsearch API, without complex code 
         # ...
         $batches | ForEach-Object -Parallel {  
-    
-            # We are iterating on a batch
+            # Rename, so we know what we are working with.
             $batch = $_
             
             # We need the variables from the outer scope...
