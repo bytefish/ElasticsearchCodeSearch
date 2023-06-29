@@ -20,19 +20,19 @@ namespace ElasticsearchCodeSearch.Controllers
             _logger = logger;
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("/api/search")]
-        public async Task<IActionResult> Query([FromQuery(Name = "q")] string query, CancellationToken cancellationToken)
+        public async Task<IActionResult> Query([FromBody] SearchRequestDto request, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
-            var searchResponse = await _elasticsearchClient.SearchAsync(query, cancellationToken);
-            var searchResult = ConvertToSearchResults(query, searchResponse);
+            var searchResponse = await _elasticsearchClient.SearchAsync(request.Query, request.From, request.Size, cancellationToken);
+            var searchResult = ConvertToSearchResults(request, searchResponse);
 
             return Ok(searchResult);
         }
 
-        private SearchResultsDto ConvertToSearchResults(string query, SearchResponse<CodeSearchDocument> searchResponse)
+        private SearchResultsDto ConvertToSearchResults(SearchRequestDto request, SearchResponse<CodeSearchDocument> searchResponse)
         {
             _logger.TraceMethodEntry();
 
@@ -60,7 +60,9 @@ namespace ElasticsearchCodeSearch.Controllers
 
             return new SearchResultsDto
             {
-                Query = query,
+                Query = request.Query,
+                From = request.From,
+                Size = request.Size,
                 Results = results
             };
         }

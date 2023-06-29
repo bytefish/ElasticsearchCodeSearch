@@ -43,7 +43,7 @@ namespace ElasticsearchCodeSearch.Dto
         /// </summary>
         [Required]
         [JsonPropertyName("content")]
-        public required string Content { get; set; } = null;
+        public required string? Content { get; set; } = null;
 
         /// <summary>
         /// Latest Commit Date.

@@ -75,7 +75,7 @@ namespace ElasticsearchCodeSearch.Controllers
             };
         }
 
-        private string? GetContentFromBase64(string? source)
+        private string GetContentFromBase64(string source)
         {
             if (string.IsNullOrWhiteSpace(source))
             {

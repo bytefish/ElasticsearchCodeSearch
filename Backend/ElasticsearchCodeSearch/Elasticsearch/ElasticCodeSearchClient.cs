@@ -8,7 +8,6 @@ using Elastic.Clients.Elasticsearch.Core.Search;
 using Elastic.Transport;
 using Microsoft.Extensions.Options;
 using Elastic.Clients.Elasticsearch.Mapping;
-using Elastic.Clients.Elasticsearch.Analysis;
 using ElasticsearchCodeSearch.Options;
 using ElasticsearchCodeSearch.Logging;
 using ElasticsearchCodeSearch.Elasticsearch.Model;
@@ -27,6 +26,15 @@ namespace ElasticsearchCodeSearch.Elasticsearch
             _logger = logger;
             _indexName = options.Value.IndexName;
             _client = CreateClient(options.Value);
+        }
+
+        public virtual ElasticsearchClient CreateClient(ElasticCodeSearchOptions options)
+        {
+            var settings = new ElasticsearchClientSettings(new Uri(options.Uri))
+                .CertificateFingerprint(options.CertificateFingerprint)
+                .Authentication(new BasicAuthentication(options.Username, options.Password));
+
+            return new ElasticsearchClient(settings);
         }
 
         public async Task<Elastic.Clients.Elasticsearch.IndexManagement.ExistsResponse> IndexExistsAsync(CancellationToken cancellationToken)
@@ -177,13 +185,15 @@ namespace ElasticsearchCodeSearch.Elasticsearch
             return indexResponse;
         }
 
-        public Task<SearchResponse<CodeSearchDocument>> SearchAsync(string query, CancellationToken cancellationToken)
+        public Task<SearchResponse<CodeSearchDocument>> SearchAsync(string query, int from, int size, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
             return _client.SearchAsync<CodeSearchDocument>(searchRequestDescriptor => searchRequestDescriptor
                 // Query this Index:
                 .Index(_indexName)
+                // Setup Pagination:
+                .From(from).Size(size)
                 // Setup the Query:
                 .Query(q => q.MultiMatch(mm => mm
                     .Query(query)
@@ -223,15 +233,6 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                 {
                     SortOptions.Field(Infer.Field<CodeSearchDocument>(x => x.LatestCommitDate), new FieldSort { Order = SortOrder.Desc })
                 }), cancellationToken);
-        }
-
-        public virtual ElasticsearchClient CreateClient(ElasticCodeSearchOptions options)
-        {
-            var settings = new ElasticsearchClientSettings(new Uri(options.Uri))
-                .CertificateFingerprint(options.CertificateFingerprint)
-                .Authentication(new BasicAuthentication(options.Username, options.Password));
-
-            return new ElasticsearchClient(settings);
         }
     }
 }
