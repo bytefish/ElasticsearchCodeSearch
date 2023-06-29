@@ -85,11 +85,11 @@
 
 	<ItemGroup Condition="$(TargetFramework)=='net7.0' ">
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.*" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.*" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.3" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Fast.Components.FluentUI" Version="2.1.*" />
+		<PackageReference Include="Microsoft.Fast.Components.FluentUI" Version="2.3.6" />
 	</ItemGroup>
 
 </Project>
