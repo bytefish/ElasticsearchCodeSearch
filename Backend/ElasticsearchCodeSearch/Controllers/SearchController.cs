@@ -51,6 +51,7 @@ namespace ElasticsearchCodeSearch.Controllers
                     Owner = hit.Source.Owner,
                     Repository = hit.Source.Repository,
                     Filename = hit.Source.Filename,
+                    Permalink = hit.Source.Permalink,
                     LatestCommitDate = hit.Source.LatestCommitDate,
                     Matches = GetMatches(hit.Highlight),
                 };

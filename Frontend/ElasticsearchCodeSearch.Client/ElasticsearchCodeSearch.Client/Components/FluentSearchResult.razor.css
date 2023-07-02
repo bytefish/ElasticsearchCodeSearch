@@ -1,0 +1,26 @@
+﻿.code-box {
+    display: grid;
+    height: 100%;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+        "code-box-title"
+        "code-box-content";
+    border: 1px solid #dcdcde;
+    background-color: #fff;
+}
+
+    .code-box .code-box-title {
+        grid-area: code-box-title;
+        background-color: #fbfafd;
+        border-bottom: 1px solid #dcdcde;
+        padding: 10px 16px;
+    }
+
+    .code-box .code-box-content {
+        grid-area: code-box-content;
+        padding: 10px;
+        height: 200px;
+    }
+
+    

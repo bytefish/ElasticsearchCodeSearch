@@ -39,11 +39,18 @@ namespace ElasticsearchCodeSearch.Dto
         public required string Filename { get; set; }
 
         /// <summary>
-        /// The Data of the Document.
+        /// Base64-encoded content to index.
         /// </summary>
         [Required]
         [JsonPropertyName("content")]
-        public required string Content { get; set; } = null;
+        public required string Content { get; set; } =string.Empty;
+
+        /// <summary>
+        /// Permalink to the indexed file.
+        /// </summary>
+        [Required]
+        [JsonPropertyName("permalink")]
+        public required string Permalink { get; set; }
 
         /// <summary>
         /// Latest Commit Date.

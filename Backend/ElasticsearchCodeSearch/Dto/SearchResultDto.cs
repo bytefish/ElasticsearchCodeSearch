@@ -18,6 +18,9 @@ namespace ElasticsearchCodeSearch.Dto
         [JsonPropertyName("filename")]
         public required string Filename { get; set; }
 
+        [JsonPropertyName("permalink")]
+        public required string Permalink { get; set; }
+
         [JsonPropertyName("matches")]
         public required IReadOnlyCollection<string>? Matches { get; set; }
 

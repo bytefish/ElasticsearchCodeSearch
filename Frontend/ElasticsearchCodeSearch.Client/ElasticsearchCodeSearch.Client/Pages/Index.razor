@@ -1,19 +1,91 @@
 ﻿@page "/"
+@using ElasticsearchCodeSearch.Client.Components
+@using ElasticsearchCodeSearch.Client.Extensions;
+@using ElasticsearchCodeSearch.Dto;
 
 <PageTitle>Elasticsearch Code Search Experiments</PageTitle>
 
-<div class="search-box">
-    <div class="row">
-        <div class="d-none d-md-flex col-sm-3" />
-        <div class="col-xs-12 col-md-6">
-            <FluentSearch @bind-Value="query" Class="w-100" />
+<div class="search-container">
+    <div class="search-header">
+        <div class="search-title">
+            <h1>Elasticsearch Code Search</h1>
         </div>
-        <div class="d-none d-md-flex col-sm-3" />
+        <div class="search-box">
+            <FluentSearch @bind-Value="query" Class="w-100" />
+            <FluentButton>Search</FluentButton>
+        </div>
     </div>
+    <div class="search-results">
+        <FluentSearchResult></FluentSearchResult>
+        <FluentSearchResult></FluentSearchResult>
+        <FluentSearchResult></FluentSearchResult>
+        <FluentSearchResult></FluentSearchResult>
+        <FluentSearchResult></FluentSearchResult>
+        <FluentSearchResult></FluentSearchResult>
+        <FluentSearchResult></FluentSearchResult>
+        <FluentSearchResult></FluentSearchResult>
+        <FluentSearchResult></FluentSearchResult>
+        <FluentSearchResult></FluentSearchResult>
+        <FluentSearchResult></FluentSearchResult>
+        <FluentSearchResult></FluentSearchResult>
+
+
+@*        @foreach(var searchResult in _results)
+        {
+            <FluentCard style="max-width:600px; max-height: 100px;">
+                <p>
+                    @searchResult.Filename
+                </p>
+                @foreach (var match in searchResult.Matches)
+                {
+                    <p>
+                        @match.AsMarkupString();
+                    </p>
+                }
+            </FluentCard>
+
+        }*@
+
+    </div>
+    <div class="search-footer">
+        <p>Footer Text</p>
+    </div>
+
 </div>
 
 
 @code {
+    SearchResultDto[] _results = new []
+    {
+        new SearchResultDto
+        {
+            Id = "1",
+            Owner = "microsoft",
+            Repository = "myrepository",
+            Filename = "Container.cs",
+            Matches = new []
+            {
+                "<strong>This is a match</strong> and this is more text",
+                "<strong>This is a match</strong> and this is more text",
+                "<strong>This is a match</strong> and this is more text",
+            },
+            LatestCommitDate = new DateTime(2013, 1, 1)
+        },
+        new SearchResultDto
+        {
+            Id = "2",
+            Owner = "microsoft",
+            Repository = "other-repo",
+            Filename = "testfile.cs",
+            Matches = new []
+            {
+                "<strong>This is a match</strong> and this is more text",
+                "<strong>This is a match</strong> and this is more text",
+            },
+            LatestCommitDate = new DateTime(2013, 1, 1)
+        }
+    };
+
     string? query = string.Empty;
 
 }

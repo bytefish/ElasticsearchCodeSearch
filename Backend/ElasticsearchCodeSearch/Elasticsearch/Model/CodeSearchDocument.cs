@@ -28,9 +28,14 @@ namespace ElasticsearchCodeSearch.Elasticsearch.Model
         public required string Filename { get; set; }
 
         /// <summary>
-        /// The Data of the Document.
+        /// Content to Index.
         /// </summary>
         public required string Content { get; set; }
+
+        /// <summary>
+        /// Permalink to the file.
+        /// </summary>
+        public required string Permalink { get; set; }
 
         /// <summary>
         /// Latest Commit Date.

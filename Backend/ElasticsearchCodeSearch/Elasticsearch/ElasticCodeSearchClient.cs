@@ -107,6 +107,7 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                             .Text(properties => properties.Repository)
                             .Text(properties => properties.Filename)
                             .Text(properties => properties.Content)
+                            .Text(properties => properties.Permalink)
                             .Date(properties => properties.LatestCommitDate))), cancellationToken);
 
             _logger.LogDebug("CreateIndexResponse DebugInformation: {DebugInformation}", createIndexResponse.DebugInformation);

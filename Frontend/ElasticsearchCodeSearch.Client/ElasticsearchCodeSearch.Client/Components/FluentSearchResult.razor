@@ -1,0 +1,46 @@
+﻿@using ElasticsearchCodeSearch.Client.Extensions;
+@using ElasticsearchCodeSearch.Dto;
+
+<div class="code-box">
+    <div class="code-box-title">
+        Test
+    </div>
+    <div class="code-box-content">
+        Body
+    </div>
+</div>
+
+@code {
+
+    /// <summary>
+    /// Filename.
+    /// </summary>
+    [Parameter]
+    public required string Filename { get; set; }
+
+    /// <summary>
+    /// Owner.
+    /// </summary>
+    [Parameter]
+    public required string Owner { get; set; }
+
+    /// <summary>
+    /// Repository.
+    /// </summary>
+    [Parameter]
+    public required string Repository { get; set; }
+
+    /// <summary>
+    /// Url.
+    /// </summary>
+    [Parameter]
+    public required string Url { get; set; }
+
+    /// <summary>
+    /// Matches.
+    /// </summary>
+    [Parameter]
+    public required string[] Matches { get; set; }
+
+
+}

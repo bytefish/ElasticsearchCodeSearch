@@ -278,6 +278,13 @@ $repositories | ForEach-Object -Parallel {
                     }
                 }
                 
+                # Gets the SHA1 Hash of the Git File. We need this to reconstruct the URL to the GitHub 
+                # file, so we have a unique identitfier for the file and we are able to generate a link 
+                # in the Frontend.
+                $sha1Hash = git --git-dir "$repositoryDirectory\.git" -ls-files -s  $relativeFilename 2>&1
+                    | % {$_ -Split " "} # Split at Whitespaces
+                    | Select-Object -Skip 1 -Take 1
+                                    
                 # We need a unique identifier. I failed to extract the 
                 # GIT Blob Hash from the GIT CLI, so I am just calculating 
                 # the MD5 Hash...
@@ -287,7 +294,12 @@ $repositories | ForEach-Object -Parallel {
                 # can later sort by commit date, which is the only 
                 # reason for building this thing...
                 $latestCommitDate = git --git-dir "$repositoryDirectory\.git" log -1  --date=iso-strict --format="%ad" -- $relativeFilename 2>&1
-                                
+                          
+                # We are generating a Permalink to the file, which is based on the owner, repository, SHA1 Hash 
+                # of the commit to the file and the relative filename inside the repo. This is a good way to link 
+                # to it from the search page, without needing to serve it by ourselves.
+                $permalink = "https://github.com/$repositoryOwner/$repositoryName/blob/$sha1Hash/$relativeFilename"
+                          
                 # This is the Document, which will be included in the 
                 # bulk request to Elasticsearch. We will append it to 
                 # a list. 
@@ -295,11 +307,12 @@ $repositories | ForEach-Object -Parallel {
                 # Since the Content should be a maximum of 1 MB, we should be on 
                 # the safe side to not have the memory exploding.
                 $codeSearchDocument = @{
-                    id = $md5Hash
+                    id = $sha1Hash
                     owner = $repositoryOwner
                     repository = $repositoryName
                     filename = $relativeFilename
                     content = $contentBase64 
+                    permalink = $permalink
                     latestCommitDate = $latestCommitDate
                 }
                         

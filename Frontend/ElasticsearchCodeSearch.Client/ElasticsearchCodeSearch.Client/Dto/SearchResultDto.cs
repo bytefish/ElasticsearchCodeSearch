@@ -19,7 +19,7 @@ namespace ElasticsearchCodeSearch.Dto
         public required string Filename { get; set; }
 
         [JsonPropertyName("matches")]
-        public required IReadOnlyCollection<string>? Matches { get; set; }
+        public required IReadOnlyCollection<string> Matches { get; set; } = new List<string>();
 
         [JsonPropertyName("latestCommitDate")]
         public required DateTime LatestCommitDate { get; set; }
