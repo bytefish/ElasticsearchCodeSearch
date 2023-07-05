@@ -9,7 +9,7 @@ $organization = "microsoft"
 
 # We want to index repositories with a maximum of 700 MB initially, so we 
 # filter all large directories ...
-$maxDiskUsageInKilobytes = 100 * 1024
+$maxDiskUsageInKilobytes = 10 * 1024
 
 # Get all GitHub Repositories for an organization or a user, using the GitHub CLI.
 $repositories = gh repo list $Organization --json id,name,owner,nameWithOwner,languages,url,sshUrl,diskUsage
@@ -203,7 +203,6 @@ $repositories | ForEach-Object -Parallel {
             $repositoryDirectory = $batch.RepositoryDirectory
             $repositoryOwner = $batch.RepositoryOwner
             $repositoryName = $batch.RepositoryName
-            $repositoryUrl = $batch.RepositoryUrl
             
             # Holds the File Index Data, that we are going to send 
             # to Elasticsearch for indexing.
@@ -256,40 +255,35 @@ $repositories | ForEach-Object -Parallel {
                     continue
                 }
                 
-                if($content) {
-                    # Get the Content as UTF8 Bytes, which will be encoded as 
-                    # Base64 and decoded on the other side, so we don't have to 
-                    # deal with JSON issues serializing the text content.
-                    $contentBytes = [System.Text.Encoding]::UTF8.GetBytes($content)
+                # if($content) {
+                #     # Get the Content as UTF8 Bytes, which will be encoded as 
+                #     # Base64 and decoded on the other side, so we don't have to 
+                #     # deal with JSON issues serializing the text content.
+                #     $contentBytes = [System.Text.Encoding]::UTF8.GetBytes($content)
                     
-                    # Why do we need Base64 at all? Because the ConvertTo-Json cmdlet 
-                    # has all kinds of Bugs, when it is used with the Content returned 
-                    # by Get-Content. 
-                    #
-                    # I was too lazy to find out ...
-                    $contentBase64 = [System.Convert]::ToBase64String($contentBytes)
+                #     # Why do we need Base64 at all? Because the ConvertTo-Json cmdlet 
+                #     # has all kinds of Bugs, when it is used with the Content returned 
+                #     # by Get-Content. 
+                #     #
+                #     # I was too lazy to find out ...
+                #     $contentBase64 = [System.Convert]::ToBase64String($contentBytes)
                     
-                    # We have at most 30 Megabytes in a request, everything else is excessive. How 
-                    # fast will we reach it with Base64 encoding? What do I know. Could we split 
-                    # the text? Probably...                   
-                    if([System.Text.Encoding]::UTF8.GetByteCount($contentBase64) -gt (1 * 1024 * 1024)) {
-                        Write-Host "[ERR] The given content exceeds the max Content Size: '$absoluteFilename'" -ForegroundColor Red
-                        continue
-                    }
-                }
+                #     # We have at most 30 Megabytes in a request, everything else is excessive. How 
+                #     # fast will we reach it with Base64 encoding? What do I know. Could we split 
+                #     # the text? Probably...                   
+                #     if([System.Text.Encoding]::UTF8.GetByteCount($contentBase64) -gt (1 * 1024 * 1024)) {
+                #         Write-Host "[ERR] The given content exceeds the max Content Size: '$absoluteFilename'" -ForegroundColor Red
+                #         continue
+                #     }
+                # }
                 
                 # Gets the SHA1 Hash of the Git File. We need this to reconstruct the URL to the GitHub 
                 # file, so we have a unique identitfier for the file and we are able to generate a link 
                 # in the Frontend.
-                $sha1Hash = git --git-dir "$repositoryDirectory\.git" -ls-files -s  $relativeFilename 2>&1
-                    | % {$_ -Split " "} # Split at Whitespaces
-                    | Select-Object -Skip 1 -Take 1
-                                    
-                # We need a unique identifier. I failed to extract the 
-                # GIT Blob Hash from the GIT CLI, so I am just calculating 
-                # the MD5 Hash...
-                $md5Hash = (Get-FileHash $absoluteFilename).Hash
-                                    
+                $sha1Hash = git --git-dir "$repositoryDirectory\.git" ls-files -s  $relativeFilename 2>&1
+                    | ForEach-Object {$_ -Split " "} # Split at Whitespaces
+                    | Select-Object -Skip 1 -First 1
+                
                 # Get the latest Commit Date from the File, so we 
                 # can later sort by commit date, which is the only 
                 # reason for building this thing...
@@ -311,7 +305,7 @@ $repositories | ForEach-Object -Parallel {
                     owner = $repositoryOwner
                     repository = $repositoryName
                     filename = $relativeFilename
-                    content = $contentBase64 
+                    content = ConvertTo-Json $content 
                     permalink = $permalink
                     latestCommitDate = $latestCommitDate
                 }
@@ -324,7 +318,7 @@ $repositories | ForEach-Object -Parallel {
             $codeSearchIndexRequest = @{
                 Method = "POST"
                 Uri = $codeSearchIndexUrl
-                Body = ConvertTo-Json $codeSearchDocumentList # Don't use a Pipe here, so Single Arrays become a JSON array too
+                Body = ConvertTo-Json -InputObject $codeSearchDocumentList -EscapeHandling EscapeNonAscii # Don't use a Pipe here, so Single Arrays become a JSON array too
                 ContentType = "application/json"
                 StatusCodeVariable = 'statusCode'
             }
@@ -339,7 +333,7 @@ $repositories | ForEach-Object -Parallel {
                 # Invokes the Requests, which will error out on HTTP Status Code >= 400, 
                 # so we need to wrap it in a try / catch block. We can then extract the 
                 # error message.
-                $codeSearchIndexResponse = Invoke-RestMethod @codeSearchIndexRequest
+                Invoke-RestMethod @codeSearchIndexRequest
                            
                 Write-Host ($requestMessage + "[$repositoryName][RES]     HTTP Status:    $statusCode") -ForegroundColor Green
             } catch {
