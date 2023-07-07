@@ -1,0 +1,28 @@
+﻿using ElasticsearchCodeSearch.Models;
+
+namespace ElasticsearchCodeSearch.Converters
+{
+    public static class CodeSearchDocumentConverter
+    {
+        public static List<CodeSearchDocument> Convert(List<CodeSearchDocumentDto> source)
+        {
+            return source
+                .Select(x => Convert(x))
+                .ToList();
+        }
+
+        public static CodeSearchDocument Convert(CodeSearchDocumentDto source)
+        {
+            return new CodeSearchDocument
+            {
+                Id = source.Id,
+                Owner = source.Owner,
+                Repository = source.Repository,
+                Filename = source.Filename,
+                Content = source.Content,
+                Permalink = source.Permalink,
+                LatestCommitDate = source.LatestCommitDate,
+            };
+        }
+    }
+}

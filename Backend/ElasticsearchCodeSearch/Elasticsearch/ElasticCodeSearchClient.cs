@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 using Elastic.Clients.Elasticsearch.Mapping;
 using ElasticsearchCodeSearch.Options;
 using ElasticsearchCodeSearch.Logging;
-using ElasticsearchCodeSearch.Elasticsearch.Model;
+using ElasticsearchCodeSearch.Models;
 
 namespace ElasticsearchCodeSearch.Elasticsearch
 {
@@ -121,7 +121,10 @@ namespace ElasticsearchCodeSearch.Elasticsearch
 
             var deleteResponse = await _client.DeleteAsync<CodeSearchDocument>(documentId, x => x.Index(_indexName), cancellationToken);
 
-            _logger.LogDebug("DeleteResponse DebugInformation: {DebugInformation}", deleteResponse.DebugInformation);
+            if (_logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("DeleteResponse DebugInformation: {DebugInformation}", deleteResponse.DebugInformation);
+            }
 
             return deleteResponse;
         }
@@ -132,7 +135,10 @@ namespace ElasticsearchCodeSearch.Elasticsearch
 
             var getResponse = await _client.GetAsync<CodeSearchDocument>(documentId, x => x.Index(_indexName), cancellationToken);
 
-            _logger.LogDebug("GetResponse DebugInformation: {DebugInformation}", getResponse.DebugInformation);
+            if (_logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("GetResponse DebugInformation: {DebugInformation}", getResponse.DebugInformation);
+            }
 
             return getResponse;
         }
@@ -149,7 +155,10 @@ namespace ElasticsearchCodeSearch.Elasticsearch
 
             var clusterHealthResponse = await _client.Cluster.HealthAsync(healthRequest, cancellationToken: cancellationToken);
 
-            _logger.LogDebug("ClusterHealthResponse DebugInformation: {DebugInformation}", clusterHealthResponse.DebugInformation);
+            if (_logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("ClusterHealthResponse DebugInformation: {DebugInformation}", clusterHealthResponse.DebugInformation);
+            }
 
             return clusterHealthResponse;
         }
@@ -170,40 +179,28 @@ namespace ElasticsearchCodeSearch.Elasticsearch
             return bulkResponse;
         }
 
-        public async Task<IndexResponse> IndexAsync(CodeSearchDocument document, CancellationToken cancellationToken)
+        public Task<SearchResponse<CodeSearchDocument>> SearchAsync(CodeSearchRequest searchRequest, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
-            var indexResponse = await _client.IndexAsync(document, x => x
-                .Id(document.Id)
-                .Index(_indexName), cancellationToken);
-
-            if (_logger.IsDebugEnabled())
-            {
-                _logger.LogDebug("IndexResponse DebugInformation: {DebugInformation}", indexResponse.DebugInformation);
-            }
-
-            return indexResponse;
-        }
-
-        public Task<SearchResponse<CodeSearchDocument>> SearchAsync(string query, int from, int size, CancellationToken cancellationToken)
-        {
-            _logger.TraceMethodEntry();
-
+            // Convert to Elasticsearch Sort Fields
+            var sortOptionsArray = searchRequest.Sort
+                .Select(x => SortOptions.Field(new Field(x.Field), new FieldSort { Order = SortOrder.Desc }))
+                .ToArray();
+            
+            // Build the Search Query:
             return _client.SearchAsync<CodeSearchDocument>(searchRequestDescriptor => searchRequestDescriptor
                 // Query this Index:
                 .Index(_indexName)
                 // Setup Pagination:
-                .From(from).Size(size)
-                // Setup the Query:
-                .Query(q => q.MultiMatch(mm => mm
-                    .Query(query)
-                    .Type(TextQueryType.BoolPrefix)
-                    .Fields(new[]
+                .From(searchRequest.From).Size(searchRequest.Size)
+                // Setup the QueryString:
+                .Query(q => q
+                    .QueryString(new QueryStringQuery()
                     {
-                        Infer.Field<CodeSearchDocument>(d => d.Content),
-                        Infer.Field<CodeSearchDocument>(d => d.Filename)
-                    }))
+                        AllowLeadingWildcard = true,
+                        Query = searchRequest.Query,
+                    })
                 )
                 // Setup the Highlighters:
                 .Highlight(highlight => highlight
@@ -230,10 +227,7 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                     )
                 )
                 // Setup the Search Order:
-                .Sort(new[]
-                {
-                    SortOptions.Field(Infer.Field<CodeSearchDocument>(x => x.LatestCommitDate), new FieldSort { Order = SortOrder.Desc })
-                }), cancellationToken);
+                .Sort(sortOptionsArray), cancellationToken);
         }
     }
 }

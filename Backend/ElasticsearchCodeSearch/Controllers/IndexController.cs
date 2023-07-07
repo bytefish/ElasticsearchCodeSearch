@@ -1,12 +1,11 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Elastic.Clients.Elasticsearch;
-using ElasticsearchCodeSearch.Dto;
+using ElasticsearchCodeSearch.Converters;
 using ElasticsearchCodeSearch.Elasticsearch;
-using ElasticsearchCodeSearch.Elasticsearch.Model;
 using ElasticsearchCodeSearch.Logging;
+using ElasticsearchCodeSearch.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.Text;
 
 namespace ElasticsearchCodeSearch.Controllers
 {
@@ -23,13 +22,13 @@ namespace ElasticsearchCodeSearch.Controllers
 
         [HttpPost]
         [Route("/api/index")]
-        public async Task<IActionResult> IndexDocument([FromBody] CodeSearchDocumentDto[] codeSearchDocuments, CancellationToken cancellationToken)
+        public async Task<IActionResult> IndexDocument([FromBody] List<CodeSearchDocumentDto> codeSearchDocuments, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
             try
             {
-                var documents = ConvertFromDto(codeSearchDocuments);
+                var documents = CodeSearchDocumentConverter.Convert(codeSearchDocuments);
 
                 var bulkIndexResponse = await _client.BulkIndexAsync(documents, cancellationToken);
 
@@ -51,40 +50,6 @@ namespace ElasticsearchCodeSearch.Controllers
             }
         }
 
-        private CodeSearchDocument[] ConvertFromDto(CodeSearchDocumentDto[] source)
-        {
-            _logger.TraceMethodEntry();
 
-            return source
-                .Select(x => ConvertFromDto(x))
-                .ToArray();
-        }
-
-        private CodeSearchDocument ConvertFromDto(CodeSearchDocumentDto source)
-        {
-            _logger.TraceMethodEntry();
-
-            return new CodeSearchDocument
-            {
-                Id = source.Id,
-                Owner = source.Owner,
-                Repository = source.Repository,
-                Filename = source.Filename,
-                Content = GetContentFromBase64(source.Content),
-                LatestCommitDate = source.LatestCommitDate,
-            };
-        }
-
-        private string GetContentFromBase64(string source)
-        {
-            if (string.IsNullOrWhiteSpace(source))
-            {
-                return source;
-            }
-
-            var contentBytes = Convert.FromBase64String(source);
-
-            return Encoding.UTF8.GetString(contentBytes);
-        }
     }
 }

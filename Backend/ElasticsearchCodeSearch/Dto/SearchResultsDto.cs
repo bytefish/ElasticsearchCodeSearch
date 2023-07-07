@@ -15,7 +15,10 @@ namespace ElasticsearchCodeSearch.Dto
         [JsonPropertyName("size")]
         public required int Size { get; set; }
 
+        [JsonPropertyName("sort")]
+        public required List<SortFieldDto> Sort { get; set; } = new List<SortFieldDto>();
+
         [JsonPropertyName("results")]
-        public required IReadOnlyCollection<SearchResultDto> Results { get; set; }
+        public required List<CodeSearchResultDto> Results { get; set; }
     }
 }

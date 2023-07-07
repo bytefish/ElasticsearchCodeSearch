@@ -1,10 +1,11 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Elastic.Clients.Elasticsearch;
+using ElasticsearchCodeSearch.Converters;
 using ElasticsearchCodeSearch.Dto;
 using ElasticsearchCodeSearch.Elasticsearch;
-using ElasticsearchCodeSearch.Elasticsearch.Model;
 using ElasticsearchCodeSearch.Logging;
+using ElasticsearchCodeSearch.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ElasticsearchCodeSearch.Controllers
@@ -22,75 +23,24 @@ namespace ElasticsearchCodeSearch.Controllers
 
         [HttpPost]
         [Route("/api/search")]
-        public async Task<IActionResult> Query([FromBody] SearchRequestDto request, CancellationToken cancellationToken)
+        public async Task<IActionResult> Query([FromBody] CodeSearchRequestDto request, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
-            var searchResponse = await _elasticsearchClient.SearchAsync(request.Query, request.From, request.Size, cancellationToken);
-            var searchResult = ConvertToSearchResults(request, searchResponse);
+            var searchRequest = CodeSearchRequestConverter.Convert(request);
 
-            return Ok(searchResult);
-        }
+            var searchResponse = await _elasticsearchClient.SearchAsync(searchRequest, cancellationToken);
 
-        private SearchResultsDto ConvertToSearchResults(SearchRequestDto request, SearchResponse<CodeSearchDocument> searchResponse)
-        {
-            _logger.TraceMethodEntry();
-
-            List<SearchResultDto> results = new List<SearchResultDto>();
-
-            foreach (var hit in searchResponse.Hits)
+            var codeSearchResults = new CodeSearchResultsDto
             {
-                if (hit.Source == null)
-                {
-                    continue;
-                }
-
-                var result = new SearchResultDto
-                {
-                    Id = hit.Source.Id,
-                    Owner = hit.Source.Owner,
-                    Repository = hit.Source.Repository,
-                    Filename = hit.Source.Filename,
-                    Permalink = hit.Source.Permalink,
-                    LatestCommitDate = hit.Source.LatestCommitDate,
-                    Matches = GetMatches(hit.Highlight),
-                };
-
-                results.Add(result);
-            }
-
-            return new SearchResultsDto
-            {
-                Query = request.Query,
                 From = request.From,
                 Size = request.Size,
-                Results = results
+                Query = request.Query,
+                Sort = request.Sort,
+                Results = CodeSearchResultConverter.Convert(searchResponse)
             };
+
+            return Ok(codeSearchResults);
         }
-
-        private IReadOnlyCollection<string>? GetMatches(IReadOnlyDictionary<string, IReadOnlyCollection<string>>? highlight)
-        {
-            _logger.TraceMethodEntry();
-
-            if (highlight == null)
-            {
-                return null;
-            }
-
-            List<string> results = new List<string>();
-
-            if (highlight.TryGetValue("content", out var matchesForContent))
-            {
-                results.AddRange(matchesForContent);
-            }
-
-            if (highlight.TryGetValue("filename", out var matchesForFilename))
-            {
-                results.AddRange(matchesForFilename);
-            }
-
-            return results;
-        }
-
     }
 }

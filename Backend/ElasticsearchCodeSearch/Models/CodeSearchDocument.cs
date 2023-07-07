@@ -1,9 +1,9 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace ElasticsearchCodeSearch.Elasticsearch.Model
+namespace ElasticsearchCodeSearch.Models
 {
     /// <summary>
-    /// Sourcecode Document, which is going to be indexed.
+    /// A code document, which should be indexed and searchable by Elasticsearch. 
     /// </summary>
     public class CodeSearchDocument
     {
@@ -24,22 +24,21 @@ namespace ElasticsearchCodeSearch.Elasticsearch.Model
 
         /// <summary>
         /// The Filename of the uploaded document.
-        /// </summary>
         public required string Filename { get; set; }
 
         /// <summary>
         /// Content to Index.
         /// </summary>
-        public required string Content { get; set; }
+        public required string Content { get; set; } =string.Empty;
 
         /// <summary>
-        /// Permalink to the file.
+        /// Permalink to the indexed file.
         /// </summary>
         public required string Permalink { get; set; }
 
         /// <summary>
         /// Latest Commit Date.
         /// </summary>
-        public required DateTime LatestCommitDate { get; set; }
+        public required DateTimeOffset LatestCommitDate { get; set; }
     }
 }

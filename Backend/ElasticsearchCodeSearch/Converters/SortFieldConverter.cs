@@ -1,0 +1,25 @@
+﻿using ElasticsearchCodeSearch.Dto;
+using ElasticsearchCodeSearch.Models;
+
+namespace ElasticsearchCodeSearch.Converters
+{
+    public static class SortFieldConverter
+    {
+
+        public static List<SortField> Convert(List<SortFieldDto> source)
+        {
+            return source
+                .Select(x => Convert(x))
+                .ToList();
+        }
+        
+        public static SortField Convert(SortFieldDto source)
+        {
+            return new SortField
+            {
+                Field = source.Field,
+                Order = SortOrderEnumConverter.Convert(source.Order)
+            };
+        }
+    }
+}

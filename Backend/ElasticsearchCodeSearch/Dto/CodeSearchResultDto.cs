@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace ElasticsearchCodeSearch.Dto
 {
-    public class SearchResultDto
+    public class CodeSearchResult
     {
         [JsonPropertyName("Id")]
         public required string Id { get; set; }
@@ -25,6 +25,6 @@ namespace ElasticsearchCodeSearch.Dto
         public required IReadOnlyCollection<string>? Matches { get; set; }
 
         [JsonPropertyName("latestCommitDate")]
-        public required DateTime LatestCommitDate { get; set; }
+        public required DateTimeOffset LatestCommitDate { get; set; }
     }
 }
