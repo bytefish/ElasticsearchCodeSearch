@@ -1,7 +1,7 @@
 ﻿@page "/"
 @using ElasticsearchCodeSearch.Client.Components
 @using ElasticsearchCodeSearch.Client.Extensions;
-@using ElasticsearchCodeSearch.Dto;
+@using ElasticsearchCodeSearch.Shared.Dto;
 
 <PageTitle>Elasticsearch Code Search Experiments</PageTitle>
 
@@ -55,30 +55,18 @@
 
 
 @code {
-    SearchResultDto[] _results = new []
+    CodeSearchResultDto[] _results = new []
     {
-        new SearchResultDto
+        new CodeSearchResultDto
         {
             Id = "1",
             Owner = "microsoft",
             Repository = "myrepository",
             Filename = "Container.cs",
+            Permalink = "http://....",
             Matches = new []
             {
                 "<strong>This is a match</strong> and this is more text",
-                "<strong>This is a match</strong> and this is more text",
-                "<strong>This is a match</strong> and this is more text",
-            },
-            LatestCommitDate = new DateTime(2013, 1, 1)
-        },
-        new SearchResultDto
-        {
-            Id = "2",
-            Owner = "microsoft",
-            Repository = "other-repo",
-            Filename = "testfile.cs",
-            Matches = new []
-            {
                 "<strong>This is a match</strong> and this is more text",
                 "<strong>This is a match</strong> and this is more text",
             },

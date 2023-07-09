@@ -10,6 +10,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ElasticsearchCodeSearch", "ElasticsearchCodeSearch\ElasticsearchCodeSearch.csproj", "{84B6D091-AF93-4E62-A324-2D5C87FDB44E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ElasticsearchCodeSearch.Client", "ElasticsearchCodeSearch.Client\ElasticsearchCodeSearch.Client.csproj", "{D993EBE4-4F76-460B-A978-3FE4E318DCF0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ElasticsearchCodeSearch.Shared", "ElasticsearchCodeSearch.Shared\ElasticsearchCodeSearch.Shared.csproj", "{846DA4F6-C779-4DD8-8C15-0D14F6DED3D5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +24,14 @@ Global
 		{84B6D091-AF93-4E62-A324-2D5C87FDB44E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{84B6D091-AF93-4E62-A324-2D5C87FDB44E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{84B6D091-AF93-4E62-A324-2D5C87FDB44E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D993EBE4-4F76-460B-A978-3FE4E318DCF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D993EBE4-4F76-460B-A978-3FE4E318DCF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D993EBE4-4F76-460B-A978-3FE4E318DCF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D993EBE4-4F76-460B-A978-3FE4E318DCF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{846DA4F6-C779-4DD8-8C15-0D14F6DED3D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{846DA4F6-C779-4DD8-8C15-0D14F6DED3D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{846DA4F6-C779-4DD8-8C15-0D14F6DED3D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{846DA4F6-C779-4DD8-8C15-0D14F6DED3D5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

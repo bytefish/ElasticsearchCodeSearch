@@ -1,11 +1,11 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace ElasticsearchCodeSearch.Dto
+namespace ElasticsearchCodeSearch.Shared.Dto
 {
     /// <summary>
     /// Sort Order.
     /// </summary>
-    public enum SortOrderDto
+    public enum SortOrderEnumDto
     {
         /// <summary>
         /// Ascending.

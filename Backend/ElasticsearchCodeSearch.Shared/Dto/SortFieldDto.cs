@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace ElasticsearchCodeSearch.Dto
+namespace ElasticsearchCodeSearch.Shared.Dto
 {
     /// <summary>
     /// Sort Field.
@@ -14,6 +14,6 @@ namespace ElasticsearchCodeSearch.Dto
 
         [Required]
         [JsonPropertyName("order")]
-        public required SortOrderDto Order { get; set; } = SortOrderDto.Ascending;
+        public required SortOrderEnumDto Order { get; set; } = SortOrderEnumDto.Ascending;
     }
 }

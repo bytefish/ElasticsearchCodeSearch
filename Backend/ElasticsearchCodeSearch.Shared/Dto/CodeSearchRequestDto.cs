@@ -3,7 +3,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace ElasticsearchCodeSearch.Dto
+namespace ElasticsearchCodeSearch.Shared.Dto
 {
     /// <summary>
     /// Search Request to the API.
@@ -37,6 +37,5 @@ namespace ElasticsearchCodeSearch.Dto
         [Required]
         [JsonPropertyName("sort")]
         public required List<SortFieldDto> Sort { get; set; } = new List<SortFieldDto>();
-
     }
 }

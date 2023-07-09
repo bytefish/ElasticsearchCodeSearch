@@ -1,14 +1,14 @@
 ﻿using Elastic.Clients.Elasticsearch;
-using ElasticsearchCodeSearch.Dto;
 using ElasticsearchCodeSearch.Models;
+using ElasticsearchCodeSearch.Shared.Dto;
 
 namespace ElasticsearchCodeSearch.Converters
 {
     public static class CodeSearchResultConverter
     {
-        public static List<CodeSearchResult> Convert(SearchResponse<CodeSearchDocument> source)
+        public static List<CodeSearchResultDto> Convert(SearchResponse<CodeSearchDocument> source)
         {
-            List<CodeSearchResult> results = new List<CodeSearchResult>();
+            List<CodeSearchResultDto> results = new List<CodeSearchResultDto>();
 
             foreach (var hit in source.Hits)
             {
@@ -17,7 +17,7 @@ namespace ElasticsearchCodeSearch.Converters
                     continue;
                 }
 
-                var result = new CodeSearchResult
+                var result = new CodeSearchResultDto
                 {
                     Id = hit.Source.Id,
                     Owner = hit.Source.Owner,

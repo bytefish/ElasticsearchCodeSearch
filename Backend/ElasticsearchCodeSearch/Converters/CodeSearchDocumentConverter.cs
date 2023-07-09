@@ -1,4 +1,5 @@
 ﻿using ElasticsearchCodeSearch.Models;
+using ElasticsearchCodeSearch.Shared.Dto;
 
 namespace ElasticsearchCodeSearch.Converters
 {

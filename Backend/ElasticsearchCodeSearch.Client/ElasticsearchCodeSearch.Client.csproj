@@ -92,4 +92,8 @@
 		<PackageReference Include="Microsoft.Fast.Components.FluentUI" Version="2.3.6" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\ElasticsearchCodeSearch.Shared\ElasticsearchCodeSearch.Shared.csproj" />
+	</ItemGroup>
+
 </Project>

@@ -1,10 +1,9 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace ElasticsearchCodeSearch.Dto
+namespace ElasticsearchCodeSearch.Shared.Dto
 {
     /// <summary>
     /// A code document, which should be indexed and searchable by Elasticsearch. 
@@ -39,17 +38,24 @@ namespace ElasticsearchCodeSearch.Dto
         public required string Filename { get; set; }
 
         /// <summary>
-        /// The Data of the Document.
+        /// Content to Index.
         /// </summary>
         [Required]
         [JsonPropertyName("content")]
-        public required string? Content { get; set; } = null;
+        public required string Content { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Permalink to the indexed file.
+        /// </summary>
+        [Required]
+        [JsonPropertyName("permalink")]
+        public required string Permalink { get; set; }
 
         /// <summary>
         /// Latest Commit Date.
         /// </summary>
         [Required]
         [JsonPropertyName("latestCommitDate")]
-        public required DateTime LatestCommitDate { get; set; }
+        public required DateTimeOffset LatestCommitDate { get; set; }
     }
 }
