@@ -33,7 +33,7 @@ namespace ElasticsearchCodeSearch.Shared.Client
 
             var stringContent = JsonSerializer.Serialize(codeSearchRequestDto);
 
-            var httpMessageBuilder = new HttpRequestMessageBuilder($"{_baseUrl}/", HttpMethod.Post)
+            var httpMessageBuilder = new HttpRequestMessageBuilder($"{_baseUrl}/search-documents", HttpMethod.Post)
                 .SetStringContent(stringContent, Encoding.UTF8, MediaTypeNames.ApplicationJson);
 
             var result = await SendAsync<CodeSearchResultsDto>(httpMessageBuilder, default, cancellationToken);

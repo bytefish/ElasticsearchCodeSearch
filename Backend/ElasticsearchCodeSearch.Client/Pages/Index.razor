@@ -1,6 +1,9 @@
 ﻿@page "/"
+@inject IElasticsearchCodeSearchClient CodeSearchClient
+
 @using ElasticsearchCodeSearch.Client.Components
 @using ElasticsearchCodeSearch.Client.Extensions;
+@using ElasticsearchCodeSearch.Shared.Client;
 @using ElasticsearchCodeSearch.Shared.Dto;
 
 <PageTitle>Elasticsearch Code Search Experiments</PageTitle>
@@ -11,69 +14,101 @@
             <h1>Elasticsearch Code Search</h1>
         </div>
         <div class="search-box">
-            <FluentSearch @bind-Value="query" Class="w-100" />
+            <FluentSearch @bind-Value="QueryString" Class="w-100" />
             <FluentButton>Search</FluentButton>
         </div>
     </div>
     <div class="search-results">
-        <FluentSearchResult></FluentSearchResult>
-        <FluentSearchResult></FluentSearchResult>
-        <FluentSearchResult></FluentSearchResult>
-        <FluentSearchResult></FluentSearchResult>
-        <FluentSearchResult></FluentSearchResult>
-        <FluentSearchResult></FluentSearchResult>
-        <FluentSearchResult></FluentSearchResult>
-        <FluentSearchResult></FluentSearchResult>
-        <FluentSearchResult></FluentSearchResult>
-        <FluentSearchResult></FluentSearchResult>
-        <FluentSearchResult></FluentSearchResult>
-        <FluentSearchResult></FluentSearchResult>
-
-
-@*        @foreach(var searchResult in _results)
+        @foreach(var searchResult in codeSearchResults)
         {
-            <FluentCard style="max-width:600px; max-height: 100px;">
-                <p>
-                    @searchResult.Filename
-                </p>
-                @foreach (var match in searchResult.Matches)
-                {
-                    <p>
-                        @match.AsMarkupString();
-                    </p>
-                }
-            </FluentCard>
-
-        }*@
-
+            <FluentSearchResult 
+                Owner="@searchResult.Owner"
+                Repository="@searchResult.Repository"
+                Filename="@searchResult.Filename"
+                Permalink="@searchResult.Permalink"
+                Matches="@searchResult.Matches"></FluentSearchResult>
+        }
     </div>
+    
     <div class="search-footer">
-        <p>Footer Text</p>
+        <p>Elasticsearch Code Search</p>
     </div>
 
 </div>
 
 
 @code {
-    CodeSearchResultDto[] _results = new []
+
+    /// <summary>
+    /// Pagination.
+    /// </summary>
+    PaginationState pagination = new PaginationState { ItemsPerPage = 25 };
+
+    /// <summary>
+    /// Number of search results to return .
+    /// </summary>
+    static List<Option<string>> sizeOptions = new()
     {
-        new CodeSearchResultDto
-        {
-            Id = "1",
-            Owner = "microsoft",
-            Repository = "myrepository",
-            Filename = "Container.cs",
-            Permalink = "http://....",
-            Matches = new []
-            {
-                "<strong>This is a match</strong> and this is more text",
-                "<strong>This is a match</strong> and this is more text",
-                "<strong>This is a match</strong> and this is more text",
-            },
-            LatestCommitDate = new DateTime(2013, 1, 1)
-        }
+        { new Option<string> { Value = "10", Text = "10" } },
+        { new Option<string> { Value = "25", Text = "25", Selected = true } },
+        { new Option<string> { Value = "50", Text = "50" } },
+        { new Option<string> { Value = "100", Text = "100" } },
     };
 
-    string? query = string.Empty;
+    /// <summary>
+    /// Sort Options for all available fields.
+    /// </summary>
+    private static List<Option<string>> SortOptions = new()
+    {
+        { new Option<string> { Value = "owner_asc", Text = "Owner (Ascending)" } },
+        { new Option<string> { Value = "owner_desc", Text = "Owner (Descending)" } },
+        { new Option<string> { Value = "repository_asc", Text = "Repository (Ascending)" } },
+        { new Option<string> { Value = "repository_desc", Text = "Repository (Descending)" } },
+        { new Option<string> { Value = "filename_asc", Text = "Filename (Ascending)" } },
+        { new Option<string> { Value = "filename_desc", Text = "Filename (Descending)" } },
+        { new Option<string> { Value = "latestCommitDate_asc", Text = "Recently Updated (Ascending)" } },
+        { new Option<string> { Value = "latestCommitDate_desc", Text = "Recently Updated (Descending)", Selected = true } },
+    };
+
+    /// <summary>
+    /// Loading Indicator.
+    /// </summary>
+    private bool IsLoading { get; set; }
+
+    /// <summary>
+    /// Total Number of Documents returned by a query.
+    /// </summary>
+    private int TotalNumberOfDocuments { get; set; } = 0;
+
+    /// <summary>
+    /// Search Results for a given query.
+    /// </summary>
+    private List<CodeSearchResultDto> codeSearchResults { get; set; } = new List<CodeSearchResultDto>();
+
+    /// <summary>
+    /// The current Query String to send to the Server (Elasticsearch QueryString format).
+    /// </summary>
+    private string? QueryString { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        
+    }
+
+    private Task EnterSubmit(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            return EnterSubmitInternal(e);
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task SearchDocuments()
+    {
+        IsLoading = true;
+        Searched = true;
+        return SearchDocumentsInternal();
+    }
 
 }

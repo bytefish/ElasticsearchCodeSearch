@@ -9,8 +9,8 @@ namespace ElasticsearchCodeSearch.Converters
         {
             return source switch
             {
-                SortOrderEnumDto.Ascending => SortOrderEnum.Ascending,
-                SortOrderEnumDto.Descending => SortOrderEnum.Descending,
+                SortOrderEnumDto.Asc => SortOrderEnum.Ascending,
+                SortOrderEnumDto.Desc => SortOrderEnum.Descending,
                 _ => throw new ArgumentException($"Cannot convert from '{source}'"),
             };
         }

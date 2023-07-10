@@ -14,6 +14,6 @@ namespace ElasticsearchCodeSearch.Shared.Dto
 
         [Required]
         [JsonPropertyName("order")]
-        public required SortOrderEnumDto Order { get; set; } = SortOrderEnumDto.Ascending;
+        public SortOrderEnumDto Order { get; set; } = SortOrderEnumDto.Asc;
     }
 }

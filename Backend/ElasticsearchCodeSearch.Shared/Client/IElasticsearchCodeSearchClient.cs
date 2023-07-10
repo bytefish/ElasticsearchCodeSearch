@@ -11,11 +11,11 @@ namespace ElasticsearchCodeSearch.Shared.Client
     public interface IElasticsearchCodeSearchClient : IDisposable
     {
         /// <summary>
-        /// Searches for Documents.
+        /// Searches for Code in the Elasticsearch Cluster.
         /// </summary>
-        /// <param name="codeSearchRequestDto">SearchRequest to send</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <param name="codeSearchRequestDto">Query to send to Elasticsearch</param>
+        /// <param name="cancellationToken">Cancellation Token to cancel asynchronous processing</param>
+        /// <returns>Code Search Results with Hits and Metadata</returns>
         Task<CodeSearchResultsDto> SearchDocuments(CodeSearchRequestDto codeSearchRequestDto, CancellationToken cancellationToken);
     }
 }

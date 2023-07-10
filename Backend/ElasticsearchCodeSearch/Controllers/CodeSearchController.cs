@@ -9,7 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ElasticsearchCodeSearch.Controllers
 {
-    public class CodeSearchController : Controller
+    [ApiController]
+    public class CodeSearchController : ControllerBase
     {
         private readonly ILogger<CodeSearchController> _logger;
         private readonly ElasticCodeSearchClient _elasticsearchClient;
@@ -21,29 +22,57 @@ namespace ElasticsearchCodeSearch.Controllers
         }
 
         [HttpPost]
-        [Route("/api/search")]
-        public async Task<IActionResult> QueryDocuments([FromBody] CodeSearchRequestDto request, CancellationToken cancellationToken)
+        [Route("/search-documents")]
+        public async Task<IActionResult> SearchDocuments([FromBody] CodeSearchRequestDto request, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
-            var searchRequest = CodeSearchRequestConverter.Convert(request);
-
-            var searchResponse = await _elasticsearchClient.SearchAsync(searchRequest, cancellationToken);
-
-            var codeSearchResults = new CodeSearchResultsDto
+            try
             {
-                From = request.From,
-                Size = request.Size,
-                Query = request.Query,
-                Sort = request.Sort,
-                Results = CodeSearchResultConverter.Convert(searchResponse)
-            };
+                // Convert to Elasticsearch DTO.
+                var searchRequest = CodeSearchRequestConverter.Convert(request);
 
-            return Ok(codeSearchResults);
+                // Query the Elasticsearch API.
+                var searchResponse = await _elasticsearchClient.SearchAsync(searchRequest, cancellationToken);
+
+                // If it's not a valid response from Elasticsearch, then exit and return a BadRequest.
+                if (!searchResponse.IsValidResponse)
+                {
+                    if (_logger.IsErrorEnabled())
+                    {
+                        searchResponse.TryGetOriginalException(out var originalException);
+
+                        _logger.LogError(originalException, "Elasticsearch failed with an unhandeled Exception");
+                    }
+
+                    return BadRequest("Invalid Search Response from Elasticsearch");
+                }
+
+                var codeSearchResults = new CodeSearchResultsDto
+                {
+                    Query = request.Query,
+                    From = request.From,
+                    Size = request.Size,
+                    Sort = request.Sort,
+                    Total = (int) searchResponse.Total,
+                    Results = CodeSearchResultConverter.Convert(searchResponse)
+                };
+
+                return Ok(codeSearchResults);
+            } 
+            catch(Exception e)
+            {
+                if(_logger.IsErrorEnabled())
+                {
+                    _logger.LogError(e, "An unhandeled exception occured");
+                }
+
+                return StatusCode(500, "An internal Server Error occured");
+            }
         }
 
         [HttpPost]
-        [Route("/api/index")]
+        [Route("/index-documents")]
         public async Task<IActionResult> IndexDocuments([FromBody] List<CodeSearchDocumentDto> codeSearchDocuments, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();

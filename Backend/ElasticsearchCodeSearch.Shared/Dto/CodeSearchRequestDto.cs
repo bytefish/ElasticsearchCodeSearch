@@ -22,20 +22,20 @@ namespace ElasticsearchCodeSearch.Shared.Dto
         /// </summary>
         [Required]
         [JsonPropertyName("from")]
-        public required int From { get; set; } = 0;
+        public int From { get; set; } = 0;
 
         /// <summary>
         /// Maximum number of hits to return, defaulting to 10.
         /// </summary>
         [Required]
         [JsonPropertyName("size")]
-        public required int Size { get; set; } = 10;
+        public int Size { get; set; } = 10;
 
         /// <summary>
         /// Sort Fields.
         /// </summary>
         [Required]
         [JsonPropertyName("sort")]
-        public required List<SortFieldDto> Sort { get; set; } = new List<SortFieldDto>();
+        public List<SortFieldDto> Sort { get; set; } = new List<SortFieldDto>();
     }
 }

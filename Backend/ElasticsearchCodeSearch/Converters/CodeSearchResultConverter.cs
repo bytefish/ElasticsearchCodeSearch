@@ -9,7 +9,7 @@ namespace ElasticsearchCodeSearch.Converters
         public static List<CodeSearchResultDto> Convert(SearchResponse<CodeSearchDocument> source)
         {
             List<CodeSearchResultDto> results = new List<CodeSearchResultDto>();
-
+            
             foreach (var hit in source.Hits)
             {
                 if (hit.Source == null)
@@ -46,11 +46,6 @@ namespace ElasticsearchCodeSearch.Converters
             if (highlight.TryGetValue("content", out var matchesForContent)) // TODO Can we replace the "content"?
             {
                 results.AddRange(matchesForContent);
-            }
-
-            if (highlight.TryGetValue("filename", out var matchesForFilename)) // TODO Can we replace the "filename"?
-            {
-                results.AddRange(matchesForFilename);
             }
 
             return results;

@@ -3,6 +3,7 @@
 using ElasticsearchCodeSearch.Elasticsearch;
 using ElasticsearchCodeSearch.Hosting;
 using ElasticsearchCodeSearch.Options;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +20,11 @@ builder.Services.AddSingleton<ElasticCodeSearchClient>();
 // Add Hosted Services
 builder.Services.AddHostedService<ElasticsearchInitializerHostedService>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+}); 
+
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();

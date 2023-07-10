@@ -34,7 +34,7 @@ namespace ElasticsearchCodeSearch.Models
         /// <summary>
         /// Permalink to the indexed file.
         /// </summary>
-        public required string Permalink { get; set; }
+        public string Permalink { get; set; } = string.Empty;
 
         /// <summary>
         /// Latest Commit Date.

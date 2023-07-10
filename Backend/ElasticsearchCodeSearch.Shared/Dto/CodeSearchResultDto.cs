@@ -22,7 +22,7 @@ namespace ElasticsearchCodeSearch.Shared.Dto
         public required string Permalink { get; set; }
 
         [JsonPropertyName("matches")]
-        public required IReadOnlyCollection<string>? Matches { get; set; }
+        public required List<string>? Matches { get; set; }
 
         [JsonPropertyName("latestCommitDate")]
         public required DateTimeOffset LatestCommitDate { get; set; }

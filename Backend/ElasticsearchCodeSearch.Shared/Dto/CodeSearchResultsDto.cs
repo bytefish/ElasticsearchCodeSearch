@@ -19,14 +19,21 @@ namespace ElasticsearchCodeSearch.Shared.Dto
         /// </summary>
         [Required]
         [JsonPropertyName("from")]
-        public required int From { get; set; } = 0;
+        public required int From { get; set; }
 
         /// <summary>
         /// Maximum number of hits to return, defaulting to 10.
         /// </summary>
         [Required]
         [JsonPropertyName("size")]
-        public required int Size { get; set; } = 10;
+        public required int Size { get; set; }
+
+        /// <summary>
+        /// Total Number of Matches.
+        /// </summary>
+        [Required]
+        [JsonPropertyName("total")]
+        public required int Total { get; set; }
 
         /// <summary>
         /// Sort Fields.

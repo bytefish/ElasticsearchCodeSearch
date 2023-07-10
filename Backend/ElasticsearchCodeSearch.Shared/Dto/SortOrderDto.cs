@@ -10,13 +10,11 @@ namespace ElasticsearchCodeSearch.Shared.Dto
         /// <summary>
         /// Ascending.
         /// </summary>
-        [JsonPropertyName("asc")]
-        Ascending = 1,
+        Asc = 1,
 
         /// <summary>
         /// Descending.
         /// </summary>
-        [JsonPropertyName("desc")]
-        Descending = 2
+        Desc = 2
     }
 }
