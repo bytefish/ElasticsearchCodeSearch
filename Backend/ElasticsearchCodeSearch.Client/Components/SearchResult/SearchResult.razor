@@ -2,10 +2,13 @@
 
 <div class="code-box">
     <div class="code-box-title">
-        Test
+        <a href="@Permalink">@Filename</a>
     </div>
     <div class="code-box-content">
-        Body
+        @foreach(var match in Matches)
+        {
+            match.AsMarkupString();
+        }
     </div>
 </div>
 

@@ -5,6 +5,9 @@ using System.Text.Json.Serialization;
 
 namespace ElasticsearchCodeSearch.Shared.Dto
 {
+    /// <summary>
+    /// Holds the Paginated Code Search Results.
+    /// </summary>
     public class CodeSearchResultsDto
     {
         /// <summary>
