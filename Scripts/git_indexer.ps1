@@ -258,10 +258,13 @@ $repositories | ForEach-Object -Parallel {
                 # Gets the SHA1 Hash of the Git File. We need this to reconstruct the URL to the GitHub 
                 # file, so we have a unique identitfier for the file and we are able to generate a link 
                 # in the Frontend.
-                $sha1Hash = git --git-dir "$repositoryDirectory\.git" ls-files -s  $relativeFilepath 2>&1
+                $sha1Hash = git --git-dir "$repositoryDirectory\.git" ls-files -s $relativeFilepath 2>&1
                     | ForEach-Object {$_ -Split " "} # Split at Whitespaces
                     | Select-Object -Skip 1 -First 1
                 
+                # We need the Commit Hash for the Permalink and 
+                $commitHash = git --git-dir "$repositoryDirectory\.git" log --pretty=format:"%H" -n 1 -- $relativeFilepath 2>&1
+
                 # Get the latest Commit Date from the File, so we 
                 # can later sort by commit date, which is the only 
                 # reason for building this thing...
@@ -270,7 +273,7 @@ $repositories | ForEach-Object -Parallel {
                 # We are generating a Permalink to the file, which is based on the owner, repository, SHA1 Hash 
                 # of the commit to the file and the relative filename inside the repo. This is a good way to link 
                 # to it from the search page, without needing to serve it by ourselves.
-                $permalink = "https://github.com/$repositoryOwner/$repositoryName/blob/$sha1Hash/$relativeFilepath"
+                $permalink = "https://github.com/$repositoryOwner/$repositoryName/blob/$commitHash/$relativeFilepath"
                 
                 # The filename with an extension for the given path. 
                 $filename = [System.IO.Path]::GetFileName($relativeFilepath)
@@ -287,6 +290,7 @@ $repositories | ForEach-Object -Parallel {
                     repository = $repositoryName
                     path = $relativeFilepath
                     filename = $filename
+                    commitHash = $commitHash
                     content = ConvertTo-Json $content 
                     permalink = $permalink
                     latestCommitDate = $latestCommitDate

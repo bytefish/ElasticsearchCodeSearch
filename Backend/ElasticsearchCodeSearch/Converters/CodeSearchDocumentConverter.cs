@@ -21,6 +21,7 @@ namespace ElasticsearchCodeSearch.Converters
                 Repository = source.Repository,
                 Filename = source.Filename,
                 Path = source.Path,
+                CommitHash = source.CommitHash,
                 Content = source.Content,
                 Permalink = source.Permalink,
                 LatestCommitDate = source.LatestCommitDate,

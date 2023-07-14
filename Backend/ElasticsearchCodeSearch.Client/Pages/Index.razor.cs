@@ -37,8 +37,6 @@ namespace ElasticsearchCodeSearch.Client.Pages
             { new Option<string> { Value = "owner_desc", Text = "Owner (Descending)" } },
             { new Option<string> { Value = "repository_asc", Text = "Repository (Ascending)" } },
             { new Option<string> { Value = "repository_desc", Text = "Repository (Descending)" } },
-            { new Option<string> { Value = "filename_asc", Text = "Filename (Ascending)" } },
-            { new Option<string> { Value = "filename_desc", Text = "Filename (Descending)" } },
             { new Option<string> { Value = "latestCommitDate_asc", Text = "Recently Updated (Ascending)" } },
             { new Option<string> { Value = "latestCommitDate_desc", Text = "Recently Updated (Descending)", Selected = true } },
         };
@@ -150,10 +148,6 @@ namespace ElasticsearchCodeSearch.Client.Pages
                     return new SortFieldDto() { Field = "repository", Order = SortOrderEnumDto.Asc };
                 case "repository_desc":
                     return new SortFieldDto() { Field = "repository", Order = SortOrderEnumDto.Desc };
-                case "filename_asc":
-                    return new SortFieldDto() { Field = "filename.tree", Order = SortOrderEnumDto.Asc };
-                case "filename_desc":
-                    return new SortFieldDto() { Field = "filename.tree", Order = SortOrderEnumDto.Desc };
                 case "latestCommitDate_asc":
                     return new SortFieldDto() { Field = "latestCommitDate", Order = SortOrderEnumDto.Asc };
                 case "latestCommitDate_desc":

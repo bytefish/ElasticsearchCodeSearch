@@ -30,6 +30,11 @@ namespace ElasticsearchCodeSearch.Models
         /// The Filename of the uploaded document.
         public required string Filename { get; set; }
 
+
+        /// <summary>
+        /// The Commit Hash for the indexed document.
+        public required string CommitHash { get; set; }
+
         /// <summary>
         /// Content to Index.
         /// </summary>

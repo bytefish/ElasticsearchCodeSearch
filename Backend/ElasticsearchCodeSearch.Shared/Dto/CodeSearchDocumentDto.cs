@@ -43,6 +43,11 @@ namespace ElasticsearchCodeSearch.Shared.Dto
         [JsonPropertyName("path")]
         public required string Path { get; set; }
 
+        /// The Filename of the uploaded document.
+        [Required]
+        [JsonPropertyName("commitHash")]
+        public required string CommitHash { get; set; }
+
         /// <summary>
         /// Content to Index.
         /// </summary>

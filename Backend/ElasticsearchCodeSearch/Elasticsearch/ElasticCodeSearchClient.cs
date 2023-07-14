@@ -149,6 +149,10 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                                     .Text("reverse", tree => tree.Analyzer("whitespace_reverse"))
                                 )
                              )
+                            .Keyword(properties => properties.CommitHash, keyword => keyword
+                                .IndexOptions(IndexOptions.Docs)
+                                .Normalizer("sha_normalizer")
+                             )
                             .Text(properties => properties.Content, text => text
                                 .IndexOptions(IndexOptions.Positions)
                                 .Analyzer("code_analyzer")
