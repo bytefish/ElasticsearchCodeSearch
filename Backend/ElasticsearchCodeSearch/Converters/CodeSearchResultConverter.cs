@@ -23,6 +23,7 @@ namespace ElasticsearchCodeSearch.Converters
                     Owner = hit.Source.Owner,
                     Repository = hit.Source.Repository,
                     Filename = hit.Source.Filename,
+                    Path = hit.Source.Path,
                     Permalink = hit.Source.Permalink,
                     LatestCommitDate = hit.Source.LatestCommitDate,
                     Matches = GetMatches(hit.Highlight),

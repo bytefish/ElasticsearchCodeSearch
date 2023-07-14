@@ -2,7 +2,7 @@
 
 <div class="code-box">
     <div class="code-box-title">
-        <a href="@Permalink">@Filename</a>
+        <strong>@Owner/@Repository</strong> - <a href="@Permalink">@Path</a>
     </div>
     <div class="code-box-content">
         @for (int matchIdx = 0; matchIdx < Matches.Count; matchIdx++)
@@ -18,6 +18,12 @@
 </div>
 
 @code {
+
+    /// <summary>
+    /// Filename.
+    /// </summary>
+    [Parameter]
+    public required string Path { get; set; }
 
     /// <summary>
     /// Filename.

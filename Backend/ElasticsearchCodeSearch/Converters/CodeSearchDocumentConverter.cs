@@ -20,6 +20,7 @@ namespace ElasticsearchCodeSearch.Converters
                 Owner = source.Owner,
                 Repository = source.Repository,
                 Filename = source.Filename,
+                Path = source.Path,
                 Content = source.Content,
                 Permalink = source.Permalink,
                 LatestCommitDate = source.LatestCommitDate,

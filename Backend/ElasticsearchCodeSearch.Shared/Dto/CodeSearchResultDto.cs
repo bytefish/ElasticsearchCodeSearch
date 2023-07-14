@@ -28,6 +28,12 @@ namespace ElasticsearchCodeSearch.Shared.Dto
         public required string Repository { get; set; }
 
         /// <summary>
+        /// Path.
+        /// </summary>
+        [JsonPropertyName("path")]
+        public required string Path { get; set; }
+
+        /// <summary>
         /// Filename.
         /// </summary>
         [JsonPropertyName("filename")]

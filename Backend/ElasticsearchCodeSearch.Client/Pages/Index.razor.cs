@@ -151,9 +151,9 @@ namespace ElasticsearchCodeSearch.Client.Pages
                 case "repository_desc":
                     return new SortFieldDto() { Field = "repository", Order = SortOrderEnumDto.Desc };
                 case "filename_asc":
-                    return new SortFieldDto() { Field = "filename", Order = SortOrderEnumDto.Asc };
+                    return new SortFieldDto() { Field = "filename.tree", Order = SortOrderEnumDto.Asc };
                 case "filename_desc":
-                    return new SortFieldDto() { Field = "filename", Order = SortOrderEnumDto.Desc };
+                    return new SortFieldDto() { Field = "filename.tree", Order = SortOrderEnumDto.Desc };
                 case "latestCommitDate_asc":
                     return new SortFieldDto() { Field = "latestCommitDate", Order = SortOrderEnumDto.Asc };
                 case "latestCommitDate_desc":

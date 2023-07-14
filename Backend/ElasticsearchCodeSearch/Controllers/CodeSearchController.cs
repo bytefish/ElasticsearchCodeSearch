@@ -6,6 +6,7 @@ using ElasticsearchCodeSearch.Elasticsearch;
 using ElasticsearchCodeSearch.Logging;
 using ElasticsearchCodeSearch.Shared.Dto;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace ElasticsearchCodeSearch.Controllers
 {
@@ -29,13 +30,10 @@ namespace ElasticsearchCodeSearch.Controllers
 
             try
             {
-                // Convert to Elasticsearch DTO.
                 var searchRequest = CodeSearchRequestConverter.Convert(request);
 
-                // Query the Elasticsearch API.
                 var searchResponse = await _elasticsearchClient.SearchAsync(searchRequest, cancellationToken);
 
-                // If it's not a valid response from Elasticsearch, then exit and return a BadRequest.
                 if (!searchResponse.IsValidResponse)
                 {
                     if (_logger.IsErrorEnabled())
@@ -85,7 +83,14 @@ namespace ElasticsearchCodeSearch.Controllers
 
                 if (!bulkIndexResponse.IsSuccess())
                 {
-                    return BadRequest($"ElasticSearch Indexing failed with Errors");
+                    if(_logger.IsErrorEnabled())
+                    {
+                        bulkIndexResponse.TryGetOriginalException(out var originalException);
+
+                        _logger.LogError(originalException, "Indexing failed due to an invalid response from Elasticsearch");
+                    }
+
+                    return BadRequest($"ElasticSearch indexing failed with Errors");
                 }
 
                 return Ok();

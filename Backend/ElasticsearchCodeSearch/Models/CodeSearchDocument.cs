@@ -23,6 +23,10 @@ namespace ElasticsearchCodeSearch.Models
         public required string Repository { get; set; }
 
         /// <summary>
+        /// The Path of the uploaded document.
+        public required string Path { get; set; }
+
+        /// <summary>
         /// The Filename of the uploaded document.
         public required string Filename { get; set; }
 

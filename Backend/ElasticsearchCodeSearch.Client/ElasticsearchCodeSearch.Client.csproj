@@ -89,7 +89,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Fast.Components.FluentUI" Version="2.3.6" />
+		<PackageReference Include="Microsoft.Fast.Components.FluentUI" Version="2.4.1" />
 	</ItemGroup>
 
 	<ItemGroup>

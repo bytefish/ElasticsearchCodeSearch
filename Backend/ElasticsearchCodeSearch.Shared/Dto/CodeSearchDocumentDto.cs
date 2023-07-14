@@ -38,6 +38,12 @@ namespace ElasticsearchCodeSearch.Shared.Dto
         public required string Filename { get; set; }
 
         /// <summary>
+        /// The Filename of the uploaded document.
+        [Required]
+        [JsonPropertyName("path")]
+        public required string Path { get; set; }
+
+        /// <summary>
         /// Content to Index.
         /// </summary>
         [Required]

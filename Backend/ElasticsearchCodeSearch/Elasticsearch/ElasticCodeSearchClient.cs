@@ -90,6 +90,14 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                                     "stemmer"
                                 })
                              )
+                            .Custom("whitespace_reverse", custom => custom
+                                .Tokenizer("whitespace").Filter(new[]
+                                {
+                                    "lowercase",
+                                    "asciifolding",
+                                    "reverse"
+                                })
+                            )
                             .Custom("code_analyzer", custom => custom
                                 .Tokenizer("whitespace").Filter(new[]
                                 {
@@ -128,12 +136,19 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                              )
                             .Keyword(properties => properties.Owner)
                             .Keyword(properties => properties.Repository)
-                            .Text(properties => properties.Filename, text => text
+                            .Text(properties => properties.Path, text => text
                                 .Fields(fields => fields
                                     .Text("tree", tree => tree.Analyzer("custom_path_tree"))
                                     .Text("tree_reversed", tree_reversed => tree_reversed.Analyzer("custom_path_tree_reversed"))
                                 )
                             )
+                            .Text(properties => properties.Filename, text => text
+                                .Analyzer("code_analyzer")
+                                .Store(true)
+                                .Fields(fields => fields
+                                    .Text("reverse", tree => tree.Analyzer("whitespace_reverse"))
+                                )
+                             )
                             .Text(properties => properties.Content, text => text
                                 .IndexOptions(IndexOptions.Positions)
                                 .Analyzer("code_analyzer")
@@ -220,7 +235,7 @@ namespace ElasticsearchCodeSearch.Elasticsearch
 
             // Convert to Elasticsearch Sort Fields
             var sortOptionsArray = searchRequest.Sort
-                .Select(x => SortOptions.Field(new Field(x.Field), new FieldSort { Order = SortOrder.Desc }))
+                .Select(sortField => ConvertToSortOptions(sortField))
                 .ToArray();
             
             // Build the Search Query:
@@ -262,6 +277,13 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                 )
                 // Setup the Search Order:
                 .Sort(sortOptionsArray), cancellationToken);
+        }
+
+        private SortOptions ConvertToSortOptions(SortField sortField)
+        {
+            var sortOrder = sortField.Order == SortOrderEnum.Ascending ? SortOrder.Asc : SortOrder.Desc;
+
+            return SortOptions.Field(new Field(sortField.Field), new FieldSort { Order = sortOrder });
         }
     }
 }
