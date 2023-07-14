@@ -134,15 +134,18 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                                     .Text("tree_reversed", tree_reversed => tree_reversed.Analyzer("custom_path_tree_reversed"))
                                 )
                             )
-                            .Text(properties => properties.Content, x => x
+                            .Text(properties => properties.Content, text => text
                                 .IndexOptions(IndexOptions.Positions)
                                 .Analyzer("code_analyzer")
                                 .TermVector(TermVectorOption.WithPositionsOffsetsPayloads)
                                 .Store(true))
-                            .Text(properties => properties.Permalink)
+                            .Keyword(properties => properties.Permalink)
                             .Date(properties => properties.LatestCommitDate))), cancellationToken);
 
-            _logger.LogDebug("CreateIndexResponse DebugInformation: {DebugInformation}", createIndexResponse.DebugInformation);
+            if (_logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("CreateIndexResponse DebugInformation: {DebugInformation}", createIndexResponse.DebugInformation);
+            }
 
             return createIndexResponse;
         }
@@ -242,8 +245,8 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                             Fragmenter = HighlighterFragmenter.Span,
                             PreTags = new[] { "<strong>" },
                             PostTags = new[] { "</strong>" },
-                            FragmentSize = 150,
-                            NoMatchSize = 150,
+                            FragmentSize = 300,
+                            NoMatchSize = 300,
                             NumberOfFragments = 5,
                         })
                         .Add(Infer.Field<CodeSearchDocument>(f => f.Filename), new HighlightField
@@ -251,10 +254,9 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                             Fragmenter = HighlighterFragmenter.Span,
                             PreTags = new[] { "<strong>" },
                             PostTags = new[] { "</strong>" },
-                            FragmentSize = 150,
-                            NoMatchSize = 150,
-                            NumberOfFragments = 5,
-                            MaxAnalyzedOffset = 1000000
+                            FragmentSize = 300,
+                            NoMatchSize = 300,
+                            NumberOfFragments = 5
                         })
                     )
                 )
