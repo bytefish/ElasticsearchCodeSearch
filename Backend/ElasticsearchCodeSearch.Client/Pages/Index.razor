@@ -17,30 +17,26 @@
         <div class="search-box">
             <FluentSearch @bind-Value="QueryString" @onkeyup="@EnterSubmit" Class="w-100" />
             <FluentButton @onclick=@QueryAsync>Search</FluentButton>
-            <FluentSelect   
-                Items="@SortOptions"
-                OptionText="@(i => i.Text)"
-                OptionValue="@(i => i.Value)"
-                OptionSelected="@(i => i.Selected)"
-                @bind-SelectedOption="@SelectedSortOption">
+            <FluentSelect Items="@SortOptions"
+                          OptionText="@(i => i.Text)"
+                          OptionValue="@(i => i.Value)"
+                          OptionSelected="@(i => i.Selected)"
+            @bind-SelectedOption="@SelectedSortOption">
             </FluentSelect>
         </div>
     </div>
+    <div class="search-results-total">
+        <p>@TotalItemCount Documents found</p>
+    </div>
     <div class="search-results">
-        <div class="search-results-total">
-            <p>@TotalItemCount Documents found</p>
-        </div>
-        <div class="search-result-items">
-            @foreach(var searchResult in CodeSearchResults)
-            {
-                <SearchResult 
-                    Owner="@searchResult.Owner"
-                    Repository="@searchResult.Repository"
-                    Filename="@searchResult.Filename"
-                    Permalink="@searchResult.Permalink"
-                    Matches="@searchResult.Matches"></SearchResult>
-            }
-        </div>
+        @foreach (var searchResult in CodeSearchResults)
+        {
+            <SearchResult Owner="@searchResult.Owner"
+                          Repository="@searchResult.Repository"
+                          Filename="@searchResult.Filename"
+                          Permalink="@searchResult.Permalink"
+                          Matches="@searchResult.Matches"></SearchResult>
+        }
     </div>
     <div class="search-paginator">
         <Paginator State="@Pagination"></Paginator>

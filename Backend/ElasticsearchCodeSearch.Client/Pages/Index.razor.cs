@@ -6,6 +6,7 @@ using Microsoft.Fast.Components.FluentUI;
 using ElasticsearchCodeSearch.Shared.Services;
 using System.Reflection;
 using ElasticsearchCodeSearch.Client.Components.Pagination;
+using Microsoft.Fast.Components.FluentUI.DataGrid.Infrastructure;
 
 namespace ElasticsearchCodeSearch.Client.Pages
 {
@@ -25,7 +26,7 @@ namespace ElasticsearchCodeSearch.Client.Pages
         /// <summary>
         /// Reacts on Paginator Changes.
         /// </summary>
-        private readonly EventCallbackSubscriber<PaginationState> CurrentPageItemsChanged;
+        private readonly EventCallbackSubscriber<PaginatorState> CurrentPageItemsChanged;
 
         /// <summary>
         /// Sort Options for all available fields.
@@ -69,10 +70,19 @@ namespace ElasticsearchCodeSearch.Client.Pages
 
         public Index()
         {
-            CurrentPageItemsChanged = new(EventCallback.Factory.Create<PaginationState>(this, QueryAsync));
-
+            CurrentPageItemsChanged = new(EventCallback.Factory.Create<PaginatorState>(this, QueryAsync));
             SelectedSortOption = SortOptions.First(x => x.Value == "latestCommitDate_desc");
         }
+
+        /// <inheritdoc />
+        protected override Task OnParametersSetAsync()
+        {
+            // The associated pagination state may have been added/removed/replaced
+            CurrentPageItemsChanged.SubscribeOrMove(Pagination?.CurrentPageItemsChanged);
+
+            return Task.CompletedTask;
+        }
+
 
         /// <summary>
         /// Queries the Backend and cancels all pending requests.
@@ -87,8 +97,8 @@ namespace ElasticsearchCodeSearch.Client.Pages
             var loadingCts = _pendingDataLoadCancellationTokenSource = new CancellationTokenSource();
 
             // Get From and Size for Pagination:
-            var from = Pagination is null ? 0 : (Pagination.CurrentPageIndex * Pagination.ItemsPerPage);
-            var size = Pagination is null ? 25 : Pagination.ItemsPerPage;
+            var from = Pagination.CurrentPageIndex * Pagination.ItemsPerPage;
+            var size = Pagination.ItemsPerPage;
 
             // Get the Sort Field to Sort results for
             var sortField = GetSortField();
@@ -115,26 +125,17 @@ namespace ElasticsearchCodeSearch.Client.Pages
             TotalItemCount = results.Total;
 
             // Refresh the Pagination:
-            if (Pagination != null)
-            {
-                await Pagination.SetTotalItemCountAsync(results.Total);
-            }
+            await Pagination.SetTotalItemCountAsync(results.Total);
 
             StateHasChanged();
         }
 
-        private Task EnterSubmit(KeyboardEventArgs e)
+        private async Task EnterSubmit(KeyboardEventArgs e)
         {
             if (e.Key == "Enter")
             {
-                return EnterSubmitInternal(e);
+                await QueryAsync();
             }
-            return Task.CompletedTask;
-        }
-        private async Task EnterSubmitInternal(KeyboardEventArgs e)
-        {
-            await Task.Delay(10, default).ConfigureAwait(false); // TODO This is what Microsoft does. Doesn't look right ...
-            await QueryAsync();
         }
 
         private SortFieldDto GetSortField()

@@ -34,6 +34,7 @@ namespace ElasticsearchCodeSearch.Client.Components.Pagination
         public event EventHandler<int?>? TotalItemCountChanged;
 
         internal EventCallbackSubscribable<PaginatorState> CurrentPageItemsChanged { get; } = new();
+
         internal EventCallbackSubscribable<PaginatorState> TotalItemCountChangedSubscribable { get; } = new();
 
         /// <inheritdoc />

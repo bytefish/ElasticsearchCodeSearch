@@ -5,9 +5,14 @@
         <a href="@Permalink">@Filename</a>
     </div>
     <div class="code-box-content">
-        @foreach(var match in Matches)
+        @for (int matchIdx = 0; matchIdx < Matches.Count; matchIdx++)
         {
-            match.AsMarkupString();
+            var match = Matches[matchIdx];
+
+            <p>Match #@matchIdx:</p>
+            <p>
+                    @match.AsMarkupString();
+            </p>
         }
     </div>
 </div>
@@ -43,6 +48,4 @@
     /// </summary>
     [Parameter]
     public required List<string> Matches { get; set; }
-
-
 }

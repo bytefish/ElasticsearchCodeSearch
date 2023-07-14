@@ -75,12 +75,23 @@ namespace ElasticsearchCodeSearch.Elasticsearch
             _logger.TraceMethodEntry();
 
             var createIndexResponse = await _client.Indices.CreateAsync(_indexName, descriptor => descriptor
-                .Settings(settings => settings.
-                    Analysis(analysis => analysis
+                .Settings(settings => settings
+                    .Analysis(analysis => analysis
+                        .Normalizers(normalizers => normalizers
+                            .Custom("sha_normalizer", normalizer => normalizer
+                                .Filter(new[] { "lowercase" })
+                            )
+                        )
                         .Analyzers(analyzers => analyzers
+                            .Custom("default", custom => custom
+                                .Tokenizer("standard").Filter(new[]
+                                {
+                                    "lowercase",
+                                    "stemmer"
+                                })
+                             )
                             .Custom("code_analyzer", custom => custom
-                                .Tokenizer("whitespace")
-                                .Filter(new[]
+                                .Tokenizer("whitespace").Filter(new[]
                                 {
                                     "word_delimiter_graph_filter",
                                     "flatten_graph",
@@ -89,6 +100,18 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                                     "remove_duplicates"
                                 })
                             )
+                            .Custom("custom_path_tree", custom => custom
+                                .Tokenizer("custom_hierarchy")
+                            )
+                            .Custom("custom_path_tree_reversed", custom => custom
+                                .Tokenizer("custom_hierarchy_reversed")
+                            )
+                        )
+                        .Tokenizers(tokenizers => tokenizers
+                            .PathHierarchy("custom_hierarchy", tokenizer => tokenizer
+                                .Delimiter("/"))
+                            .PathHierarchy("custom_hierarchy_reversed", tokenizer => tokenizer
+                                .Reverse(true).Delimiter("/"))
                         )
                         .TokenFilters(filters => filters
                             .WordDelimiterGraph("word_delimiter_graph_filter", filter => filter
@@ -99,14 +122,23 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                  )
                 .Mappings(mapping => mapping
                         .Properties<CodeSearchDocument>(properties => properties
-                            .Text(properties => properties.Id)
-                            .Text(properties => properties.Owner, x => x
+                            .Keyword(properties => properties.Id, keyword => keyword
+                                .IndexOptions(IndexOptions.Docs)
+                                .Normalizer("sha_normalizer")
+                             )
+                            .Keyword(properties => properties.Owner)
+                            .Keyword(properties => properties.Repository)
+                            .Text(properties => properties.Filename, text => text
+                                .Fields(fields => fields
+                                    .Text("tree", tree => tree.Analyzer("custom_path_tree"))
+                                    .Text("tree_reversed", tree_reversed => tree_reversed.Analyzer("custom_path_tree_reversed"))
+                                )
+                            )
+                            .Text(properties => properties.Content, x => x
+                                .IndexOptions(IndexOptions.Positions)
                                 .Analyzer("code_analyzer")
                                 .TermVector(TermVectorOption.WithPositionsOffsetsPayloads)
                                 .Store(true))
-                            .Text(properties => properties.Repository)
-                            .Text(properties => properties.Filename)
-                            .Text(properties => properties.Content)
                             .Text(properties => properties.Permalink)
                             .Date(properties => properties.LatestCommitDate))), cancellationToken);
 

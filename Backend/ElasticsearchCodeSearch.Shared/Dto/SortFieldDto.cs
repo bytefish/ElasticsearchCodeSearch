@@ -20,6 +20,7 @@ namespace ElasticsearchCodeSearch.Shared.Dto
         /// </summary>
         [Required]
         [JsonPropertyName("order")]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public SortOrderEnumDto Order { get; set; } = SortOrderEnumDto.Asc;
     }
 }

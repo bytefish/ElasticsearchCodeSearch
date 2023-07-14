@@ -6,7 +6,7 @@ namespace ElasticsearchCodeSearch.Client.Components.Pagination
 {
 
     /// <summary>
-    /// A component that provides a user interface for <see cref="PaginationState"/>.
+    /// A component that provides a user interface for <see cref="PaginatorState"/>.
     /// </summary>
     public partial class Paginator : FluentComponentBase, IDisposable
     {
