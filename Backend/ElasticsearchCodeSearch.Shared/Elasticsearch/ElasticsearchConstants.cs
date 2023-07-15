@@ -1,4 +1,4 @@
-﻿namespace ElasticsearchCodeSearch.Shared.Constants
+﻿namespace ElasticsearchCodeSearch.Shared.Elasticsearch
 {
     /// <summary>
     /// Constants used by the Frontend and Backend.
