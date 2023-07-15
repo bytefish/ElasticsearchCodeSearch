@@ -11,6 +11,7 @@ using Elastic.Clients.Elasticsearch.Mapping;
 using ElasticsearchCodeSearch.Options;
 using ElasticsearchCodeSearch.Logging;
 using ElasticsearchCodeSearch.Models;
+using ElasticsearchCodeSearch.Shared.Constants;
 
 namespace ElasticsearchCodeSearch.Elasticsearch
 {
@@ -262,20 +263,16 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                         .Add(Infer.Field<CodeSearchDocument>(f => f.Content), new HighlightField
                         {
                             Fragmenter = HighlighterFragmenter.Span,
-                            PreTags = new[] { "<strong>" },
-                            PostTags = new[] { "</strong>" },
-                            FragmentSize = 300,
-                            NoMatchSize = 300,
-                            NumberOfFragments = 5,
+                            PreTags = new[] { ElasticsearchConstants.HighlightStartTag },
+                            PostTags = new[] { ElasticsearchConstants.HighlightEndTag },
+                            NumberOfFragments = 0,
                         })
                         .Add(Infer.Field<CodeSearchDocument>(f => f.Filename), new HighlightField
                         {
                             Fragmenter = HighlighterFragmenter.Span,
-                            PreTags = new[] { "<strong>" },
-                            PostTags = new[] { "</strong>" },
-                            FragmentSize = 300,
-                            NoMatchSize = 300,
-                            NumberOfFragments = 5
+                            PreTags = new[] { ElasticsearchConstants.HighlightStartTag },
+                            PostTags = new[] { ElasticsearchConstants.HighlightEndTag },
+                            NumberOfFragments = 0,
                         })
                     )
                 )
