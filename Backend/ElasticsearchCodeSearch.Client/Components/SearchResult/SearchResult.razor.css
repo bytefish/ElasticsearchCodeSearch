@@ -22,6 +22,25 @@
         min-height: 200px;
     }
 
+    .code-box .code-box-content {
+        display: grid;
+        grid-area: code-box-content;
+        grid-template-columns: auto 1fr;
+        grid-template-areas:
+            "code-line-number"
+            "code-line-content";
+    }
+    
+    .code-box .code-box-content .code-line-number {
+        display: grid;
+        grid-area: code-line-number;
+    }
+
+    .code-box .code-box-content .code-line-content {
+        display: grid;
+        grid-area: code-line-number;
+    }
+
 .highlight {
     border: 1px solid #888;
     padding: 1em;

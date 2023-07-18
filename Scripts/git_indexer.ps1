@@ -254,7 +254,7 @@ $repositories | ForEach-Object -Parallel {
                     
                     continue
                 }
-                       
+                
                 # Gets the SHA1 Hash of the Git File. We need this to reconstruct the URL to the GitHub 
                 # file, so we have a unique identitfier for the file and we are able to generate a link 
                 # in the Frontend.
@@ -291,7 +291,7 @@ $repositories | ForEach-Object -Parallel {
                     path = $relativeFilepath
                     filename = $filename
                     commitHash = $commitHash
-                    content = ConvertTo-Json $content 
+                    content = $content 
                     permalink = $permalink
                     latestCommitDate = $latestCommitDate
                 }
@@ -323,8 +323,6 @@ $repositories | ForEach-Object -Parallel {
                            
                 Write-Host ($requestMessage + "[$repositoryName][RES]     HTTP Status:    $statusCode") -ForegroundColor Green
             } catch {
-                
-                Write-Host (ConvertTo-Json $codeSearchDocumentList)
                 
                 Write-Host ($requestMessage + "[ERR] Request failed with Error Message: " + $_.Exception.Message) -ForegroundColor Red
             }

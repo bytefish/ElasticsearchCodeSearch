@@ -1,21 +1,14 @@
 ﻿@using ElasticsearchCodeSearch.Client.Extensions;
+@using ElasticsearchCodeSearch.Shared.Dto;
 
 <div class="code-box">
     <div class="code-box-title">
         <strong>@Owner/@Repository</strong> - <a href="@Permalink">@Path</a>
     </div>
     <div class="code-box-content">
-        @for (int matchIdx = 0; matchIdx < Matches.Count; matchIdx++)
+        @foreach (var line in HighlitedContent)
         {
-            var match = Matches[matchIdx];
-
-            <p>Match #@matchIdx:</p>
-            <div class="highlight">
-
-            </div>
-            <p>
                     @match.AsMarkupString();
-            </p>
         }
     </div>
 </div>
@@ -56,5 +49,5 @@
     /// Matches.
     /// </summary>
     [Parameter]
-    public required List<string> Matches { get; set; }
+    public required List<HighlightedContentDto> HighlitedContent { get; set; }
 }

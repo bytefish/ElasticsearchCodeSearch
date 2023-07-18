@@ -10,7 +10,6 @@ using Microsoft.Extensions.Logging;
 
 namespace ElasticsearchCodeSearch.Controllers
 {
-    [ApiController]
     public class CodeSearchController : ControllerBase
     {
         private readonly ILogger<CodeSearchController> _logger;
@@ -20,6 +19,41 @@ namespace ElasticsearchCodeSearch.Controllers
         {
             _elasticsearchClient = elasticsearchClient;
             _logger = logger;
+        }
+
+        [HttpPost]
+        [Route("/delete-all-documents")]
+        public async Task<IActionResult> DeleteAllDocuments(CancellationToken cancellationToken)
+        {
+            _logger.TraceMethodEntry();
+
+            try
+            {
+                var deleteAllResponse = await _elasticsearchClient.DeleteAllAsync(cancellationToken);
+
+                if (!deleteAllResponse.IsValidResponse)
+                {
+                    if (_logger.IsErrorEnabled())
+                    {
+                        deleteAllResponse.TryGetOriginalException(out var originalException);
+
+                        _logger.LogError(originalException, "Elasticsearch failed with an unhandeled Exception");
+                    }
+
+                    return BadRequest("Invalid Search Response from Elasticsearch");
+                }
+
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                if (_logger.IsErrorEnabled())
+                {
+                    _logger.LogError(e, "An unhandeled exception occured");
+                }
+
+                return StatusCode(500, "An internal Server Error occured");
+            }
         }
 
         [HttpPost]

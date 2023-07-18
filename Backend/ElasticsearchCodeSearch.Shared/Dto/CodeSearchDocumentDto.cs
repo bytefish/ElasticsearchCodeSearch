@@ -51,9 +51,8 @@ namespace ElasticsearchCodeSearch.Shared.Dto
         /// <summary>
         /// Content to Index.
         /// </summary>
-        [Required]
         [JsonPropertyName("content")]
-        public required string Content { get; set; } = string.Empty;
+        public string? Content { get; set; } = string.Empty;
 
         /// <summary>
         /// Permalink to the indexed file.

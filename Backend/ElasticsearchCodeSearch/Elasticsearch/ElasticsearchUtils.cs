@@ -57,7 +57,7 @@ namespace ElasticsearchCodeSearch.Elasticsearch
             int to = totalLines - startIdx > 3 ? startIdx + 2 : startIdx;
 
             // Build the result.
-            for (int lineIdx = from; lineIdx < to; lineIdx++)
+            for (int lineIdx = from; lineIdx <= to; lineIdx++)
             {
                 // The raw line with the possible match tags.
                 var line = lines[lineIdx];

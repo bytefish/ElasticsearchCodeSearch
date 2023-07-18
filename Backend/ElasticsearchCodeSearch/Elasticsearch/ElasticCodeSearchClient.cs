@@ -169,6 +169,20 @@ namespace ElasticsearchCodeSearch.Elasticsearch
             return createIndexResponse;
         }
 
+        public async Task<DeleteByQueryResponse> DeleteAllAsync(CancellationToken cancellationToken)
+        {
+            _logger.TraceMethodEntry();
+
+            var deleteByQueryResponse = await _client.DeleteByQueryAsync<CodeSearchDocument>(_indexName, request => request.Query(query => query.MatchAll()), cancellationToken);
+
+            if (_logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("DeleteResponse DebugInformation: {DebugInformation}", deleteByQueryResponse.DebugInformation);
+            }
+
+            return deleteByQueryResponse;
+        }
+
         public async Task<DeleteResponse> DeleteAsync(string documentId, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();

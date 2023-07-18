@@ -22,7 +22,7 @@ namespace ElasticsearchCodeSearch.Converters
                 Filename = source.Filename,
                 Path = source.Path,
                 CommitHash = source.CommitHash,
-                Content = source.Content,
+                Content = source.Content ?? string.Empty,
                 Permalink = source.Permalink,
                 LatestCommitDate = source.LatestCommitDate,
             };
