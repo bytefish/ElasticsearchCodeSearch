@@ -55,8 +55,8 @@
     display: grid;
     grid-area: search-results;
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr;
-    max-width: 800px;
+    grid-auto-rows: max-content;
+    max-width: 1000px;
     margin: 0 auto;
     padding: 20px;
     grid-row-gap: 20px;

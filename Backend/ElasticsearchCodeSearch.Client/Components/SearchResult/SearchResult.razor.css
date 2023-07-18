@@ -1,6 +1,6 @@
 ﻿.code-box {
     display: grid;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr auto;
     grid-template-columns: 1fr;
     grid-template-areas:
         "code-box-title"

@@ -31,12 +31,7 @@
     <div class="search-results">
         @foreach (var searchResult in CodeSearchResults)
         {
-            <SearchResult Owner="@searchResult.Owner"
-                          Repository="@searchResult.Repository"
-                          Path="@searchResult.Path"
-                          Filename="@searchResult.Filename"
-                          Permalink="@searchResult.Permalink"
-                          HighlitedContent="@searchResult.Content"></SearchResult>
+            <SearchResult Item="@searchResult"></SearchResult>
         }
     </div>
     <div class="search-paginator">
