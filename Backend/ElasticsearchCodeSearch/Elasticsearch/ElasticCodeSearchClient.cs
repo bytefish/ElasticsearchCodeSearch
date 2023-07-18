@@ -9,9 +9,8 @@ using Elastic.Transport;
 using Microsoft.Extensions.Options;
 using Elastic.Clients.Elasticsearch.Mapping;
 using ElasticsearchCodeSearch.Options;
-using ElasticsearchCodeSearch.Logging;
 using ElasticsearchCodeSearch.Models;
-using ElasticsearchCodeSearch.Shared.Constants;
+using ElasticsearchCodeSearch.Shared.Logging;
 
 namespace ElasticsearchCodeSearch.Elasticsearch
 {
@@ -280,7 +279,7 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                 .Sort(sortOptionsArray), cancellationToken);
         }
 
-        private SortOptions ConvertToSortOptions(SortField sortField)
+        private static SortOptions ConvertToSortOptions(SortField sortField)
         {
             var sortOrder = sortField.Order == SortOrderEnum.Ascending ? SortOrder.Asc : SortOrder.Desc;
 

@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace ElasticsearchCodeSearch.Shared.Dto

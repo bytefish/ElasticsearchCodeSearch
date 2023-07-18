@@ -1,4 +1,6 @@
-﻿using ElasticsearchCodeSearch.Shared.Dto;
+﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using ElasticsearchCodeSearch.Shared.Dto;
 using ElasticsearchCodeSearch.Shared.Exceptions;
 using ElasticsearchCodeSearch.Shared.Logging;
 using Microsoft.Extensions.Logging;

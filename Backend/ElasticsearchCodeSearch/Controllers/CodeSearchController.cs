@@ -3,7 +3,7 @@
 using Elastic.Clients.Elasticsearch;
 using ElasticsearchCodeSearch.Converters;
 using ElasticsearchCodeSearch.Elasticsearch;
-using ElasticsearchCodeSearch.Logging;
+using ElasticsearchCodeSearch.Shared.Logging;
 using ElasticsearchCodeSearch.Shared.Dto;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;

@@ -1,7 +1,7 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using ElasticsearchCodeSearch.Elasticsearch;
-using ElasticsearchCodeSearch.Logging;
+using ElasticsearchCodeSearch.Shared.Logging;
 
 namespace ElasticsearchCodeSearch.Hosting
 {

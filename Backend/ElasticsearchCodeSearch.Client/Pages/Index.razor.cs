@@ -21,7 +21,7 @@ namespace ElasticsearchCodeSearch.Client.Pages
         /// <summary>
         /// Pagination.
         /// </summary>
-        PaginatorState Pagination = new PaginatorState { ItemsPerPage = 25, TotalItemCount = 10 };
+        private readonly PaginatorState Pagination = new PaginatorState { ItemsPerPage = 25, TotalItemCount = 10 };
 
         /// <summary>
         /// Reacts on Paginator Changes.
@@ -31,7 +31,7 @@ namespace ElasticsearchCodeSearch.Client.Pages
         /// <summary>
         /// Sort Options for all available fields.
         /// </summary>
-        private static List<Option<string>> SortOptions = new()
+        private static readonly List<Option<string>> SortOptions = new()
         {
             { new Option<string> { Value = "owner_asc", Text = "Owner (Ascending)" } },
             { new Option<string> { Value = "owner_desc", Text = "Owner (Descending)" } },
@@ -138,28 +138,23 @@ namespace ElasticsearchCodeSearch.Client.Pages
 
         private SortFieldDto GetSortField()
         {
-            switch(SelectedSortOption.Value)
+            return SelectedSortOption.Value switch
             {
-                case "owner_asc":
-                    return new SortFieldDto() { Field = "owner", Order = SortOrderEnumDto.Asc };
-                case "owner_desc":
-                    return new SortFieldDto() { Field = "owner", Order = SortOrderEnumDto.Desc };
-                case "repository_asc":
-                    return new SortFieldDto() { Field = "repository", Order = SortOrderEnumDto.Asc };
-                case "repository_desc":
-                    return new SortFieldDto() { Field = "repository", Order = SortOrderEnumDto.Desc };
-                case "latestCommitDate_asc":
-                    return new SortFieldDto() { Field = "latestCommitDate", Order = SortOrderEnumDto.Asc };
-                case "latestCommitDate_desc":
-                    return new SortFieldDto() { Field = "latestCommitDate", Order = SortOrderEnumDto.Desc };
-                default:
-                    throw new ArgumentException($"Unknown SortField '{SelectedSortOption.Value}'");
-            }
+                "owner_asc" => new SortFieldDto() { Field = "owner", Order = SortOrderEnumDto.Asc },
+                "owner_desc" => new SortFieldDto() { Field = "owner", Order = SortOrderEnumDto.Desc },
+                "repository_asc" => new SortFieldDto() { Field = "repository", Order = SortOrderEnumDto.Asc },
+                "repository_desc" => new SortFieldDto() { Field = "repository", Order = SortOrderEnumDto.Desc },
+                "latestCommitDate_asc" => new SortFieldDto() { Field = "latestCommitDate", Order = SortOrderEnumDto.Asc },
+                "latestCommitDate_desc" => new SortFieldDto() { Field = "latestCommitDate", Order = SortOrderEnumDto.Desc },
+                _ => throw new ArgumentException($"Unknown SortField '{SelectedSortOption.Value}'"),
+            };
         }
 
         public ValueTask DisposeAsync()
         {
             CurrentPageItemsChanged.Dispose();
+            
+            GC.SuppressFinalize(this);
 
             return ValueTask.CompletedTask;
         }

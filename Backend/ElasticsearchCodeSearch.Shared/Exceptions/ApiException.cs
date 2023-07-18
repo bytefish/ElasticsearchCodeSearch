@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Net;
 using System.Runtime.Serialization;
 
 namespace ElasticsearchCodeSearch.Shared.Exceptions

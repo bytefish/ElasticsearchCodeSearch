@@ -48,8 +48,8 @@ namespace ElasticsearchCodeSearch.Shared.Dto
         /// <summary>
         /// Highlighted matches in code.
         /// </summary>
-        [JsonPropertyName("matches")]
-        public required List<string>? Matches { get; set; }
+        [JsonPropertyName("content")]
+        public required List<HighlightedContentDto> Content { get; set; }
 
         /// <summary>
         /// Latest Commit Date.

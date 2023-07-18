@@ -1,4 +1,5 @@
 ﻿using Elastic.Clients.Elasticsearch;
+using ElasticsearchCodeSearch.Elasticsearch;
 using ElasticsearchCodeSearch.Models;
 using ElasticsearchCodeSearch.Shared.Dto;
 
@@ -26,7 +27,7 @@ namespace ElasticsearchCodeSearch.Converters
                     Path = hit.Source.Path,
                     Permalink = hit.Source.Permalink,
                     LatestCommitDate = hit.Source.LatestCommitDate,
-                    Matches = GetMatches(hit.Highlight),
+                    Content = GetContent(hit.Highlight),
                 };
 
                 results.Add(result);
@@ -35,21 +36,30 @@ namespace ElasticsearchCodeSearch.Converters
             return results;
         }
 
-        private static List<string>? GetMatches(IReadOnlyDictionary<string, IReadOnlyCollection<string>>? highlight)
+        private static List<HighlightedContentDto> GetContent(IReadOnlyDictionary<string, IReadOnlyCollection<string>>? highlight)
         {
             if (highlight == null)
             {
-                return null;
+                return new();
             }
 
-            List<string> results = new List<string>();
+            highlight.TryGetValue("content", out var matchesForContent);
 
-            if (highlight.TryGetValue("content", out var matchesForContent)) // TODO Can we replace the "content"?
+            if(matchesForContent == null)
             {
-                results.AddRange(matchesForContent);
+                return new();
             }
 
-            return results;
+            var match = matchesForContent.FirstOrDefault();
+
+            if (match == null)
+            {
+                return new();
+            }
+
+            var highlightedContent = ElasticsearchUtils.GetHighlightedContent(match);
+
+            return HighlightedContentConverter.Convert(highlightedContent);
         }
     }
 }
