@@ -17,29 +17,28 @@
     }
 
     .code-box .code-box-content {
-        grid-area: code-box-content;
-        padding: 10px;
-        min-height: 200px;
-    }
-
-    .code-box .code-box-content {
         display: grid;
         grid-area: code-box-content;
-        grid-template-columns: auto 1fr;
-        grid-template-areas:
-            "code-line-number"
-            "code-line-content";
-    }
-    
-    .code-box .code-box-content .code-line-number {
-        display: grid;
-        grid-area: code-line-number;
+        grid-template-columns: 1fr;
+        max-width: 800px;
+        overflow: auto;
+        white-space: nowrap;
     }
 
-    .code-box .code-box-content .code-line-content {
-        display: grid;
-        grid-area: code-line-number;
-    }
+        .code-box .code-box-content .code-line {
+            display: grid;
+            grid-template-columns: auto 1fr;
+        }
+
+            .code-box .code-box-content .code-line .code-line-number {
+                display: grid;
+                border-right: 1px solid #dcdcde;
+            }
+
+            .code-box .code-box-content .code-line .code-line-content {
+                display: grid;
+                text-align: left;
+            }
 
 .highlight {
     border: 1px solid #888;

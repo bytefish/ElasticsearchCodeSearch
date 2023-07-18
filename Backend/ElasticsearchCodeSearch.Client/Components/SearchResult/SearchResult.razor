@@ -8,7 +8,14 @@
     <div class="code-box-content">
         @foreach (var line in HighlitedContent)
         {
-                    @match.AsMarkupString();
+            <div class="code-line">
+                <div class="code-line-number">
+                    @line.LineNo
+                </div>
+                <div class="code-line-content">
+                    @line.Content
+                </div>
+            </div>
         }
     </div>
 </div>
