@@ -22,7 +22,7 @@ function Write-Log {
     $timestamp = Get-Date  -Format 'hh:mm:ss'
     $threadId = [System.Threading.Thread]::CurrentThread.ManagedThreadId
 
-    Write-Host "[$timestamp] $Repository [$threadId] $Severity $Message"
+    Write-Host "$timestamp $Severity [$threadId] $Repository $Message"
 }
 
 # We are going to use Parallel Blocks, and they don't play nice 
@@ -142,7 +142,7 @@ $repositories | ForEach-Object -ThrottleLimit 1 -Parallel {
     $appConfig = $using:appConfig
 
     # Rename, so we know what we are operating on.
-    $repository = $_    
+    $repository = $_
 
     # Repository Name.
     $repositoryName = $repository.name
@@ -364,7 +364,7 @@ $repositories | ForEach-Object -ThrottleLimit 1 -Parallel {
 
                 Write-Log -Severity Debug -Repository $repositoryName -Message "CodeIndexRequest sent successfully with HTTP Status Code = $statusCode"
             } catch {
-                Write-Log -Severity Debug -Repository $repositoryName -Message ("CodeIndexRequest failed with Message: " + $_.Exception.Message)
+                Write-Log -Severity Error -Repository $repositoryName -Message ("CodeIndexRequest failed with Message: " + $_.Exception.Message)
             }
         }
     }
