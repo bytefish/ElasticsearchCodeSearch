@@ -8,17 +8,17 @@ namespace ElasticsearchCodeSearch.Shared.Dto
     public class HighlightedContentDto
     {
         /// <summary>
-        /// Line Number in the data.
+        /// Gets or sets the line number.
         /// </summary>
         public int LineNo { get; set; }
 
         /// <summary>
-        /// Content.
+        /// Gets or sets the line content.
         /// </summary>
         public string Content { get; set; } = string.Empty;
 
         /// <summary>
-        /// Has this been a match?
+        /// Gets or sets the information, if the content needs to be highlighted.
         /// </summary>
         public bool IsHighlight { get; set; }
     }

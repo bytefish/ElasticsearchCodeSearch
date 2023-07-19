@@ -11,14 +11,14 @@ namespace ElasticsearchCodeSearch.Shared.Dto
     public class SortFieldDto
     {
         /// <summary>
-        /// SortBy Field.
+        /// Gets or sets the field name to sort.
         /// </summary>
         [Required]
         [JsonPropertyName("field")]
         public required string Field { get; set; }
 
         /// <summary>
-        /// Sort Order.
+        /// Gets or sets the sort order.
         /// </summary>
         [Required]
         [JsonPropertyName("order")]

@@ -6,33 +6,35 @@ using System.Text.Json.Serialization;
 namespace ElasticsearchCodeSearch.Shared.Dto
 {
     /// <summary>
-    /// Search Request to the API.
+    /// The Client sends a <see cref="CodeSearchDocumentDto"/> to filter for 
+    /// documents, paginate and sort the results. The Search Query is given as 
+    /// a Query String.
     /// </summary>
     public class CodeSearchRequestDto
     {
         /// <summary>
-        /// Defines the query string to search.
+        /// Gets or sets the Query String.
         /// </summary>
         [Required]
         [JsonPropertyName("query")]
         public required string Query { get; set; }
 
         /// <summary>
-        /// Defines the number of hits to skip, defaulting to 0.
+        /// Gets or sets the number of hits to skip, defaulting to 0.
         /// </summary>
         [Required]
         [JsonPropertyName("from")]
         public int From { get; set; } = 0;
 
         /// <summary>
-        /// Maximum number of hits to return, defaulting to 10.
+        /// Gets or sets the number of hits to return, defaulting to 10.
         /// </summary>
         [Required]
         [JsonPropertyName("size")]
         public int Size { get; set; } = 10;
 
         /// <summary>
-        /// Sort Fields.
+        /// Gets or sets the sort fields for the results.
         /// </summary>
         [Required]
         [JsonPropertyName("sort")]

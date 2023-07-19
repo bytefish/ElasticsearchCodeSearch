@@ -11,58 +11,62 @@ namespace ElasticsearchCodeSearch.Shared.Dto
     public class CodeSearchDocumentDto
     {
         /// <summary>
-        /// A unique document id.
+        /// Gets or sets the Id.
         /// </summary>
         [Required]
         [JsonPropertyName("id")]
         public required string Id { get; set; }
 
         /// <summary>
-        /// Owner (User or Organization).
+        /// Gets or sets the owner (user or organization).
         /// </summary>
         [Required]
         [JsonPropertyName("owner")]
         public required string Owner { get; set; }
 
         /// <summary>
-        /// Repository.
+        /// Gets or sets the Repository Name.
         /// </summary>
         [Required]
         [JsonPropertyName("repository")]
         public required string Repository { get; set; }
 
         /// <summary>
-        /// The Filename of the uploaded document.
+        /// Gets or sets the filename.
+        /// </summary>
         [Required]
         [JsonPropertyName("filename")]
         public required string Filename { get; set; }
 
         /// <summary>
-        /// The Filename of the uploaded document.
+        /// Gets or sets the relative file path.
+        /// </summary>
         [Required]
         [JsonPropertyName("path")]
         public required string Path { get; set; }
 
-        /// The Filename of the uploaded document.
+        /// <summary>
+        /// Gets or sets the commit hash.
+        /// </summary>
         [Required]
         [JsonPropertyName("commitHash")]
         public required string CommitHash { get; set; }
 
         /// <summary>
-        /// Content to Index.
+        /// Gets or sets the content to index.
         /// </summary>
         [JsonPropertyName("content")]
         public string? Content { get; set; } = string.Empty;
 
         /// <summary>
-        /// Permalink to the indexed file.
+        /// Gets or sets the Permalink to the file.
         /// </summary>
         [Required]
         [JsonPropertyName("permalink")]
         public required string Permalink { get; set; }
 
         /// <summary>
-        /// Latest Commit Date.
+        /// Gets or sets the latest commit date.
         /// </summary>
         [Required]
         [JsonPropertyName("latestCommitDate")]
