@@ -1,60 +1,61 @@
 <#
 .SYNOPSIS
-    Example Script for Sending Indexing Requests to an ElasticSearch Service.
+    Code Indexer for the Elasticsearch Code Search.
 #>
 
-# The organization (or user) we are going to index all repositories 
-# from. This should be passed as a parameter in a later version ...
-$organization = "microsoft"
+# The Write-Log function to write Log Messages for Repositories in a standard 
+# format and assign a Severity to it.
+function Write-Log {
+    param(
 
-# We want to index repositories with a maximum of 700 MB initially, so we 
-# filter all large directories ...
-$maxDiskUsageInKilobytes = 10 * 1024
+        [Parameter(Mandatory = $false)]    
+        [ValidateSet('Debug', 'Info', 'Warn', 'Error', IgnoreCase = $false)]
+        [string]$Severity = "Info",
 
-# Get all GitHub Repositories for an organization or a user, using the GitHub CLI.
-$repositories = gh repo list $Organization --json id,name,owner,nameWithOwner,languages,url,sshUrl,diskUsage
-                     | ConvertFrom-Json                                         
-                     | Where-Object {$_.diskUsage -lt $maxDiskUsageInKilobytes} 
- 
-# Index all files of the organization or user, cloning is going to take some time, 
-# so we should probably be able to clone and process 4 repositories in parallel. We 
-# need to check if it reduces the waiting time ...
-$repositories | ForEach-Object -Parallel {
+        [Parameter(Mandatory = $true)]
+        [string]$Repository,
 
-    # Rename, so we know what we are operating on.
-    $repository = $_    
+        [Parameter(Mandatory = $true)]
+        [string]$Message
+    )
+    
+    $timestamp = Get-Date  -Format 'hh:mm:ss'
+    $threadId = [System.Threading.Thread]::CurrentThread.ManagedThreadId
 
+    Write-Host "[$timestamp] $Repository [$threadId] $Severity $Message"
+}
+
+# We are going to use Parallel Blocks, and they don't play nice 
+# with importing modules and such. It's such a simple function, 
+# we are just going to source it in each Script Block.
+$writeLogDef = ${function:Write-Log}.ToString()
+
+# The AppConfig, where you can configure the Indexer. It allows 
+# you to set the organization to index, the URL to send documents 
+# for indexing to and whiteliste filenames and extensions. 
+$appConfig = @{
+    # The organization (or user) we are going to index all repositories 
+    # from. This should be passed as a parameter in a later version ...
+    Organization = "microsoft"
+    # We want to index repositories with a maximum of 700 MB initially, so we 
+    # filter all large directories ...
+    MaxDiskUsageInKilobytes = 10 * 1024
     # The Url, where the Index Service is running at. This is the ASP.NET 
     # Core WebAPI, which is responsible to send the indexing requests ...
-    $codeSearchIndexUrl = "http://localhost:5000/index-documents"
-    
+    CodeSearchIndexUrl = "http://localhost:5000/index-documents"
     # This is where we are going to clone the temporary Git repositories to, 
     # which will be created for reading the file content and sending it to 
     # the ElasticSearch instance.
-    $baseDirectory = "C:\Temp"
-
-    # Repository Name.
-    $repositoryName = $repository.name
-    
-    # Repository URL.
-    $repositoryUrl = $repository.url
-
-    # Repository URL.
-    $repositoryOwner = $repository.owner.login
-    
-    # Repository Path.
-    $repositoryDirectory = "$baseDirectory\$repositoryName"
-    
+    BaseDirectory = "C:\Temp"
     # Files allowed for processing.
-    $allowedFilenames = (
+    AllowedFilenames = (
         ".gitignore",
         ".editorconfig",
         "README",
         "CHANGELOG"
     )
-    
     # Extensions allowed for processing.
-    $allowedExtensions = (
+    AllowedExtensions = (
         # C / C++
         ".c",
         ".cpp",
@@ -113,8 +114,49 @@ $repositories | ForEach-Object -Parallel {
         ".bbx",
         ".cbx"
     )
+    # Batch Size for Elasticsearch Requests.
+    BatchSize = 30
+}
+
+# Get all GitHub Repositories for an organization or a user, using the GitHub CLI.
+$repositories = gh repo list $appConfig.Organization --json id,name,owner,nameWithOwner,languages,url,sshUrl,diskUsage
+                     | ConvertFrom-Json                                         
+                     | Where-Object {$_.diskUsage -lt $appConfig.MaxDiskUsageInKilobytes} 
+ 
+# Index all files of the organization or user, cloning is going to take some time, 
+# so we should probably be able to clone and process 4 repositories in parallel. We 
+# need to check if it reduces the waiting time ...
+$repositories | ForEach-Object -ThrottleLimit 1 -Parallel {
+
+    # We need to re-assign the defintion, because we are 
+    # going to have another nested Parallel block, which 
+    # needs to source the function.
+    $writeLogDef = $using:writeLogDef;
+
+    # Source the Write-Log function, so we can use it in the
+    # Parallel ScriptBlock. Somewhat ugly, but I don't know a 
+    # good way around.
+    ${function:Write-Log} = $using:writeLogDef
+
+    # Get the global AppConfig.
+    $appConfig = $using:appConfig
+
+    # Rename, so we know what we are operating on.
+    $repository = $_    
+
+    # Repository Name.
+    $repositoryName = $repository.name
+    
+    # Repository URL.
+    $repositoryUrl = $repository.url
+
+    # Repository URL.
+    $repositoryOwner = $repository.owner.login
+    
+    # Repository Path.
+    $repositoryDirectory = "$($appConfig.BaseDirectory)\$repositoryName"
        
-    Write-Host "[$repositoryName] Processing started ..."
+    Write-Log -Severity Debug -Repository $repositoryName -Message "Processing started ..."
     
     # Wrap the whole thing in a try - finally, so we always delete the repositories.
     try {
@@ -123,11 +165,11 @@ $repositories | ForEach-Object -Parallel {
         # when the Repository has been updated in between, but the idea is to re-index the entire 
         # organization in case of error.
         if(Test-Path $repositoryDirectory) {
-            Write-Host "[$repositoryName] Directory '$repositoryDirectory' already exists. Not Cloning ...."
+            Write-Log -Severity Debug -Repository $repositoryName -Message "Directory '$repositoryDirectory' already exists"
         } else {
-            Write-Host "[$repositoryName]: Repository does not exist. Cloning to '$repositoryDirectory' ..."
-        
-            git clone $repositoryUrl $repositoryDirectory
+            Write-Log -Severity Debug -Repository $repositoryName -Message "Cloning to '$repositoryDirectory'"
+
+            git clone $repositoryUrl $repositoryDirectory 2>&1 | Out-Null
         }
                 
         # Get all files in the repositrory using the GIT CLI. This command 
@@ -154,22 +196,21 @@ $repositories | ForEach-Object -Parallel {
             
             # If the filename or extension is allowed, we are adding it to the 
             # list of files to process. Don't add duplicate files.
-            if($allowedFilenames -contains $filename) {
+            if($appConfig.AllowedFilenames -contains $filename) {
                 $relativeFilepaths += $relativeFilepath
-            } elseif($allowedExtensions -contains $extension) {
+            } elseif($appConfig.AllowedExtensions -contains $extension) {
                 $relativeFilepaths += $relativeFilepath
             }
         }
 
-        Write-Host "[$repositoryName] '$($relativeFilepaths.Length)' files to Process ..."
+        Write-Log -Severity Debug -Repository $repositoryName -Message "$($relativeFilepaths.Length)' files to Process ..."
         
         # We want to create Bulk Requests, so we don't send a million
         # Requests to the Elasticsearch API. We will use Skip and Take, 
         # probably not efficient, but who cares.
         $batches = @()
-        $batchSize = 30
         
-        for($batchStartIdx = 0; $batchStartIdx -lt $relativeFilepaths.Length; $batchStartIdx += $batchSize) {
+        for($batchStartIdx = 0; $batchStartIdx -lt $relativeFilepaths.Length; $batchStartIdx += $appConfig.BatchSize) {
             
             # A Batch is going to hold all information for processing the Data in parallel, so 
             # we don't have to introduce race conditions, when sharing variables on different 
@@ -179,27 +220,34 @@ $repositories | ForEach-Object -Parallel {
                 RepositoryOwner = $repositoryOwner
                 RepositoryUrl = $repositoryUrl
                 RepositoryDirectory = $repositoryDirectory
-                CodeSearchIndexUrl = $codeSearchIndexUrl
                 Elements = @($relativeFilepaths
                     | Select-Object -Skip $batchStartIdx
-                    | Select-Object -First $batchSize)
+                    | Select-Object -First $appConfig.BatchSize)
             }
             
             # Add the current batch to the list of batches 
             $batches += , $batch
         }
-        
-        Write-Host "[$repositoryName] '$($batches.Length)' Bulk Index Requests will be sent to Indexing Service ..."
+
+        Write-Log -Severity Debug -Repository $repositoryName -Message "'$($batches.Length)' Bulk Index Requests will be sent to Indexing Service"
         
         # Process all File Chunks in Parallel. This allows us to send 
         # Bulk Requests to the Elasticsearch API, without complex code 
         # ...
-        $batches | ForEach-Object -Parallel {  
+        $batches | ForEach-Object -ThrottleLimit 10 -Parallel {  
+            
+            # Source the Write-Log function, so we can use it in the
+            # Parallel ScriptBlock. Somewhat ugly, but I don't know a 
+            # good way around.
+            ${function:Write-Log} = $using:writeLogDef
+
+            # Get the global AppConfig.
+            $appConfig = $using:appConfig
+
             # Rename, so we know what we are working with.
             $batch = $_
             
             # We need the variables from the outer scope...
-            $codeSearchIndexUrl = $batch.CodeSearchIndexUrl
             $repositoryDirectory = $batch.RepositoryDirectory
             $repositoryOwner = $batch.RepositoryOwner
             $repositoryName = $batch.RepositoryName
@@ -228,8 +276,7 @@ $repositories | ForEach-Object -Parallel {
                 # We could filter this out in the pipe, but better we print the problematic 
                 # filenames for further investigation
                 if(Test-Path -Path $absoluteFilepath -PathType Container) {
-                    Write-Host "[ERR] The given Filename is a directory: '$absoluteFilepath'" -ForegroundColor Red
-                    
+                    Write-Log -Severity Warn -Repository $repositoryName -Message "The given Filename is a directory: '$absoluteFilepath'"
                     continue
                 }
                 
@@ -237,8 +284,7 @@ $repositories | ForEach-Object -Parallel {
                 # actually, who knows how all this stuff behaves anyway? What should we 
                 # do here? Best we can do... print the problem and call it a day.
                 if((Test-Path $absoluteFilepath) -eq $false) {
-                    Write-Host "[ERR] The given Filename does not exist: '$absoluteFilepath'" -ForegroundColor Red
-                    
+                    Write-Log -Severity Warn -Repository $repositoryName -Message "The given Filename does not exist: '$absoluteFilepath'"
                     continue
                 }
                 
@@ -250,8 +296,7 @@ $repositories | ForEach-Object -Parallel {
                 try {
                     $content = Get-Content -Path $absoluteFilepath -Raw -ErrorAction Stop
                 } catch {
-                    Write-Host ("[ERR] Failed to read file content: " + $_.Exception.Message) -ForegroundColor Red
-                    
+                    Write-Log -Severity Warn -Repository $repositoryName -Message ("[ERR] Failed to read file content: " + $_.Exception.Message)
                     continue
                 }
                 
@@ -303,37 +348,31 @@ $repositories | ForEach-Object -Parallel {
             # Build the actual HTTP Request.
             $codeSearchIndexRequest = @{
                 Method = "POST"
-                Uri = $codeSearchIndexUrl
+                Uri = $appConfig.CodeSearchIndexUrl
                 Body = ConvertTo-Json -InputObject $codeSearchDocumentList -EscapeHandling EscapeNonAscii # Don't use a Pipe here, so Single Arrays become a JSON array too
                 ContentType = "application/json"
                 StatusCodeVariable = 'statusCode'
             }
             
-            $requestMessage = ("[$repositoryName][REQ] Code Search Index Request`n" +
-                               "[$repositoryName][REQ]`n" +
-                               "[$repositoryName][REQ]     URL:            $codeSearchIndexUrl`n" +
-                               "[$repositoryName][REQ]     File Count:     $($codeSearchDocumentList.Length)`n" + 
-                               "[$repositoryName][REQ]`n")
+            Write-Log -Severity Debug -Repository $repositoryName -Message "Sending CodeIndexRequest with Document Count: $($codeSearchDocumentList.Length)"
 
             try {
                 # Invokes the Requests, which will error out on HTTP Status Code >= 400, 
                 # so we need to wrap it in a try / catch block. We can then extract the 
                 # error message.
                 Invoke-RestMethod @codeSearchIndexRequest
-                           
-                Write-Host ($requestMessage + "[$repositoryName][RES]     HTTP Status:    $statusCode") -ForegroundColor Green
+
+                Write-Log -Severity Debug -Repository $repositoryName -Message "CodeIndexRequest sent successfully with HTTP Status Code = $statusCode"
             } catch {
-                
-                Write-Host ($requestMessage + "[ERR] Request failed with Error Message: " + $_.Exception.Message) -ForegroundColor Red
+                Write-Log -Severity Debug -Repository $repositoryName -Message ("CodeIndexRequest failed with Message: " + $_.Exception.Message)
             }
-        
-        } -ThrottleLimit 10
+        }
     }
     finally {
-        Write-Host "Deleting GIT Repository: $repositoryDirectory ..."
-        
         if($repositoryDirectory.StartsWith("C:\Temp")) {
+            Write-Log -Repository $repositoryName -Severity Debug -Message "Deleting GIT Repository: $repositoryDirectory ..."
+        
             Remove-Item -LiteralPath $repositoryDirectory -Force -Recurse
         }
     }
-} -ThrottleLimit 1
+}
