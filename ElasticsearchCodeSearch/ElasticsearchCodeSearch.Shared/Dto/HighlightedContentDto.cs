@@ -3,7 +3,8 @@
 namespace ElasticsearchCodeSearch.Shared.Dto
 {
     /// <summary>
-    /// Highlighted Line of Code.
+    /// Holds the line number and line content for a match, and it has the 
+    /// information if the content needs highlighting.
     /// </summary>
     public class HighlightedContentDto
     {
@@ -18,7 +19,7 @@ namespace ElasticsearchCodeSearch.Shared.Dto
         public string Content { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the information, if the content needs to be highlighted.
+        /// Gets or sets the flag, if this line needs to be highlighted.
         /// </summary>
         public bool IsHighlight { get; set; }
     }

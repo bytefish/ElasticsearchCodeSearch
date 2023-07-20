@@ -18,12 +18,12 @@ namespace ElasticsearchCodeSearch.Options
         public required string IndexName { get; set; }
 
         /// <summary>
-        /// Username.
+        /// Elasticsearch Username.
         /// </summary>
         public required string Username { get; set; }
 
         /// <summary>
-        /// Password.
+        /// Elasticsearch Password.
         /// </summary>
         public required string Password { get; set; }
 

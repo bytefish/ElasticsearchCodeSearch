@@ -7,8 +7,14 @@ namespace ElasticsearchCodeSearch.Models
     /// </summary>
     public class SortField
     {
+        /// <summary>
+        /// Gets or sets the Sort Field.
+        /// </summary>
         public required string Field { get; set; }
-
+        
+        /// <summary>
+        /// Gets or sets the Sort Order.
+        /// </summary>
         public required SortOrderEnum Order { get; set; } = SortOrderEnum.Ascending;
     }
 }

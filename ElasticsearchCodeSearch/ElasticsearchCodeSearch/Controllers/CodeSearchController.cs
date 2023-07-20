@@ -6,10 +6,10 @@ using ElasticsearchCodeSearch.Elasticsearch;
 using ElasticsearchCodeSearch.Shared.Logging;
 using ElasticsearchCodeSearch.Shared.Dto;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace ElasticsearchCodeSearch.Controllers
 {
+    [ApiController]
     public class CodeSearchController : ControllerBase
     {
         private readonly ILogger<CodeSearchController> _logger;

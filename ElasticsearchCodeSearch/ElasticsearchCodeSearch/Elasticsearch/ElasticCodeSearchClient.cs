@@ -41,7 +41,9 @@ namespace ElasticsearchCodeSearch.Elasticsearch
         {
             _logger.TraceMethodEntry();
 
-            var indexExistsResponse = await _client.Indices.ExistsAsync(_indexName, cancellationToken: cancellationToken);
+            var indexExistsResponse = await _client.Indices
+                .ExistsAsync(_indexName, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
 
             if (_logger.IsDebugEnabled())
             {
@@ -60,7 +62,9 @@ namespace ElasticsearchCodeSearch.Elasticsearch
         {
             _logger.TraceMethodEntry();
 
-            var pingResponse = await _client.PingAsync(cancellationToken: cancellationToken);
+            var pingResponse = await _client
+                .PingAsync(cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
 
             if (_logger.IsDebugEnabled())
             {
@@ -159,7 +163,8 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                                 .TermVector(TermVectorOption.WithPositionsOffsetsPayloads)
                                 .Store(true))
                             .Keyword(properties => properties.Permalink)
-                            .Date(properties => properties.LatestCommitDate))), cancellationToken);
+                            .Date(properties => properties.LatestCommitDate))), cancellationToken)
+                .ConfigureAwait(false);
 
             if (_logger.IsDebugEnabled())
             {
@@ -173,7 +178,9 @@ namespace ElasticsearchCodeSearch.Elasticsearch
         {
             _logger.TraceMethodEntry();
 
-            var deleteByQueryResponse = await _client.DeleteByQueryAsync<CodeSearchDocument>(_indexName, request => request.Query(query => query.MatchAll()), cancellationToken);
+            var deleteByQueryResponse = await _client
+                .DeleteByQueryAsync<CodeSearchDocument>(_indexName, request => request.Query(query => query.MatchAll()), cancellationToken)
+                .ConfigureAwait(false);
 
             if (_logger.IsDebugEnabled())
             {
@@ -187,7 +194,9 @@ namespace ElasticsearchCodeSearch.Elasticsearch
         {
             _logger.TraceMethodEntry();
 
-            var deleteResponse = await _client.DeleteAsync<CodeSearchDocument>(documentId, x => x.Index(_indexName), cancellationToken);
+            var deleteResponse = await _client
+                .DeleteAsync<CodeSearchDocument>(documentId, x => x.Index(_indexName), cancellationToken)
+                .ConfigureAwait(false);
 
             if (_logger.IsDebugEnabled())
             {
@@ -201,7 +210,9 @@ namespace ElasticsearchCodeSearch.Elasticsearch
         {
             _logger.TraceMethodEntry();
 
-            var getResponse = await _client.GetAsync<CodeSearchDocument>(documentId, x => x.Index(_indexName), cancellationToken);
+            var getResponse = await _client
+                .GetAsync<CodeSearchDocument>(documentId, x => x.Index(_indexName), cancellationToken)
+                .ConfigureAwait(false);
 
             if (_logger.IsDebugEnabled())
             {
@@ -221,7 +232,9 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                 Timeout = timeout
             };
 
-            var clusterHealthResponse = await _client.Cluster.HealthAsync(healthRequest, cancellationToken: cancellationToken);
+            var clusterHealthResponse = await _client.Cluster
+                .HealthAsync(healthRequest, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
 
             if (_logger.IsDebugEnabled())
             {
@@ -237,7 +250,8 @@ namespace ElasticsearchCodeSearch.Elasticsearch
 
             var bulkResponse = await _client.BulkAsync(b => b
                 .Index(_indexName)
-                .IndexMany(documents), cancellationToken);
+                .IndexMany(documents), cancellationToken)
+                .ConfigureAwait(false);
 
             if (_logger.IsDebugEnabled())
             {

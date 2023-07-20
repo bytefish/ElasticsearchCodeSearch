@@ -3,15 +3,24 @@
 namespace ElasticsearchCodeSearch.Models
 {
     /// <summary>
-    /// Highlighted Line of Code. We want to keep the UI simple, so we 
-    /// prepare the data for easy display.
+    /// Holds the line number and line content for a match, and it 
+    /// has the information if the content needs highlighting.
     /// </summary>
     public class HighlightedContent
     {
+        /// <summary>
+        /// Gets or sets the line number.
+        /// </summary>
         public int LineNo { get; set; }
 
+        /// <summary>
+        /// Gets or sets the line content.
+        /// </summary>
         public string Content { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the flag, if this line needs to be highlighted.
+        /// </summary>
         public bool IsHighlight { get; set; }
     }
 }

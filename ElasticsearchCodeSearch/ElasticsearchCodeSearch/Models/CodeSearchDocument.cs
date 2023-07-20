@@ -8,45 +8,44 @@ namespace ElasticsearchCodeSearch.Models
     public class CodeSearchDocument
     {
         /// <summary>
-        /// A unique document id.
+        /// Gets or sets the Id.
         /// </summary>
         public required string Id { get; set; }
 
         /// <summary>
-        /// Owner (User or Organization).
+        /// Gets or sets the owner (organization or user).
         /// </summary>
         public required string Owner { get; set; }
 
         /// <summary>
-        /// Repository.
+        /// Gets or sets the repository.
         /// </summary>
         public required string Repository { get; set; }
 
         /// <summary>
-        /// The Path of the uploaded document.
+        /// Gets or sets the filepath.
         public required string Path { get; set; }
 
         /// <summary>
-        /// The Filename of the uploaded document.
+        /// Gets or sets the filename.
         public required string Filename { get; set; }
 
-
         /// <summary>
-        /// The Commit Hash for the indexed document.
+        /// Gets or sets the commit hash.
         public required string CommitHash { get; set; }
 
         /// <summary>
-        /// Content to Index.
+        /// Gets or sets the content to index.
         /// </summary>
-        public required string Content { get; set; } =string.Empty;
+        public required string Content { get; set; } = string.Empty;
 
         /// <summary>
-        /// Permalink to the indexed file.
+        /// Gets or sets the Permalink to the file.
         /// </summary>
         public string Permalink { get; set; } = string.Empty;
 
         /// <summary>
-        /// Latest Commit Date.
+        /// Gets or sets the latest commit date.
         /// </summary>
         public required DateTimeOffset LatestCommitDate { get; set; }
     }

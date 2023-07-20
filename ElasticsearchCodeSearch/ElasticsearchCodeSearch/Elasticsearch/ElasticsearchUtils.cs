@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 
 namespace ElasticsearchCodeSearch.Elasticsearch
 {
-
     public static class ElasticsearchUtils
     {
         /// <summary>
