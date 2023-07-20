@@ -13,10 +13,11 @@ namespace ElasticsearchCodeSearch.Elasticsearch
         private static readonly Regex regex = new Regex($"{ElasticsearchConstants.HighlightStartTag}(.*){ElasticsearchConstants.HighlightEndTag}");
 
         /// <summary>
-        /// Returns 
+        /// Returns the Highlighted Content, with the line number, line content and the 
+        /// information wether to highlight a line or not.
         /// </summary>
-        /// <param name="content"></param>
-        /// <returns></returns>
+        /// <param name="content">Matching Content from the Elasticsearch response</param>
+        /// <returns>List of highlighted content</returns>
         public static List<HighlightedContent> GetHighlightedContent(string content)
         {
             // We want to highlight entire lines of code and don't want to only
@@ -67,7 +68,7 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                     .Replace(ElasticsearchConstants.HighlightEndTag, string.Empty);
 
                 // Check if this line has been a match. We could probably simplify the code
-                // but I don't know. 🤷‍
+                // but I don't know.
                 bool isHighlight = lineIdx >= startIdx && lineIdx < startIdx + matchedLinesCount;
 
                 result.Add(new HighlightedContent
