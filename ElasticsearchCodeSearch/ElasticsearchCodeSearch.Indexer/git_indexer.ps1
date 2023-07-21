@@ -3,9 +3,24 @@
     Code Indexer for the Elasticsearch Code Search.
 #>
 
-# The Write-Log function to write Log Messages for Repositories in a standard 
-# format and assign a Severity to it.
 function Write-Log {
+    param(
+
+        [Parameter(Mandatory = $false)]    
+        [ValidateSet('Debug', 'Info', 'Warn', 'Error', IgnoreCase = $false)]
+        [string]$Severity = "Info",
+
+        [Parameter(Mandatory = $true)]
+        [string]$Message
+    )
+    
+    $timestamp = Get-Date  -Format 'hh:mm:ss'
+    $threadId = [System.Threading.Thread]::CurrentThread.ManagedThreadId
+
+    Write-Output "$timestamp $Severity [$threadId] $Repository $Message"
+}
+
+function Write-Repository-Log {
     param(
 
         [Parameter(Mandatory = $false)]    
@@ -28,7 +43,7 @@ function Write-Log {
 # We are going to use Parallel Blocks, and they don't play nice 
 # with importing modules and such. It's such a simple function, 
 # we are just going to source it in each Script Block.
-$writeLogDef = ${function:Write-Log}.ToString()
+$writeRepositoryLogDef = ${function:Write-Repository-Log}.ToString()
 
 # The AppConfig, where you can configure the Indexer. It allows 
 # you to set the owner to index, the URL to send documents, 
@@ -45,8 +60,10 @@ $appConfig = @{
     MaxNumberOfRepositories = 1000
     # Only indexes repositories updated between these timestamps
     UpdatedBetween = @([datetime]::Parse("2020-01-01T00:00:00Z"), [datetime]::Parse("9999-12-31T00:00:00Z"))
-    # A flag no index archived repositories or not.
-    IndexArchived = $false
+    # Set this to false if you want to index archived repositories.
+    OmitArchivedRepositories = $true
+    # Set this to true, if you want to index archived repositories only.
+    OnlyArchivedRepositories = $false
     # LogFile to write the logs to. We don't print to screen directly, because 
     # we cannot trust the results.
     LogFile = "C:\Temp\log_indexer.log"
@@ -141,8 +158,22 @@ $appConfig = @{
 Start-Transcript $appConfig.LogFile -Append
 
 # Get all GitHub Repositories for an organization or a user, using the GitHub CLI.
+$argumentList = @()
 
-$repositories = gh repo list $appConfig.Owner --limit $appConfig.MaxNumberOfRepositories --json id,name,owner,nameWithOwner,languages,url,sshUrl,diskUsage,updatedAt
+$argumentList += "--limit $($appConfig.MaxNumberOfRepositories)"
+$argumentList += "--json id,name,owner,nameWithOwner,languages,url,sshUrl,diskUsage,updatedAt"
+
+if($appConfig.OmitArchivedRepositories -eq $true) {
+    $argumentList += "--no-archived"
+}
+
+if($appConfig.OnlyArchivedRepositories -eq $true) {
+    $argumentList += "--archived"
+}
+
+$arguments = $argumentList -join " "
+
+$repositories = Invoke-Expression "gh repo list $($appConfig.Owner) $arguments"
     | ConvertFrom-Json    
     | Where-Object {$_.diskUsage -lt $appConfig.MaxDiskUsageInKilobytes} 
     | Where-Object { ($_.updatedAt -ge $appConfig.UpdatedBetween[0]) -and  ($_.updatedAt -le $appConfig.UpdatedBetween[1]) }
@@ -157,12 +188,12 @@ $repositories | ForEach-Object -ThrottleLimit $appConfig.MaxParallelClones -Para
     # We need to re-assign the defintion, because we are 
     # going to have another nested Parallel block, which 
     # needs to source the function.
-    $writeLogDef = $using:writeLogDef;
+    $writeRepositoryLogDef = $using:writeRepositoryLogDef
 
-    # Source the Write-Log function, so we can use it in the
+    # Source the Write-Repository-Log function, so we can use it in the
     # Parallel ScriptBlock. Somewhat ugly, but I don't know a 
     # good way around.
-    ${function:Write-Log} = $using:writeLogDef
+    ${function:Write-Repository-Log} = $using:writeRepositoryLogDef
 
     # Get the global AppConfig.
     $appConfig = $using:appConfig
@@ -182,7 +213,7 @@ $repositories | ForEach-Object -ThrottleLimit $appConfig.MaxParallelClones -Para
     # Repository Path.
     $repositoryDirectory = "$($appConfig.BaseDirectory)\$repositoryName"
        
-    Write-Log -Severity Debug -Repository $repositoryName -Message "Processing started ..."
+    Write-Repository-Log -Severity Debug -Repository $repositoryName -Message "Processing started ..."
     
     # Wrap the whole thing in a try - finally, so we always delete the repositories.
     try {
@@ -191,9 +222,9 @@ $repositories | ForEach-Object -ThrottleLimit $appConfig.MaxParallelClones -Para
         # when the Repository has been updated in between, but the idea is to re-index the entire 
         # organization in case of error.
         if(Test-Path $repositoryDirectory) {
-            Write-Log -Severity Debug -Repository $repositoryName -Message "Directory '$repositoryDirectory' already exists"
+            Write-Repository-Log -Severity Debug -Repository $repositoryName -Message "Directory '$repositoryDirectory' already exists"
         } else {
-            Write-Log -Severity Debug -Repository $repositoryName -Message "Cloning to '$repositoryDirectory'"
+            Write-Repository-Log -Severity Debug -Repository $repositoryName -Message "Cloning to '$repositoryDirectory'"
 
             git clone $repositoryUrl $repositoryDirectory 2>&1 | Out-Null
         }
@@ -229,7 +260,7 @@ $repositories | ForEach-Object -ThrottleLimit $appConfig.MaxParallelClones -Para
             }
         }
 
-        Write-Log -Severity Debug -Repository $repositoryName -Message "$($relativeFilepaths.Length)' files to Process ..."
+        Write-Repository-Log -Severity Debug -Repository $repositoryName -Message "$($relativeFilepaths.Length)' files to Process ..."
         
         # We want to create Bulk Requests, so we don't send a million
         # Requests to the Elasticsearch API. We will use Skip and Take, 
@@ -255,17 +286,17 @@ $repositories | ForEach-Object -ThrottleLimit $appConfig.MaxParallelClones -Para
             $batches += , $batch
         }
 
-        Write-Log -Severity Debug -Repository $repositoryName -Message "'$($batches.Length)' Bulk Index Requests will be sent to Indexing Service"
+        Write-Repository-Log -Severity Debug -Repository $repositoryName -Message "'$($batches.Length)' Bulk Index Requests will be sent to Indexing Service"
         
         # Process all File Chunks in Parallel. This allows us to send 
         # Bulk Requests to the Elasticsearch API, without complex code 
         # ...
         $batches | ForEach-Object -ThrottleLimit $appConfig.MaxParallelBulkRequests -Parallel {  
             
-            # Source the Write-Log function, so we can use it in the
+            # Source the Write-Repository-Log function, so we can use it in the
             # Parallel ScriptBlock. Somewhat ugly, but I don't know a 
             # good way around.
-            ${function:Write-Log} = $using:writeLogDef
+            ${function:Write-Repository-Log} = $using:writeRepositoryLogDef
 
             # Get the global AppConfig.
             $appConfig = $using:appConfig
@@ -302,7 +333,7 @@ $repositories | ForEach-Object -ThrottleLimit $appConfig.MaxParallelClones -Para
                 # We could filter this out in the pipe, but better we print the problematic 
                 # filenames for further investigation
                 if(Test-Path -Path $absoluteFilepath -PathType Container) {
-                    Write-Log -Severity Warn -Repository $repositoryName -Message "The given Filename is a directory: '$absoluteFilepath'"
+                    Write-Repository-Log -Severity Warn -Repository $repositoryName -Message "The given Filename is a directory: '$absoluteFilepath'"
                     continue
                 }
                 
@@ -310,7 +341,7 @@ $repositories | ForEach-Object -ThrottleLimit $appConfig.MaxParallelClones -Para
                 # actually, who knows how all this stuff behaves anyway? What should we 
                 # do here? Best we can do... print the problem and call it a day.
                 if((Test-Path $absoluteFilepath) -eq $false) {
-                    Write-Log -Severity Warn -Repository $repositoryName -Message "The given Filename does not exist: '$absoluteFilepath'"
+                    Write-Repository-Log -Severity Warn -Repository $repositoryName -Message "The given Filename does not exist: '$absoluteFilepath'"
                     continue
                 }
                 
@@ -322,7 +353,7 @@ $repositories | ForEach-Object -ThrottleLimit $appConfig.MaxParallelClones -Para
                 try {
                     $content = Get-Content -Path $absoluteFilepath -Raw -ErrorAction Stop
                 } catch {
-                    Write-Log -Severity Warn -Repository $repositoryName -Message ("[ERR] Failed to read file content: " + $_.Exception.Message)
+                    Write-Repository-Log -Severity Warn -Repository $repositoryName -Message ("[ERR] Failed to read file content: " + $_.Exception.Message)
                     continue
                 }
                 
@@ -380,7 +411,7 @@ $repositories | ForEach-Object -ThrottleLimit $appConfig.MaxParallelClones -Para
                 StatusCodeVariable = 'statusCode'
             }
             
-            Write-Log -Severity Debug -Repository $repositoryName -Message "Sending CodeIndexRequest with Document Count: $($codeSearchDocumentList.Length)"
+            Write-Repository-Log -Severity Debug -Repository $repositoryName -Message "Sending CodeIndexRequest with Document Count: $($codeSearchDocumentList.Length)"
 
             try {
                 # Invokes the Requests, which will error out on HTTP Status Code >= 400, 
@@ -388,15 +419,15 @@ $repositories | ForEach-Object -ThrottleLimit $appConfig.MaxParallelClones -Para
                 # error message.
                 $resp = Invoke-RestMethod @codeSearchIndexRequest
 
-                Write-Log -Severity Debug -Repository $repositoryName -Message "CodeIndexRequest sent successfully with HTTP Status Code = $statusCode"
+                Write-Repository-Log -Severity Debug -Repository $repositoryName -Message "CodeIndexRequest sent successfully with HTTP Status Code = $statusCode"
             } catch {
-                Write-Log -Severity Error -Repository $repositoryName -Message ("CodeIndexRequest failed with Message: " + $_.Exception.Message)
+                Write-Repository-Log -Severity Error -Repository $repositoryName -Message ("CodeIndexRequest failed with Message: " + $_.Exception.Message)
             }
         }
     }
     finally {
         if($repositoryDirectory.StartsWith("C:\Temp")) {
-            Write-Log -Repository $repositoryName -Severity Debug -Message "Deleting GIT Repository: $repositoryDirectory ..."
+            Write-Repository-Log -Repository $repositoryName -Severity Debug -Message "Deleting GIT Repository: $repositoryDirectory ..."
         
             Remove-Item -LiteralPath $repositoryDirectory -Force -Recurse
         }
