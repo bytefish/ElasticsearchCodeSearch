@@ -17,7 +17,7 @@ function Write-Log {
     $timestamp = Get-Date  -Format 'hh:mm:ss'
     $threadId = [System.Threading.Thread]::CurrentThread.ManagedThreadId
 
-    Write-Output "$timestamp $Severity [$threadId] $Repository $Message"
+    Write-Output "$timestamp $Severity [$threadId] $Message"
 }
 
 function Write-Repository-Log {
@@ -60,6 +60,8 @@ $appConfig = @{
     MaxNumberOfRepositories = 1000
     # Only indexes repositories updated between these timestamps
     UpdatedBetween = @([datetime]::Parse("2020-01-01T00:00:00Z"), [datetime]::Parse("9999-12-31T00:00:00Z"))
+    # Filter for Repositories with the Primary Language
+    PrimaryLanguage = "C#"
     # Set this to false if you want to index archived repositories.
     OmitArchivedRepositories = $true
     # Set this to true, if you want to index archived repositories only.
@@ -157,6 +159,10 @@ $appConfig = @{
 # Start Writing the Log
 Start-Transcript $appConfig.LogFile -Append
 
+# Log Indexer Settings, so we know what configuration had been 
+# used, when analyzing the Logs.
+Write-Log -Severity Debug -Message ($appConfig | ConvertTo-Json)
+
 # Get all GitHub Repositories for an organization or a user, using the GitHub CLI.
 $argumentList = @()
 
@@ -171,14 +177,23 @@ if($appConfig.OnlyArchivedRepositories -eq $true) {
     $argumentList += "--archived"
 }
 
-$arguments = $argumentList -join " "
+if($appConfig.PrimaryLanguage) {
+    $argumentList += "--language $($appConfig.PrimaryLanguage)"
+}
 
-$repositories = Invoke-Expression "gh repo list $($appConfig.Owner) $arguments"
+$arguments = $argumentList -join " "
+$cmd = "gh repo list $($appConfig.Owner) $arguments"
+
+Write-Log -Severity Debug -Message "Getting repositories for owner $($appConfig.Owner) using command: '$($cmd)'"
+
+$repositories = Invoke-Expression $cmd
     | ConvertFrom-Json    
     | Where-Object {$_.diskUsage -lt $appConfig.MaxDiskUsageInKilobytes} 
-    | Where-Object { ($_.updatedAt -ge $appConfig.UpdatedBetween[0]) -and  ($_.updatedAt -le $appConfig.UpdatedBetween[1]) }
+    | Where-Object { ($_.updatedAt -ge $appConfig.UpdatedBetween[0]) -and ($_.updatedAt -le $appConfig.UpdatedBetween[1]) }
 
-Write-Host ($repositories | Select-Object -Property name,updatedAt)
+# Add Debug Information about the Number of Repositories to be crawled, 
+# We could also add the name, but I am unsure about the relevant data.
+Write-Log -Severity Debug -Message "Processing $($repositories.Length) repositories"
 
 # Index all files of the organization or user, cloning is going to take some time, 
 # so we should probably be able to clone and process 4 repositories in parallel. We 
@@ -417,7 +432,7 @@ $repositories | ForEach-Object -ThrottleLimit $appConfig.MaxParallelClones -Para
                 # Invokes the Requests, which will error out on HTTP Status Code >= 400, 
                 # so we need to wrap it in a try / catch block. We can then extract the 
                 # error message.
-                $resp = Invoke-RestMethod @codeSearchIndexRequest
+                Invoke-RestMethod @codeSearchIndexRequest | Out-Null
 
                 Write-Repository-Log -Severity Debug -Repository $repositoryName -Message "CodeIndexRequest sent successfully with HTTP Status Code = $statusCode"
             } catch {
