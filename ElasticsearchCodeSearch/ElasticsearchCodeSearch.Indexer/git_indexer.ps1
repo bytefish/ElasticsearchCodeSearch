@@ -22,7 +22,7 @@ function Write-Log {
     $timestamp = Get-Date  -Format 'hh:mm:ss'
     $threadId = [System.Threading.Thread]::CurrentThread.ManagedThreadId
 
-    Write-Host "$timestamp $Severity [$threadId] $Repository $Message"
+    Write-Output "$timestamp $Severity [$threadId] $Repository $Message"
 }
 
 # We are going to use Parallel Blocks, and they don't play nice 
@@ -31,15 +31,25 @@ function Write-Log {
 $writeLogDef = ${function:Write-Log}.ToString()
 
 # The AppConfig, where you can configure the Indexer. It allows 
-# you to set the organization to index, the URL to send documents 
-# for indexing to and whiteliste filenames and extensions. 
+# you to set the owner to index, the URL to send documents, 
+# and whitelist filenames and extensions. 
 $appConfig = @{
     # The organization (or user) we are going to index all repositories 
     # from. This should be passed as a parameter in a later version ...
-    Organization = "microsoft"
+    Owner = "microsoft"
     # We want to index repositories with a maximum of 700 MB initially, so we 
     # filter all large directories ...
-    MaxDiskUsageInKilobytes = 10 * 1024
+    MaxDiskUsageInKilobytes = 100 * 1024
+    # Maximum Numbers of GitHub Repositories to process. This needs to be 
+    # passed to the gh CLI, because it doesn't support pagination.
+    MaxNumberOfRepositories = 1000
+    # Only indexes repositories updated between these timestamps
+    UpdatedBetween = @([datetime]::Parse("2020-01-01T00:00:00Z"), [datetime]::Parse("9999-12-31T00:00:00Z"))
+    # A flag no index archived repositories or not.
+    IndexArchived = $false
+    # LogFile to write the logs to. We don't print to screen directly, because 
+    # we cannot trust the results.
+    LogFile = "C:\Temp\log_indexer.log"
     # The Url, where the Index Service is running at. This is the ASP.NET 
     # Core WebAPI, which is responsible to send the indexing requests ...
     CodeSearchIndexUrl = "http://localhost:5000/index-documents"
@@ -68,6 +78,7 @@ $appConfig = @{
         ".fs",
         ".razor", 
         ".sln",
+        ".xaml",
         # CSS
         ".css",
         ".scss",
@@ -116,17 +127,32 @@ $appConfig = @{
     )
     # Batch Size for Elasticsearch Requests.
     BatchSize = 30
+    # Throttles the number of parallel clones. This way we can 
+    # clone multiple repositories in parallel, so we don't have 
+    # to wait for each clone.
+    MaxParallelClones = 1
+    # Throttles the number of parallel bulk index requests to 
+    # the backend, so we can send multiple requests in parallel 
+    # and don't need to wait for the request to return.
+    MaxParallelBulkRequests = 10
 }
 
+# Start Writing the Log
+Start-Transcript $appConfig.LogFile -Append
+
 # Get all GitHub Repositories for an organization or a user, using the GitHub CLI.
-$repositories = gh repo list $appConfig.Organization --json id,name,owner,nameWithOwner,languages,url,sshUrl,diskUsage
-                     | ConvertFrom-Json                                         
-                     | Where-Object {$_.diskUsage -lt $appConfig.MaxDiskUsageInKilobytes} 
- 
+
+$repositories = gh repo list $appConfig.Owner --limit $appConfig.MaxNumberOfRepositories --json id,name,owner,nameWithOwner,languages,url,sshUrl,diskUsage,updatedAt
+    | ConvertFrom-Json    
+    | Where-Object {$_.diskUsage -lt $appConfig.MaxDiskUsageInKilobytes} 
+    | Where-Object { ($_.updatedAt -ge $appConfig.UpdatedBetween[0]) -and  ($_.updatedAt -le $appConfig.UpdatedBetween[1]) }
+
+Write-Host ($repositories | Select-Object -Property name,updatedAt)
+
 # Index all files of the organization or user, cloning is going to take some time, 
 # so we should probably be able to clone and process 4 repositories in parallel. We 
 # need to check if it reduces the waiting time ...
-$repositories | ForEach-Object -ThrottleLimit 1 -Parallel {
+$repositories | ForEach-Object -ThrottleLimit $appConfig.MaxParallelClones -Parallel {
 
     # We need to re-assign the defintion, because we are 
     # going to have another nested Parallel block, which 
@@ -234,7 +260,7 @@ $repositories | ForEach-Object -ThrottleLimit 1 -Parallel {
         # Process all File Chunks in Parallel. This allows us to send 
         # Bulk Requests to the Elasticsearch API, without complex code 
         # ...
-        $batches | ForEach-Object -ThrottleLimit 10 -Parallel {  
+        $batches | ForEach-Object -ThrottleLimit $appConfig.MaxParallelBulkRequests -Parallel {  
             
             # Source the Write-Log function, so we can use it in the
             # Parallel ScriptBlock. Somewhat ugly, but I don't know a 
@@ -360,7 +386,7 @@ $repositories | ForEach-Object -ThrottleLimit 1 -Parallel {
                 # Invokes the Requests, which will error out on HTTP Status Code >= 400, 
                 # so we need to wrap it in a try / catch block. We can then extract the 
                 # error message.
-                Invoke-RestMethod @codeSearchIndexRequest
+                $resp = Invoke-RestMethod @codeSearchIndexRequest
 
                 Write-Log -Severity Debug -Repository $repositoryName -Message "CodeIndexRequest sent successfully with HTTP Status Code = $statusCode"
             } catch {
@@ -376,3 +402,5 @@ $repositories | ForEach-Object -ThrottleLimit 1 -Parallel {
         }
     }
 }
+
+Stop-Transcript
