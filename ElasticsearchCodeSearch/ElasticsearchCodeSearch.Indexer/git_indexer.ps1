@@ -195,6 +195,10 @@ $repositories = Invoke-Expression $cmd
 # We could also add the name, but I am unsure about the relevant data.
 Write-Log -Severity Debug -Message "Processing $($repositories.Length) repositories"
 
+# Add Debug Information about the Repositories to be indexed. This enables 
+# us to check the logs, if a repository has been indexed correctly. 
+Write-Log -Severity Debug -Message "List of Repositories to index: $(($repositories | Select-Object -ExpandProperty name) -join ", ")"
+
 # Index all files of the organization or user, cloning is going to take some time, 
 # so we should probably be able to clone and process 4 repositories in parallel. We 
 # need to check if it reduces the waiting time ...
