@@ -5,6 +5,7 @@ using System.Runtime.Serialization;
 
 namespace ElasticsearchCodeSearch.Shared.Exceptions
 {
+    [Serializable]
     public class ApiException : Exception
     {
         public ApiException()
@@ -27,6 +28,5 @@ namespace ElasticsearchCodeSearch.Shared.Exceptions
         /// Http status code.
         /// </summary>
         public required HttpStatusCode StatusCode { get; set; }
-
     }
 }
