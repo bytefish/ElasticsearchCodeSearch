@@ -5,7 +5,7 @@ code search. I wanted to learn about Powershell and the recent updates to the
 Elasticsearch .NET client.
 
 <a href="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/Screenshots/ElasticsearchCodeSearch.jpg">
-    <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/Screenshots/ElasticsearchCodeSearch.jpg" alt="The final Code Search with the Blazor Frontend" width="50%" />
+    <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/Screenshots/ElasticsearchCodeSearch.jpg" alt="The final Code Search with the Blazor Frontend" width="100%" />
 </a>
 
 The Git Repositories are read by a Powershell script in `ElasticsearchCodeSearch\ElasticsearchCodeSearch.Indexer\git_indexer.ps1`, 
