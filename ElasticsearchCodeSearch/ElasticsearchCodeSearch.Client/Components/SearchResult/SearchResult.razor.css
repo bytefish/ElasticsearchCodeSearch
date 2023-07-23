@@ -26,6 +26,10 @@
         font-family: "JetBrains Mono","Menlo","DejaVu Sans Mono","Liberation Mono","Consolas","Ubuntu Mono","Courier New","andale mono","lucida console",monospace;
     }
 
+        .code-box .code-box-content .highlighted-line {
+            background-color: #f8eec7 !important;
+        }
+
         .code-box .code-box-content .code-line {
             display: grid;
             grid-template-columns: auto 1fr;
@@ -33,7 +37,7 @@
 
             .code-box .code-box-content .code-line .code-line-number {
                 display: grid;
-                text-align:right;
+                text-align: right;
                 padding-right: 0.5rem;
                 border-right: 1px solid #dcdcde;
                 min-width: 4rem;
@@ -43,7 +47,3 @@
                 display: grid;
                 text-align: left;
             }
-
-.highlighted-line {
-    background-color: #f8eec7 !important;
-}
