@@ -8,8 +8,8 @@ Elasticsearch .NET client.
 </a>
 
 The Git Repositories are read by a Powershell script in `ElasticsearchCodeSearch\ElasticsearchCodeSearch.Indexer\git_indexer.ps1`, 
-which sends the data to be indexed to an ASP.NET Core Backend. The ASP.NET Core Backend then sends a Bulk Indexing Request to the 
-Elasticsearch server.
+which sends the data to an ASP.NET Core Backend. The ASP.NET Core Backend then sends a Bulk Indexing Request to the Elasticsearch 
+server.
 
 You'll need to adjust the `Username`, `Password` and `CertificateFingerprint` for your Elasticsearch 
 instance. See the Elasticsearch "Getting Started" guide on Elasticsearch.NET to learn how to obtain 
