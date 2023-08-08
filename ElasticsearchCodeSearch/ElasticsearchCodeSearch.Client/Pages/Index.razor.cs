@@ -76,7 +76,7 @@ namespace ElasticsearchCodeSearch.Client.Pages
         protected override Task OnParametersSetAsync()
         {
             // The associated pagination state may have been added/removed/replaced
-            CurrentPageItemsChanged.SubscribeOrMove(Pagination?.CurrentPageItemsChanged);
+            CurrentPageItemsChanged.SubscribeOrMove(Pagination.CurrentPageItemsChanged);
 
             return Task.CompletedTask;
         }
