@@ -1,16 +1,17 @@
 # Elasticsearch Code Search Experiments #
 
-This repository is an Elasticsearch experiment to see how to build a very simple 
-code search. I wanted to learn about Powershell and the recent updates to the 
+This repository is an Elasticsearch experiment to see how to build a code search engine. I wanted to learn about Powershell and the recent updates to the 
 Elasticsearch .NET client.
 
+The final result looks like this:
+
 <a href="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/Screenshots/ElasticsearchCodeSearch.jpg">
-    <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/Screenshots/ElasticsearchCodeSearch.jpg" alt="The final Code Search with the Blazor Frontend" width="50%" />
+    <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/Screenshots/ElasticsearchCodeSearch.jpg" alt="The final Code Search with the Blazor Frontend" width="100%" />
 </a>
 
 The Git Repositories are read by a Powershell script in `ElasticsearchCodeSearch\ElasticsearchCodeSearch.Indexer\git_indexer.ps1`, 
-which sends the data to be indexed to an ASP.NET Core Backend. The ASP.NET Core Backend then sends a Bulk Indexing Request to the 
-Elasticsearch server.
+which sends the data to an ASP.NET Core Backend. The ASP.NET Core Backend then sends a Bulk Indexing Request to the Elasticsearch 
+server.
 
 You'll need to adjust the `Username`, `Password` and `CertificateFingerprint` for your Elasticsearch 
 instance. See the Elasticsearch "Getting Started" guide on Elasticsearch.NET to learn how to obtain 
@@ -44,6 +45,14 @@ By default the Backend sorts all matches by their latest commit date, that has b
 from the git repository. 
 
 This is an Open Source project, feel free to contribute!
+
+## Articles ##
+
+The Search Engine has been introduced in a three articles: 
+
+* [Implementing a Code Search: Elasticsearch and ASP.NET Core Backend (Part 1)](https://www.bytefish.de/blog/elasticsearch_code_search_part1_backend_elasticsearch.html)
+* [Implementing a Code Search: Indexing Git Repositories using PowerShell (Part 2)](https://www.bytefish.de/blog/elasticsearch_code_search_part2_indexer_powershell.html)
+* [Implementing a Code Search: A Frontend with ASP.NET Core Blazor (Part 3)](https://www.bytefish.de/blog/elasticsearch_code_search_part3_frontend_blazor.html)
 
 ## License ##
 
