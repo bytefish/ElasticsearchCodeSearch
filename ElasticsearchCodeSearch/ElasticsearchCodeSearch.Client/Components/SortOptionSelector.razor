@@ -1,0 +1,17 @@
+﻿@using ElasticsearchCodeSearch.Client.Infrastructure;
+@using ElasticsearchCodeSearch.Client.Models;
+@using Microsoft.Fast.Components.FluentUI.Utilities;
+
+@inherits FluentComponentBase
+<FluentSelect @attributes="AdditionalAttributes" class="@Class" style="@Style"
+              Id="@Id"
+              Title="@Title"
+              Disabled="@Disabled"
+              Items="@SortOptions"
+              OptionText="@(i => Loc.TranslateEnum(i))"
+              OptionValue="@(i => i.ToString())"
+              TOption=SortOptionEnum
+              Value=@_value
+              SelectedOption=@_sortOption
+              SelectedOptionChanged="OnSelectedValueChanged">
+</FluentSelect>

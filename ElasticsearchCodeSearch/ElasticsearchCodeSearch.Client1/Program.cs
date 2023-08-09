@@ -15,8 +15,6 @@ builder.Services.AddHttpClient<ElasticsearchCodeSearchService>((services, client
     client.BaseAddress = new Uri(builder.Configuration["ElasticsearchCodeSearchApi:BaseAddress"]!);
 });
 
-builder.Services.AddLocalization();
-
 builder.Services.AddFluentUIComponents();
 
 //When using icons and/or emoji replace the line above with the code below

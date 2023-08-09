@@ -1,6 +1,4 @@
-﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 
 namespace ElasticsearchCodeSearch.Client.Extensions
 {

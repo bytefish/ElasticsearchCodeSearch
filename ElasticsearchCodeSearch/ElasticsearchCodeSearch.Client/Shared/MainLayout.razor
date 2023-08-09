@@ -1,16 +1,82 @@
-﻿@* // Licensed under the MIT license. See LICENSE file in the project root for full license information. *@
+﻿@namespace ElasticsearchCodeSearch.Client.Shared
 
+@using Microsoft.AspNetCore.Components
+@using System.Runtime.InteropServices
 @inherits LayoutComponentBase
 
-<PageTitle>Elasticsearch Code Search Experiments</PageTitle>
+<PageTitle>Fluent UI Blazor components demo page</PageTitle>
 
-<div class="container">
-    <ErrorBoundary>
-        <ChildContent>
-            @Body
-        </ChildContent>
-        <ErrorContent Context="ex">
-            <p class="error">@ex.Message</p>
-        </ErrorContent>
-    </ErrorBoundary>
+<div id="container" @ref="container">
+    
+    <header>
+        <div class="logo" role="presentation" aria-hidden="true" itemprop="logo" itemscope="itemscope">
+        </div>
+        <div class="colorgroup">
+            <label for="color">Color</label>
+            <FluentSelect Id="color" 
+                          Items=@(Enum.GetValues<OfficeColor>()) 
+                          OptionValue="@(c => c.ToAttributeValue())"
+                          OptionSelected="@(c => c == _selectedColorOption)"
+                          TOption="OfficeColor"
+                          Position="SelectPosition.Below"
+                          @bind-SelectedOption="@_selectedColorOption"
+                          @onchange="@(x => HandleColorChange(x))" 
+                          aria-label="Accent color selector"/>
+        </div>
+        <div class="switches">
+            <FluentSwitch @bind-Value="@_inDarkMode" AfterBindValue="UpdateTheme" title="Switch theme">
+                <span class="label">Theme</span>
+                <span slot="unchecked-message">light</span>
+                <span slot="checked-message">dark</span>
+            </FluentSwitch>
+            <FluentSwitch @bind-Value="@_ltr" AfterBindValue="UpdateDirection" title="Switch direction">
+                <span>Direction</span>
+                <span slot="unchecked-message">LTR</span>
+                <span slot="checked-message">RTL</span>
+            </FluentSwitch>
+        </div>
+    </header>
+
+    <main>
+        <input type="checkbox" id="menu-toggle" checked=@menuchecked @onclick=HandleChecked />
+        <label for="menu-toggle" class="menu-icon">
+            <FluentIcon Icon="Icons.Regular.Size24.Navigation" />
+        </label>
+        <nav>
+            @if(_menuType == "list")
+            {
+                <NavMenuList />
+            }
+            else
+            {
+                <NavMenuTree />
+            }
+        </nav>
+        <div class="content">
+            <article id="article">
+                <ErrorBoundary @ref="errorBoundary">
+                    <ChildContent>
+                        @Body
+                    </ChildContent>
+                    <ErrorContent Context="ex">
+                        <div class="blazor-error-boundary">@ex.Message</div>
+                    </ErrorContent>
+                </ErrorBoundary>
+            </article>
+        </div>
+        <FluentToastContainer MaxToastCount="10"  />
+        <FluentDialogContainer />
+    </main>
+    <footer>
+        <div class="version">
+            <small>
+                Version: @_version
+                &nbsp;-&nbsp;
+                <a href="https://dotnet.microsoft.com/en-us/learn/aspnet/what-is-aspnet-core">Powered by @RuntimeInformation.FrameworkDescription</a>
+            </small>
+        </div>
+        <div class="copy">
+            <small>Microsoft © 2023. All rights reserved.</small>
+        </div>
+    </footer>
 </div>

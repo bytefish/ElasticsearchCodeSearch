@@ -1,45 +1,9 @@
-﻿@* // Licensed under the MIT license. See LICENSE file in the project root for full license information. *@
+﻿@page "/"
 
-@page "/"
+<PageTitle>Index</PageTitle>
 
-@using ElasticsearchCodeSearch.Client.Components
-@using ElasticsearchCodeSearch.Client.Components.Pagination
-@using ElasticsearchCodeSearch.Client.Components.SearchResult
-@using ElasticsearchCodeSearch.Client.Extensions;
-@using ElasticsearchCodeSearch.Client.Infrastructure;
-@using ElasticsearchCodeSearch.Shared.Dto;
+<h1>Hello, world!</h1>
 
-<PageTitle>Elasticsearch Code Search Experiments</PageTitle>
-
-<div class="search-container">
-    <div class="search-header">
-        <div class="search-title">
-            <h1>Elasticsearch Code Search</h1>
-        </div>
-        <div class="search-box">
-            <FluentSearch @bind-Value="QueryString" @onkeyup="@EnterSubmit" Class="w-100" />
-            <FluentButton @onclick=@QueryAsync>Search</FluentButton>
-            <FluentSelect Items="@SortOptions"
-                          OptionText="@(i => i.Text)"
-                          OptionValue="@(i => i.Value)"
-                          OptionSelected="@(i => i.Selected)"
-            @bind-SelectedOption="@SelectedSortOption">
-            </FluentSelect>
-        </div>
-    </div>
-    <div class="search-results-total">
-        <p>@TotalItemCount Documents found</p>
-    </div>
-    <div class="search-results">
-        @foreach (var searchResult in CodeSearchResults)
-        {
-            <SearchResult Item="@searchResult"></SearchResult>
-        }
-    </div>
-    <div class="search-paginator">
-        <Paginator State="@Pagination"></Paginator>
-    </div>
-    <div class="search-footer">
-        <span>Elasticsearch Code Search</span>
-    </div>
-</div>
+<p style="margin-bottom: 1rem;">
+    Welcome to your new app.
+</p>

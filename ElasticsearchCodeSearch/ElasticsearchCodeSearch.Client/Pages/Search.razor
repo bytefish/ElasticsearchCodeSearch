@@ -1,0 +1,42 @@
+﻿@* // Licensed under the MIT license. See LICENSE file in the project root for full license information. *@
+
+@page "/Search"
+
+@using ElasticsearchCodeSearch.Client.Components
+@using ElasticsearchCodeSearch.Client.Extensions;
+@using ElasticsearchCodeSearch.Client.Infrastructure;
+@using ElasticsearchCodeSearch.Shared.Dto;
+
+<PageTitle>Elasticsearch Code Search Experiments</PageTitle>
+
+            <FluentGrid>
+                <FluentGridItem xs="4">
+                    <FluentSearch @bind-Value="_queryString" @onkeyup="@EnterSubmit"/>
+                </FluentGridItem>
+                <FluentGridItem xs="4">
+                    <FluentButton @onclick=@QueryAsync Class="w-100">Search</FluentButton>
+                </FluentGridItem>
+                <FluentGridItem xs="4">
+                    <SortOptionSelector SortOptions="_sortOptions" @bind-SortOption="_selectedSortOption"></SortOptionSelector>
+                </FluentGridItem>
+            </FluentGrid>
+        @*
+
+<div class="search-container">
+
+    <div class="search-results-total">
+        <p>@_totalItemCount Documents found</p>
+    </div>
+    <div class="search-results">
+        @foreach (var searchResult in _codeSearchResults)
+        {
+            <SearchResult Item="@searchResult"></SearchResult>
+        }
+    </div>
+    <div class="search-paginator">
+        <Paginator State="@_pagination"></Paginator>
+    </div>
+    <div class="search-footer">
+        <span>Elasticsearch Code Search</span>
+    </div>
+</div>*@

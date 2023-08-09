@@ -1,0 +1,16 @@
+﻿@* // Licensed under the MIT license. See LICENSE file in the project root for full license information. *@
+
+@inherits LayoutComponentBase
+
+<PageTitle>Elasticsearch Code Search Experiments</PageTitle>
+
+<div class="container">
+    <ErrorBoundary>
+        <ChildContent>
+            @Body
+        </ChildContent>
+        <ErrorContent Context="ex">
+            <p class="error">@ex.Message</p>
+        </ErrorContent>
+    </ErrorBoundary>
+</div>

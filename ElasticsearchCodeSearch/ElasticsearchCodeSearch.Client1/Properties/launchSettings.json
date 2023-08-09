@@ -8,7 +8,7 @@
     }
   },
   "profiles": {
-    "BlazorDataGridExample": {
+    "ElasticsearchCodeSearch.Client": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
