@@ -9,21 +9,16 @@
 
 <PageTitle>Elasticsearch Code Search Experiments</PageTitle>
 
-            <FluentGrid>
-                <FluentGridItem xs="4">
-                    <FluentSearch @bind-Value="_queryString" @onkeyup="@EnterSubmit"/>
-                </FluentGridItem>
-                <FluentGridItem xs="4">
-                    <FluentButton @onclick=@QueryAsync Class="w-100">Search</FluentButton>
-                </FluentGridItem>
-                <FluentGridItem xs="4">
-                    <SortOptionSelector SortOptions="_sortOptions" @bind-SortOption="_selectedSortOption"></SortOptionSelector>
-                </FluentGridItem>
-            </FluentGrid>
-        @*
-
 <div class="search-container">
+    <div class="search-header">
 
+        <div class="search-box">
+            <FluentSearch @bind-Value="QueryString" @onkeyup="@EnterSubmit" Class="w-100" />
+            <FluentButton @onclick=@QueryAsync>Search</FluentButton>
+            <SortOptionSelector SortOptions="_sortOptions" @bind-SortOption="_selectedSortOption">
+            </SortOptionSelector>
+        </div>
+    </div>
     <div class="search-results-total">
         <p>@_totalItemCount Documents found</p>
     </div>
@@ -36,7 +31,4 @@
     <div class="search-paginator">
         <Paginator State="@_pagination"></Paginator>
     </div>
-    <div class="search-footer">
-        <span>Elasticsearch Code Search</span>
-    </div>
-</div>*@
+</div>

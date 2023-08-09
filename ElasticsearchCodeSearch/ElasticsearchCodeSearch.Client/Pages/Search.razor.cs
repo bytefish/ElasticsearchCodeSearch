@@ -52,7 +52,10 @@ namespace ElasticsearchCodeSearch.Client.Pages
         /// <summary>
         /// Pagination.
         /// </summary>
-        private PaginatorState _pagination = new PaginatorState();
+        private PaginatorState _pagination = new PaginatorState
+        {
+            ItemsPerPage = 10
+        };
 
         /// <summary>
         /// Reacts on Paginator Changes.
@@ -105,6 +108,7 @@ namespace ElasticsearchCodeSearch.Client.Pages
         /// <inheritdoc />
         protected override Task OnParametersSetAsync()
         {
+            // Set bound values, so we don't modify the parameters directly
             _queryString = QueryString ?? string.Empty;
             _selectedSortOption = GetSortOption(SortOption, defaultValue: SortOptionEnum.LatestCommitDateDescending);
             _pagination.CurrentPageIndex = Page ?? 1;
@@ -131,7 +135,6 @@ namespace ElasticsearchCodeSearch.Client.Pages
                 var loadingCts = _pendingDataLoadCancellationTokenSource = new CancellationTokenSource();
 
                 // Get From and Size for Pagination:
-
                 var from = _pagination.CurrentPageIndex * _pagination.ItemsPerPage;
                 var size = _pagination.ItemsPerPage;
 
