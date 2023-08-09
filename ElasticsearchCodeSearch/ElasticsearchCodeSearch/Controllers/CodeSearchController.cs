@@ -21,6 +21,41 @@ namespace ElasticsearchCodeSearch.Controllers
             _logger = logger;
         }
 
+        [HttpGet]
+        [Route("/search-stat")]
+        public async Task<IActionResult> GetSearchStatistics(CancellationToken cancellationToken)
+        {
+            _logger.TraceMethodEntry();
+
+            try
+            {
+                var indicesStatResponse = await _elasticsearchClient.GetSearchStatistics(cancellationToken);
+
+                if (!indicesStatResponse.IsValidResponse)
+                {
+                    if (_logger.IsErrorEnabled())
+                    {
+                        indicesStatResponse.TryGetOriginalException(out var originalException);
+
+                        _logger.LogError(originalException, "Elasticsearch failed with an unhandeled Exception");
+                    }
+
+                    return BadRequest("Invalid Search Response from Elasticsearch");
+                }
+
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                if (_logger.IsErrorEnabled())
+                {
+                    _logger.LogError(e, "An unhandeled exception occured");
+                }
+
+                return StatusCode(500, "An internal Server Error occured");
+            }
+        }
+
         [HttpPost]
         [Route("/delete-all-documents")]
         public async Task<IActionResult> DeleteAllDocuments(CancellationToken cancellationToken)

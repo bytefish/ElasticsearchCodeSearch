@@ -190,6 +190,22 @@ namespace ElasticsearchCodeSearch.Elasticsearch
             return deleteByQueryResponse;
         }
 
+        public async Task<IndicesStatsResponse> GetSearchStatistics(CancellationToken cancellationToken)
+        {
+            _logger.TraceMethodEntry();
+
+            var indicesStatResponse = await _client
+                .Indices.StatsAsync(request => request.Indices(_indexName))
+                .ConfigureAwait(false);
+            
+            if (_logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("IndicesStatsResponse DebugInformation: {DebugInformation}", indicesStatResponse.DebugInformation);
+            }
+
+            return indicesStatResponse;
+        }
+
         public async Task<DeleteResponse> DeleteAsync(string documentId, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
