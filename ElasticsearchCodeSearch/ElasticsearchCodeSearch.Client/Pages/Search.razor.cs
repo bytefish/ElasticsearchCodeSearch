@@ -127,6 +127,12 @@ namespace ElasticsearchCodeSearch.Client.Pages
         /// <returns>An awaitable task</returns>
         public async Task QueryAsync()
         {
+            // Do not execute empty queries ...
+            if(string.IsNullOrWhiteSpace(_queryString))
+            {
+                return;
+            }
+
             try
             {
                 // Cancel all Pending Search Requests

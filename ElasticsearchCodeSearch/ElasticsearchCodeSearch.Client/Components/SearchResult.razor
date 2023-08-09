@@ -11,7 +11,7 @@
         @foreach (var line in @Item.Content)
         {
             <div class="code-line @codeLineClass(line)">
-                <div class="code-line-number">
+                <div class="code-line-number noselect">
                     @line.LineNo
                 </div>
                 <div class="code-line-content">
