@@ -54,7 +54,8 @@ namespace ElasticsearchCodeSearch.Client.Pages
         /// </summary>
         private PaginatorState _pagination = new PaginatorState
         {
-            ItemsPerPage = 10
+            ItemsPerPage = 10,
+            TotalItemCount = 10
         };
 
         /// <summary>
@@ -111,8 +112,8 @@ namespace ElasticsearchCodeSearch.Client.Pages
             // Set bound values, so we don't modify the parameters directly
             _queryString = QueryString ?? string.Empty;
             _selectedSortOption = GetSortOption(SortOption, defaultValue: SortOptionEnum.LatestCommitDateDescending);
-            _pagination.CurrentPageIndex = Page ?? 1;
-            _pagination.ItemsPerPage = PageSize ?? 25;
+            _pagination.CurrentPageIndex = Page ?? 0;
+            _pagination.ItemsPerPage = PageSize ?? 10;
 
             // The associated pagination state may have been added/removed/replaced
             _currentPageItemsChanged.SubscribeOrMove(_pagination.CurrentPageItemsChanged);

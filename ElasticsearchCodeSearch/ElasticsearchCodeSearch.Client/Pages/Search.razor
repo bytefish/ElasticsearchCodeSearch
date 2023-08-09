@@ -13,7 +13,7 @@
     <div class="search-header">
 
         <div class="search-box">
-            <FluentSearch @bind-Value="QueryString" @onkeyup="@EnterSubmit" Class="w-100" />
+            <FluentSearch @bind-Value="_queryString" @onkeyup="@EnterSubmit" Class="w-100" />
             <FluentButton @onclick=@QueryAsync>Search</FluentButton>
             <SortOptionSelector SortOptions="_sortOptions" @bind-SortOption="_selectedSortOption">
             </SortOptionSelector>
