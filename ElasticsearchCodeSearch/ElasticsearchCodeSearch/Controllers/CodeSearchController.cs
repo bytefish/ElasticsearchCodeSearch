@@ -22,7 +22,7 @@ namespace ElasticsearchCodeSearch.Controllers
         }
 
         [HttpGet]
-        [Route("/search-stat")]
+        [Route("/search-statistics")]
         public async Task<IActionResult> GetSearchStatistics(CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();

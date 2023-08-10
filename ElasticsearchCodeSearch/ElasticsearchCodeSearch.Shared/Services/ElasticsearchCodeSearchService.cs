@@ -43,5 +43,29 @@ namespace ElasticsearchCodeSearch.Shared.Services
                 .ReadFromJsonAsync<CodeSearchResultsDto>(cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
         }
+
+        public async Task<List<CodeSearchStatisticsDto>?> SearchStatisticsAsync(CancellationToken cancellationToken)
+        {
+            _logger.TraceMethodEntry();
+
+            var response = await _httpClient
+                .GetAsync("search-statistics", cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new ApiException(string.Format(CultureInfo.InvariantCulture,
+                    "HTTP Request failed with Status: '{0}' ({1})",
+                    (int)response.StatusCode,
+                    response.StatusCode))
+                {
+                    StatusCode = response.StatusCode
+                };
+            }
+
+            return await response.Content
+                .ReadFromJsonAsync<List<CodeSearchStatisticsDto>>(cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }
