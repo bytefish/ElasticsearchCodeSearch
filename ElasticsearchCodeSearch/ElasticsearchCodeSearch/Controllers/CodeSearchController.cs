@@ -43,7 +43,9 @@ namespace ElasticsearchCodeSearch.Controllers
                     return BadRequest("Invalid Search Response from Elasticsearch");
                 }
 
-                return Ok();
+                var result = CodeSearchStatisticsConverter.Convert(indicesStatResponse);
+
+                return Ok(result);
             }
             catch (Exception e)
             {
