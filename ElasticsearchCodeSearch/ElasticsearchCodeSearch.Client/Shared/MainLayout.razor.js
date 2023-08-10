@@ -3,21 +3,25 @@
 }
 
 export function switchHighlightStyle(dark) {
+
+    const darkNode = document.querySelector(`link[title="dark"]`);
+    const lightNode = document.querySelector(`link[title="dark"]`);
+
     if (dark) {
-        document
-            .querySelector(`link[title="dark"]`)
-            .removeAttribute("disabled");
-        document
-            .querySelector(`link[title="light"]`)
-            .setAttribute("disabled", "disabled");
+        if (darkNode) {
+            darkNode.removeAttribute("disabled");
+        }
+        if (lightNode) {
+            lightNode.setAttribute("disabled", "disabled");
+        }
     }
     else {
-        document
-            .querySelector(`link[title="light"]`)
-            .removeAttribute("disabled");
-        document
-            .querySelector(`link[title="dark"]`)
-            .setAttribute("disabled", "disabled");
+        if (lightNode) {
+            lightNode.removeAttribute("disabled");
+        }
+        if (isDarkNode) {
+            isDarkNode.setAttribute("disabled", "disabled")
+        }
     }
 }
 
@@ -33,5 +37,5 @@ export function isDarkMode() {
 export function switchDirection(dir) {
     document.dir = dir;
     const container = document.getElementById('container');
-    container.style.direction = dir;
+    container?.style.direction = dir;
 }
