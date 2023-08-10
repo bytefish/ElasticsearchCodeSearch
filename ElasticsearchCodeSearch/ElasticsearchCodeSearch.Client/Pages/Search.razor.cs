@@ -4,7 +4,6 @@ using ElasticsearchCodeSearch.Client.Infrastructure;
 using ElasticsearchCodeSearch.Shared.Dto;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Fast.Components.FluentUI;
 using ElasticsearchCodeSearch.Shared.Services;
 using ElasticsearchCodeSearch.Client.Components;
 using ElasticsearchCodeSearch.Client.Models;
@@ -101,6 +100,11 @@ namespace ElasticsearchCodeSearch.Client.Pages
         /// </summary>
         private int _totalItemCount { get; set; } = 0;
 
+        /// <summary>
+        /// Processing Time.
+        /// </summary>
+        private decimal _tookInSeconds { get; set; } = 0;
+
         public Search()
         {
             _currentPageItemsChanged = new(EventCallback.Factory.Create<PaginatorState>(this, QueryAsync));
@@ -167,10 +171,11 @@ namespace ElasticsearchCodeSearch.Client.Pages
 
                 // Set the Search Results:
                 _codeSearchResults = results.Results;
-                _totalItemCount = results.Total;
+                _tookInSeconds = results.TookInMilliseconds / (decimal) 1000;
+                _totalItemCount = (int)results.Total;
 
                 // Refresh the Pagination:
-                await _pagination.SetTotalItemCountAsync(results.Total);
+                await _pagination.SetTotalItemCountAsync(_totalItemCount);
             } 
             catch(Exception e)
             {

@@ -123,7 +123,8 @@ namespace ElasticsearchCodeSearch.Controllers
                     From = request.From,
                     Size = request.Size,
                     Sort = request.Sort,
-                    Total = (int) searchResponse.Total,
+                    Total = searchResponse.Total,
+                    TookInMilliseconds = searchResponse.Took,
                     Results = CodeSearchResultConverter.Convert(searchResponse)
                 };
 
