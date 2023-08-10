@@ -1,9 +1,21 @@
-﻿@page "/"
+﻿@using ElasticsearchCodeSearch.Client.Infrastructure;
+@page "/"
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Search Cluster Overview</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>Search Cluster Overview</h1>
 
-<p style="margin-bottom: 1rem;">
-    Welcome to your new app.
+<p>
+    This page gives you an overview for all indices in your Elasticsearch cluster. It's meant to get a quick overview about your cluster health.
 </p>
+
+@foreach (var indexMetric in _elasticsearchIndexMetrics)
+{
+    <h2>Index "@indexMetric.Index"</h2>
+
+    <FluentDataGrid Items="@indexMetric?.Metrics.AsQueryable()" ResizableColumns=true style="height: 500px; overflow:auto;">
+        <PropertyColumn Title="Metric" Property="@(c => c.Name)" Sortable="true" Align="Align.Start" />
+        <PropertyColumn Title="Key" Property="@(c => c.Key)" Sortable="true" Align="Align.Start" />
+        <PropertyColumn Title="Value" Property="@(c => c.Value)" Sortable="true" Align="Align.Start" />
+    </FluentDataGrid>
+}

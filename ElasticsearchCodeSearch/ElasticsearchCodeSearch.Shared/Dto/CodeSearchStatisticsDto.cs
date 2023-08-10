@@ -21,28 +21,34 @@ namespace ElasticsearchCodeSearch.Shared.Dto
         public required string IndexName { get; set; }
 
         /// <summary>
-        /// Total Index Size in bytes (indices.total.store.size_in_bytes).
+        /// Total Index Size in bytes (indices.store.size_in_bytes).
         /// </summary>
         [JsonPropertyName("indexSizeInBytes")]
         public required long? IndexSizeInBytes { get; set; }
 
         /// <summary>
-        /// Total number of documents indexed (indices.indexing.index_total).
+        /// Total number of documents indexed (indices.docs.count).
         /// </summary>
         [JsonPropertyName("totalNumberOfDocumentsIndexed")]
         public required long? TotalNumberOfDocumentsIndexed { get; set; }
+        
+        /// <summary>
+        /// Number of documents currently being indexed (indices.indexing.index_current).
+        /// </summary>
+        [JsonPropertyName("numberOfDocumentsCurrentlyBeingIndexed")]
+        public required long? NumberOfDocumentsCurrentlyBeingIndexed { get; set; }
+
+        /// <summary>
+        /// Total time spent indexing documents (indices.bulk.total_time_in_millis).
+        /// </summary>
+        [JsonPropertyName("totalTimeSpentBulkIndexingDocumentsInMilliseconds")]
+        public required long? TotalTimeSpentBulkIndexingDocumentsInMilliseconds { get; set; }
 
         /// <summary>
         /// Total time spent indexing documents (indices.indexing.index_time_in_millis).
         /// </summary>
         [JsonPropertyName("totalTimeSpentIndexingDocumentsInMilliseconds")]
         public required long? TotalTimeSpentIndexingDocumentsInMilliseconds { get; set; }
-
-        /// <summary>
-        /// Number of documents currently being indexed (indices.indexing.index_current).
-        /// </summary>
-        [JsonPropertyName("numberOfDocumentsCurrentlyBeingIndexed")]
-        public required long? NumberOfDocumentsCurrentlyBeingIndexed { get; set; }
 
         /// <summary>
         /// Total number of queries (indices.search.query_total).

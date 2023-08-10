@@ -25,13 +25,14 @@ namespace ElasticsearchCodeSearch.Converters
             {
                 IndexName = indexName,
                 IndexSizeInBytes = indexStats.Total?.Store?.SizeInBytes,
-                TotalNumberOfDocumentsIndexed = indexStats.Total?.Indexing?.IndexTotal,
+                TotalNumberOfDocumentsIndexed = indexStats.Total?.Docs?.Count,
                 NumberOfDocumentsCurrentlyBeingIndexed = indexStats.Total?.Indexing?.IndexCurrent,
                 TotalNumberOfFetches = indexStats.Total?.Search?.FetchTotal,
                 NumberOfFetchesCurrentlyInProgress = indexStats.Total?.Search?.FetchCurrent,
                 TotalNumberOfQueries = indexStats.Total?.Search?.QueryTotal,
                 NumberOfQueriesCurrentlyInProgress = indexStats.Total?.Search?.QueryCurrent,
-                TotalTimeSpentIndexingDocumentsInMilliseconds = indexStats.Total?.Indexing?.IndexTimeInMillis,
+                TotalTimeSpentBulkIndexingDocumentsInMilliseconds = indexStats.Total?.Bulk?.TotalTimeInMillis,
+                TotalTimeSpentIndexingDocumentsInMilliseconds = indexStats.Total?.Bulk?.TotalTimeInMillis,
                 TotalTimeSpentOnFetchesInMilliseconds = indexStats.Total?.Search?.FetchTimeInMillis,
                 TotalTimeSpentOnQueriesInMilliseconds = indexStats.Total?.Search?.QueryTimeInMillis,
             };
