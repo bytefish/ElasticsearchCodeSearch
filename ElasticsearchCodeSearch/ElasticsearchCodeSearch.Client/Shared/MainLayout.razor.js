@@ -11,6 +11,7 @@ export function switchHighlightStyle(dark) {
         if (darkNode) {
             darkNode.removeAttribute("disabled");
         }
+
         if (lightNode) {
             lightNode.setAttribute("disabled", "disabled");
         }
@@ -19,8 +20,9 @@ export function switchHighlightStyle(dark) {
         if (lightNode) {
             lightNode.removeAttribute("disabled");
         }
-        if (isDarkNode) {
-            isDarkNode.setAttribute("disabled", "disabled")
+
+        if (darkNode) {
+            darkNode.setAttribute("disabled", "disabled")
         }
     }
 }
@@ -37,5 +39,5 @@ export function isDarkMode() {
 export function switchDirection(dir) {
     document.dir = dir;
     const container = document.getElementById('container');
-    container?.style.direction = dir;
+    container.style.direction = dir;
 }
