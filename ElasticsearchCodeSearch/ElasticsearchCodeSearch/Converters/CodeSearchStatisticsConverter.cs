@@ -7,21 +7,20 @@ namespace ElasticsearchCodeSearch.Converters
 {
     public static class CodeSearchStatisticsConverter
     {
-        public static CodeSearchStatisticsDto Convert(IndicesStatsResponse indicesStatsResponse)
+        public static List<CodeSearchStatisticsDto> Convert(IndicesStatsResponse indicesStatsResponse)
         {
-            if(indicesStatsResponse.Indices == null)
+            if (indicesStatsResponse.Indices == null)
             {
                 throw new Exception("No statistics available");
             }
 
-            if(indicesStatsResponse.Indices.Count != 1)
-            {
-                throw new Exception($"Expected '1' Index, but got '{indicesStatsResponse.Indices.Count}'");
-            }
+            return indicesStatsResponse.Indices
+                .Select(x => Convert(x.Key, x.Value))
+                .ToList();
+        }
 
-            var indexName = indicesStatsResponse.Indices.First().Key;
-            var indexStats = indicesStatsResponse.Indices.First().Value;
-
+        public static CodeSearchStatisticsDto Convert(string indexName, IndicesStats indexStats)
+        {
             return new CodeSearchStatisticsDto
             {
                 IndexName = indexName,
