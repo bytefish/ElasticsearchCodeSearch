@@ -117,6 +117,42 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Metrics_IndexName" xml:space="preserve">
+    <value>Index Name</value>
+  </data>
+  <data name="Metrics_IndexSize" xml:space="preserve">
+    <value>Index Size (Mb)</value>
+  </data>
+  <data name="Metrics_NumberOfDocumentsCurrentlyBeingIndexed" xml:space="preserve">
+    <value>Number of DocumentsCurrentlyBeingIndexed</value>
+  </data>
+  <data name="Metrics_NumberOfFetchesCurrentlyInProgress" xml:space="preserve">
+    <value>Number of Fetches Currently In Progress</value>
+  </data>
+  <data name="Metrics_NumberOfQueriesCurrentlyInProgress" xml:space="preserve">
+    <value>Number of Queries Currently In Progress</value>
+  </data>
+  <data name="Metrics_TotalNumberOfDocumentsIndexed" xml:space="preserve">
+    <value>Total Number of Documents indexed</value>
+  </data>
+  <data name="Metrics_TotalNumberOfFetches" xml:space="preserve">
+    <value>Total Number of Fetches</value>
+  </data>
+  <data name="Metrics_TotalNumberOfQueries" xml:space="preserve">
+    <value>Total Number of Queries</value>
+  </data>
+  <data name="Metrics_TotalTimeSpentBulkIndexingDocuments" xml:space="preserve">
+    <value>Total Time Spent Bulk Indexing (Seconds)</value>
+  </data>
+  <data name="Metrics_TotalTimeSpentIndexingDocuments" xml:space="preserve">
+    <value>Total Time Spent Indexing Documents</value>
+  </data>
+  <data name="Metrics_TotalTimeSpentOnFetches" xml:space="preserve">
+    <value>Total Time Spent on Fetches (s)</value>
+  </data>
+  <data name="Metrics_TotalTimeSpentOnQueries" xml:space="preserve">
+    <value>Total Time Spent On Queries (s)</value>
+  </data>
   <data name="SortOptionEnum_LatestCommitDateAscending" xml:space="preserve">
     <value>Recently Updated (Asc)</value>
   </data>

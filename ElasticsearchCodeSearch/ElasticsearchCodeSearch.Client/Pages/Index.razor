@@ -15,7 +15,6 @@
 
     <FluentDataGrid Items="@indexMetric?.Metrics.AsQueryable()" ResizableColumns=true style="height: 500px; overflow:auto;">
         <PropertyColumn Title="Metric" Property="@(c => c.Name)" Sortable="true" Align="Align.Start" />
-        <PropertyColumn Title="Key" Property="@(c => c.Key)" Sortable="true" Align="Align.Start" />
         <PropertyColumn Title="Value" Property="@(c => c.Value)" Sortable="true" Align="Align.Start" />
     </FluentDataGrid>
 }

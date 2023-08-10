@@ -38,10 +38,10 @@ namespace ElasticsearchCodeSearch.Client.Shared
         [Inject]
         private Direction Direction { get; set; } = default!;
 
-
         ElementReference container;
 
         private IJSObjectReference? _jsModule;
+
         bool menuchecked = true;
 
         ErrorBoundary? errorBoundary;
