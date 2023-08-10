@@ -20,7 +20,7 @@ header {
     background-color: var(--neutral-layer-4);
     grid-area: header;
     display: grid;
-    grid-template-columns: 280px 1fr auto auto auto;
+    grid-template-columns: auto 1fr auto auto auto;
     grid-template-rows: 1fr;
     align-items: center;
     justify-content: flex-start;
@@ -500,4 +500,12 @@ code {
 
 .w-100 {
     width: 100% !important;
+}
+
+.branding {
+    font-size: var(--type-ramp-plus-5-font-size);
+    line-height: var(--type-ramp-plus-5-line-height);
+    padding: 0.75rem;
+    font-weight: 500;
+    color: var(--accent-foreground-hover);
 }

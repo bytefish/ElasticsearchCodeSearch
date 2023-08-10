@@ -5,15 +5,15 @@
     grid-template-areas:
         "code-box-title"
         "code-box-content";
-    border: 1px solid #dcdcde;
-    background-color: #fff;
+    border: 1px solid var(--neutral-foreground-rest);
+    background-color: var(--neutral-layer-1);
 }
 
 
     .code-box .code-box-title {
         grid-area: code-box-title;
-        background-color: #fbfafd;
-        border-bottom: 1px solid #dcdcde;
+        background-color: var(--neutral-layer-4);
+        border-bottom: 1px solid var(--neutral-foreground-rest);
         padding: 10px 16px;
     }
 
@@ -23,12 +23,12 @@
         grid-template-columns: 1fr;
         overflow: auto;
         white-space: nowrap;
-        color: #333;
+        color: var(--neutral-foreground-rest);
         font-family: "JetBrains Mono","Menlo","DejaVu Sans Mono","Liberation Mono","Consolas","Ubuntu Mono","Courier New","andale mono","lucida console",monospace;
     }
 
         .code-box .code-box-content .highlighted-line {
-            background-color: #f8eec7 !important;
+            background-color: #f8eec7ab !important;
         }
 
         .code-box .code-box-content .code-line {
@@ -40,7 +40,7 @@
                 display: grid;
                 text-align: right;
                 padding-right: 0.5rem;
-                border-right: 1px solid #dcdcde;
+                border-right: 1px solid var(--neutral-foreground-rest);
                 min-width: 4rem;
             }
 
