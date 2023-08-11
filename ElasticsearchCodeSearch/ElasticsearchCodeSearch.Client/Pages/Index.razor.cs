@@ -1,4 +1,6 @@
-﻿using ElasticsearchCodeSearch.Client.Infrastructure;
+﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using ElasticsearchCodeSearch.Client.Infrastructure;
 using ElasticsearchCodeSearch.Client.Localization;
 using ElasticsearchCodeSearch.Client.Models;
 using ElasticsearchCodeSearch.Shared.Dto;

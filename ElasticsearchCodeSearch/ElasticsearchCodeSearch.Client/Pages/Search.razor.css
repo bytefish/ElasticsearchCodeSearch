@@ -18,8 +18,7 @@
     grid-template-rows: auto 1fr;
     justify-content: center;
     padding: 1rem;
-    
-    border-bottom: 1px solid #d6d5d5;
+    border-bottom: 1px solid var(--neutral-foreground-rest);
 }
 
     .search-header .search-title {

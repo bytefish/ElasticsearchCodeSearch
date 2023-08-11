@@ -34,6 +34,7 @@
         .code-box .code-box-content .code-line {
             display: grid;
             grid-template-columns: auto 1fr;
+            grid-column-gap: 5px;
         }
 
             .code-box .code-box-content .code-line .code-line-number {

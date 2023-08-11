@@ -19,12 +19,6 @@ namespace ElasticsearchCodeSearch.Client.Pages
         public ElasticsearchCodeSearchService ElasticsearchCodeSearchService { get; set; } = default!;
 
         /// <summary>
-        /// Navigation Manager.
-        /// </summary>
-        [Inject]
-        public NavigationManager NavigationManager { get; set; } = default!;
-
-        /// <summary>
         /// The current Query String to send to the Server (Elasticsearch QueryString format).
         /// </summary>
         [Parameter]
@@ -34,7 +28,7 @@ namespace ElasticsearchCodeSearch.Client.Pages
         /// The Selected Sort Option:
         /// </summary>
         [Parameter]
-        public string? SortOption { get; set; }
+        public SortOptionEnum? SortOption { get; set; }
 
         /// <summary>
         /// Page Number.
@@ -115,7 +109,7 @@ namespace ElasticsearchCodeSearch.Client.Pages
         {
             // Set bound values, so we don't modify the parameters directly
             _queryString = QueryString ?? string.Empty;
-            _selectedSortOption = GetSortOption(SortOption, defaultValue: SortOptionEnum.LatestCommitDateDescending);
+            _selectedSortOption = SortOption ?? SortOptionEnum.LatestCommitDateDescending;
             _pagination.CurrentPageIndex = Page ?? 0;
             _pagination.ItemsPerPage = PageSize ?? 10;
 
