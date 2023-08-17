@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ElasticsearchCodeSearch.Cli
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ElasticsearchCodeSearch.Shared", "ElasticsearchCodeSearch.Shared\ElasticsearchCodeSearch.Shared.csproj", "{846DA4F6-C779-4DD8-8C15-0D14F6DED3D5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ElasticsearchCodeSearch.Indexer", "ElasticsearchCodeSearch.Indexer\ElasticsearchCodeSearch.Indexer.csproj", "{E2E40021-E0B3-4779-B575-FD752E911C82}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ElasticsearchCodeSearch.Indexer", "ElasticsearchCodeSearch.Indexer\ElasticsearchCodeSearch.Indexer.csproj", "{E2E40021-E0B3-4779-B575-FD752E911C82}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

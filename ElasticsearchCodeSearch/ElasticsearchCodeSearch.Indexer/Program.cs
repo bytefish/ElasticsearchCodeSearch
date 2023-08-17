@@ -1,6 +1,8 @@
 ﻿
 using ElasticsearchCodeSearch.Indexer.Client;
 using ElasticsearchCodeSearch.Indexer.Client.Options;
+using ElasticsearchCodeSearch.Indexer.Services;
+using ElasticsearchCodeSearch.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -13,7 +15,88 @@ builder.Services.Configure<GitHubClientOptions>(o =>
     o.AccessToken = Environment.GetEnvironmentVariable("GH_TOKEN")!;
 });
 
+builder.Services.AddHttpClient<ElasticsearchCodeSearchService>((services, client) =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ElasticsearchCodeSearchApi:BaseAddress"]!);
+});
+
+builder.Services.Configure<GitIndexerOptions>(o =>
+{
+    o.BaseDirectory = @"C:\Temp";
+    o.MaxParallelClones = 1;
+    o.MaxParallelBulkRequests = 30;
+    o.AllowedFilenames = new[]
+    {
+        ".gitignore",
+        ".editorconfig",
+        "README",
+        "CHANGELOG"
+    };
+    o.AllowedExtensions = new[]
+    {
+        // C / C++
+        ".c",
+        ".cpp",
+        ".h",
+        ".hpp",
+        // .NET
+        ".cs",
+        ".cshtml",
+        ".csproj",
+        ".fs",
+        ".razor",
+        ".sln",
+        ".xaml",
+        // CSS
+        ".css",
+        ".scss",
+        ".sass",
+        // CSV / TSV
+        ".csv",
+        ".tsv",
+        // HTML
+        ".html",
+        ".htm",
+        // JSON
+        ".json", 
+        // JavaScript
+        ".js",
+        ".jsx",
+        ".spec.js",
+        ".config.js",
+        // Typescript
+        ".ts",
+        ".tsx", 
+        // TXT
+        ".txt", 
+        // Powershell
+        ".ps1",
+        // Python
+        ".py",
+        // Configuration
+        ".ini",
+        ".config",
+        // XML
+        ".xml",
+        ".xsl",
+        ".xsd",
+        ".dtd",
+        ".wsdl",
+        // Markdown
+        ".md",
+        ".markdown",
+        // reStructured Text
+        ".rst",
+        // LaTeX
+        ".tex",
+        ".bib",
+        ".bbx",
+        ".cbx"
+    };
+});
+
 builder.Services.AddSingleton<GitHubClient>();
+builder.Services.AddSingleton<GitIndexerService>();
 
 using IHost host = builder.Build();
 
@@ -22,8 +105,8 @@ using var scope = host.Services.CreateScope();
 
 var services = scope.ServiceProvider;
 
-var client = services.GetRequiredService<GitHubClient>();
+var indexer = services.GetRequiredService<GitIndexerService>();
 
-var res = await client.GetAllRepositoriesByOrganizationAsync("microsoft", 100, default);
+await indexer.IndexOrganizationAsync("microsoft", default);
 
 await host.RunAsync();

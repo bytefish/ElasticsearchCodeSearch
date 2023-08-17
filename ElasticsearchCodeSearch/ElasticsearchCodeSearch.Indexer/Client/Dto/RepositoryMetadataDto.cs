@@ -4,10 +4,13 @@ using System.Text.Json.Serialization;
 
 namespace ElasticsearchCodeSearch.Indexer.Client.Dto
 {
-    public class RepositoryDto
+    public class RepositoryMetadataDto
     {
         [JsonPropertyName("id")]
         public required int Id { get; set; }
+
+        [JsonPropertyName("node_id")]
+        public required string NodeId { get; set; }
 
         [JsonPropertyName("name")]
         public required string Name { get; set; }
@@ -15,11 +18,20 @@ namespace ElasticsearchCodeSearch.Indexer.Client.Dto
         [JsonPropertyName("full_name")]
         public required string FullName { get; set; }
 
+        [JsonPropertyName("default_branch")]
+        public required string DefaultBranch { get; set; }
+
         [JsonPropertyName("owner")]
         public required RepositoryOwnerDto Owner { get; set; }
 
         [JsonPropertyName("url")]
         public string? Url { get; set; }
+
+        [JsonPropertyName("git_url")]
+        public string? GitUrl { get; set; }
+        
+        [JsonPropertyName("clone_url")]
+        public string? CloneUrl { get; set; }
 
         [JsonPropertyName("sshUrl")]
         public string? SshUrl { get; set; }

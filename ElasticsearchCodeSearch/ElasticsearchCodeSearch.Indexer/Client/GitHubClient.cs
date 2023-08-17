@@ -30,10 +30,10 @@ namespace ElasticsearchCodeSearch.Indexer.Client
             _httpClient = httpClient;
         }
 
-        public async Task<List<RepositoryDto>> GetAllRepositoriesByOrganizationAsync(string organization, int pageSize, CancellationToken cancellationToken)
+        public async Task<List<RepositoryMetadataDto>> GetAllRepositoriesByOrganizationAsync(string organization, int pageSize, CancellationToken cancellationToken)
         {
             // Holds the Results:
-            List<RepositoryDto> repositories = new List<RepositoryDto>();
+            List<RepositoryMetadataDto> repositories = new List<RepositoryMetadataDto>();
 
             // Get the first page:
             var page = await GetRepositoriesByOrganizationAsync(organization, 1, pageSize, cancellationToken).ConfigureAwait(false);
@@ -62,7 +62,7 @@ namespace ElasticsearchCodeSearch.Indexer.Client
             return repositories;
         }
 
-        public async Task<PaginatedResultsDto<RepositoryDto>> GetRepositoriesByOrganizationAsync(string organization, int pageNum, int pageSize, CancellationToken cancellationToken)
+        public async Task<PaginatedResultsDto<RepositoryMetadataDto>> GetRepositoriesByOrganizationAsync(string organization, int pageNum, int pageSize, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
@@ -98,10 +98,10 @@ namespace ElasticsearchCodeSearch.Indexer.Client
             var links = ParseLinks(response);
 
             var repositories = await response.Content
-                .ReadFromJsonAsync<List<RepositoryDto>>(cancellationToken: cancellationToken)
+                .ReadFromJsonAsync<List<RepositoryMetadataDto>>(cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
 
-            return new PaginatedResultsDto<RepositoryDto>
+            return new PaginatedResultsDto<RepositoryMetadataDto>
             {
                 PageNumber = pageNum,
                 PageSize = pageSize,

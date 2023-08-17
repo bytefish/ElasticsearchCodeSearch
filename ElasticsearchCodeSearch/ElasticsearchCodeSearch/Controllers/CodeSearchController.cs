@@ -129,10 +129,10 @@ namespace ElasticsearchCodeSearch.Controllers
                 };
 
                 return Ok(codeSearchResults);
-            } 
-            catch(Exception e)
+            }
+            catch (Exception e)
             {
-                if(_logger.IsErrorEnabled())
+                if (_logger.IsErrorEnabled())
                 {
                     _logger.LogError(e, "An unhandeled exception occured");
                 }
@@ -155,7 +155,7 @@ namespace ElasticsearchCodeSearch.Controllers
 
                 if (!bulkIndexResponse.IsSuccess())
                 {
-                    if(_logger.IsErrorEnabled())
+                    if (_logger.IsErrorEnabled())
                     {
                         bulkIndexResponse.TryGetOriginalException(out var originalException);
 
