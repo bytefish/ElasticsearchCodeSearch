@@ -1,9 +1,11 @@
-﻿using ElasticsearchCodeSearch.Indexer.Client;
+﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using ElasticsearchCodeSearch.Indexer.Client;
 using ElasticsearchCodeSearch.Indexer.Client.Dto;
+using ElasticsearchCodeSearch.Indexer.Git;
 using ElasticsearchCodeSearch.Shared.Dto;
 using ElasticsearchCodeSearch.Shared.Logging;
 using ElasticsearchCodeSearch.Shared.Services;
-using LibGit2Sharp;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -17,24 +19,29 @@ namespace ElasticsearchCodeSearch.Indexer.Services
         private readonly ILogger<GitIndexerService> _logger;
 
         private readonly GitIndexerOptions _options;
-        private readonly ElasticsearchCodeSearchService _elasticCodeSearchService;
-        private readonly GitHubClient _gitHubClient;
 
-        public GitIndexerService(ILogger<GitIndexerService> logger, IOptions<GitIndexerOptions> options, GitHubClient gitHubClient, ElasticsearchCodeSearchService elasticCodeSearchService)
+        private readonly GitClient _git;
+        private readonly GitHubClient _gitHubClient;
+        private readonly ElasticsearchCodeSearchService _elasticCodeSearchService;
+
+        public GitIndexerService(ILogger<GitIndexerService> logger, IOptions<GitIndexerOptions> options, GitClient git, GitHubClient gitHubClient, ElasticsearchCodeSearchService elasticCodeSearchService)
         {
             _logger = logger;
             _options = options.Value;
-            _elasticCodeSearchService = elasticCodeSearchService;
+            _git = git;
             _gitHubClient = gitHubClient;
+            _elasticCodeSearchService = elasticCodeSearchService;
         }
-
 
         public async Task IndexOrganizationAsync(string organization, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
-            var page = await _gitHubClient.GetRepositoriesByOrganizationAsync(organization, 1, 1, cancellationToken);
-            var repositories = page.Values!;
+            var response = await _gitHubClient
+                .GetRepositoriesByOrganizationAsync(organization, 1, 20, cancellationToken)
+                .ConfigureAwait(false);
+
+            var repositories = response.Values!;
 
             var parallelOptions = new ParallelOptions()
             {
@@ -42,12 +49,22 @@ namespace ElasticsearchCodeSearch.Indexer.Services
                 CancellationToken = cancellationToken
             };
 
-            await Parallel.ForEachAsync(source: repositories, parallelOptions: parallelOptions, body: (source, cancellationToken) => IndexRepositoryAsync(source, cancellationToken));
+            await Parallel
+                .ForEachAsync(source: repositories, parallelOptions: parallelOptions, body: (source, cancellationToken) => IndexRepositoryAsync(source, cancellationToken))
+                .ConfigureAwait(false);
         }
 
         public async ValueTask IndexRepositoryAsync(RepositoryMetadataDto repositoryMetadata, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
+
+            // Nothing to do, if we cannot clone ...
+            if(repositoryMetadata.CloneUrl == null)
+            {
+                _logger.LogInformation("Not cloning repository '{Repository}, because it has no Clone URL'", repositoryMetadata.FullName);
+
+                return;
+            }
 
             var allowedFilenames = _options.AllowedFilenames.ToHashSet();
             var allowedExtensions = _options.AllowedExtensions.ToHashSet();
@@ -56,14 +73,21 @@ namespace ElasticsearchCodeSearch.Indexer.Services
 
             try
             {
-                if (!Directory.Exists(workingDirectory))
+                if (workingDirectory.StartsWith(@"C:\Temp"))
                 {
-                    Repository.Clone(repositoryMetadata.CloneUrl, workingDirectory);
+                    if (Directory.Exists(workingDirectory))
+                    {
+                        DeleteReadOnlyDirectory(workingDirectory);
+                    }
                 }
+
+                await _git
+                    .Clone(repositoryMetadata.CloneUrl, workingDirectory, cancellationToken)
+                    .ConfigureAwait(false);
 
                 // Get the list of allowed files, by matching against allowed extensions (.c, .cpp, ...)
                 // and allowed filenames (.gitignore, README, ...). We don't want to parse binary data.
-                var batches = GetListOfFiles(repositoryMetadata)
+                var batches =  (await _git.ListFiles(workingDirectory, cancellationToken).ConfigureAwait(false))
                     .Where(filename => IsAllowedFile(filename, allowedExtensions, allowedFilenames))
                     .Chunk(_options.BatchSize);
 
@@ -79,18 +103,48 @@ namespace ElasticsearchCodeSearch.Indexer.Services
             } 
             catch(Exception e)
             {
-                _logger.LogError(e, $"Indexing Repository '{repositoryMetadata.FullName}' failed");
+                _logger.LogError(e, "Indexing Repository '{Repository}' failed", repositoryMetadata.FullName);
+
+                throw;
             } 
             finally
             {
                 if(workingDirectory.StartsWith(@"C:\Temp")) 
                 {
-                    if (Directory.Exists(workingDirectory))
+                    try
                     {
-                        Directory.Delete(workingDirectory, true);
+                        if (Directory.Exists(workingDirectory))
+                        {
+                            DeleteReadOnlyDirectory(workingDirectory);
+                        }
+                    } 
+                    catch(Exception e) 
+                    {
+                        _logger.LogError(e, "Error deleting '{Repository}'", repositoryMetadata.FullName);
                     }
+                   
                 }
             }
+        }
+
+        /// <summary>
+        /// Recursively deletes a directory as well as any subdirectories and files. If the files are read-only, they are flagged as normal and then deleted.
+        /// </summary>
+        /// <param name="directory">The name of the directory to remove.</param>
+        public static void DeleteReadOnlyDirectory(string directory)
+        {
+            foreach (var subdirectory in Directory.EnumerateDirectories(directory))
+            {
+                DeleteReadOnlyDirectory(subdirectory);
+            }
+
+            foreach (var fileName in Directory.EnumerateFiles(directory))
+            {
+                var fileInfo = new FileInfo(fileName);
+                fileInfo.Attributes = FileAttributes.Normal;
+                fileInfo.Delete();
+            }
+            Directory.Delete(directory);
         }
 
         public async ValueTask IndexDocumentsAsync(RepositoryMetadataDto repositoryMetadata, string[] files, CancellationToken cancellationToken)
@@ -101,12 +155,12 @@ namespace ElasticsearchCodeSearch.Indexer.Services
 
             List<CodeSearchDocumentDto> documents = new List<CodeSearchDocumentDto>();
 
-            using (var repository = new Repository(workingDirectory))
+            foreach (var file in files)
             {
-                foreach (var file in files)
-                {
-                    var codeSearchDocument = GetCodeSearchDocumentDto(repository, repositoryMetadata, file);
+                var codeSearchDocument = await GetCodeSearchDocumentDtoAsync(repositoryMetadata, file, cancellationToken);
 
+                if (codeSearchDocument != null)
+                {
                     documents.Add(codeSearchDocument);
                 }
             }
@@ -121,58 +175,40 @@ namespace ElasticsearchCodeSearch.Indexer.Services
         /// <param name="repositoryMetadata">Repository Metadata</param>
         /// <param name="relativeFilename">Filename to process</param>
         /// <returns></returns>
-        private CodeSearchDocumentDto GetCodeSearchDocumentDto(Repository repository, RepositoryMetadataDto repositoryMetadata, string relativeFilename)
+        private async Task<CodeSearchDocumentDto> GetCodeSearchDocumentDtoAsync(RepositoryMetadataDto repositoryMetadata, string relativeFilename, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
-            // Get the History of the File, so we can extract all relevant GIT data
-            var fileHistoryEntries = repository.Commits
-                .QueryBy(relativeFilename, new CommitFilter() { SortBy = CommitSortStrategies.Time })
-                .ToList();
+            var workingDirectory = GetWorkingDirectory(repositoryMetadata);
 
-            var logEntry = fileHistoryEntries.First();
+            var shaHash = await _git
+                .SHA1(workingDirectory, relativeFilename, cancellationToken)
+                .ConfigureAwait(false);
 
-            var relativePath = logEntry.Path;
-            var shaHash = logEntry.Commit.Sha;
-            var commitHash = logEntry.Commit.Id.Sha;
-            var absoluteFilename = Path.Combine(GetWorkingDirectory(repositoryMetadata), relativeFilename);
+            var commitHash = await _git
+                .CommitHash(workingDirectory, relativeFilename, cancellationToken)
+                .ConfigureAwait(false);
+
+            var latestCommitDate = await _git
+                .LatestCommitDate(workingDirectory, relativeFilename, cancellationToken)
+                .ConfigureAwait(false);
+
+            var absoluteFilename = Path.Combine(workingDirectory, relativeFilename);
+
+            var content = File.ReadAllText(absoluteFilename);
 
             return new CodeSearchDocumentDto
             {
                 Id = shaHash,
-                Path = relativePath,
+                Path = relativeFilename,
                 Repository = repositoryMetadata.Name,
                 Owner = repositoryMetadata.Owner.Login,
-                Content = File.ReadAllText(absoluteFilename),
+                Content = content,
                 Filename = Path.GetFileName(relativeFilename),
-                CommitHash = logEntry.Commit.Id.Sha,
-                Permalink = $"https://github.com/{repositoryMetadata.Owner}/{repositoryMetadata.Name}/blob/{commitHash}/{relativePath}",
-                LatestCommitDate = logEntry.Commit.Committer.When.ToUniversalTime(),
+                CommitHash = commitHash,
+                Permalink = $"https://github.com/{repositoryMetadata.Owner}/{repositoryMetadata.Name}/blob/{commitHash}/{relativeFilename}",
+                LatestCommitDate = latestCommitDate
             };
-        }
-
-        /// <summary>
-        /// Returns the List of files for the given Repository.
-        /// </summary>
-        /// <param name="repositoryMetadataDto">Repository Metadata</param>
-        /// <returns>List of all files in the Git repository</returns>
-        private List<string> GetListOfFiles(RepositoryMetadataDto repositoryMetadataDto)
-        {
-            _logger.TraceMethodEntry();
-
-            List<string> relativeFilenames = new List<string>();
-
-            var workingDirectory = GetWorkingDirectory(repositoryMetadataDto);
-
-            using (var repository = new Repository(workingDirectory))
-            {
-                foreach(var indexEntry in repository.Index)
-                {     
-                    relativeFilenames.Add(indexEntry.Path);
-                }
-            }
-
-            return relativeFilenames;
         }
 
         /// <summary>

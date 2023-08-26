@@ -1,6 +1,8 @@
-﻿
+﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using ElasticsearchCodeSearch.Indexer.Client;
 using ElasticsearchCodeSearch.Indexer.Client.Options;
+using ElasticsearchCodeSearch.Indexer.Git;
 using ElasticsearchCodeSearch.Indexer.Services;
 using ElasticsearchCodeSearch.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +13,7 @@ HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 // Create the GitClientOptions by using the GH_TOKEN Key:
 builder.Services.Configure<GitHubClientOptions>(o =>
 {
-    o.RequestDelayInMilliseconds = 50;
+    o.RequestDelayInMilliseconds = 0;
     o.AccessToken = Environment.GetEnvironmentVariable("GH_TOKEN")!;
 });
 
@@ -24,7 +26,8 @@ builder.Services.Configure<GitIndexerOptions>(o =>
 {
     o.BaseDirectory = @"C:\Temp";
     o.MaxParallelClones = 1;
-    o.MaxParallelBulkRequests = 30;
+    o.MaxParallelBulkRequests = 4;
+    o.BatchSize = 20;
     o.AllowedFilenames = new[]
     {
         ".gitignore",
@@ -95,6 +98,7 @@ builder.Services.Configure<GitIndexerOptions>(o =>
     };
 });
 
+builder.Services.AddSingleton<GitClient>();
 builder.Services.AddSingleton<GitHubClient>();
 builder.Services.AddSingleton<GitIndexerService>();
 
