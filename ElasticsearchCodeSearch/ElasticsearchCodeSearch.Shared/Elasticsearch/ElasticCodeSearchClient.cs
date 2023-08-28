@@ -8,11 +8,13 @@ using Elastic.Clients.Elasticsearch.Core.Search;
 using Elastic.Transport;
 using Microsoft.Extensions.Options;
 using Elastic.Clients.Elasticsearch.Mapping;
-using ElasticsearchCodeSearch.Options;
 using ElasticsearchCodeSearch.Models;
 using ElasticsearchCodeSearch.Shared.Logging;
+using Microsoft.Extensions.Logging;
+using System.Threading;
+using Elastic.Transport.Products.Elasticsearch;
 
-namespace ElasticsearchCodeSearch.Elasticsearch
+namespace ElasticsearchCodeSearch.Shared.Elasticsearch
 {
     public class ElasticCodeSearchClient
     {
@@ -74,12 +76,102 @@ namespace ElasticsearchCodeSearch.Elasticsearch
             return pingResponse;
         }
 
-        public async Task<CreateIndexResponse> CreateIndexAsync(CancellationToken cancellationToken)
+        public async Task<(bool Success, ElasticsearchResponse? ErrorResponse)> CreateIndexAsync(CancellationToken cancellationToken)
+        {
+            _logger.TraceMethodEntry();
+
+            var healthTimeout = TimeSpan.FromSeconds(60);
+
+            if (_logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("Waiting for at least 1 Node and at least 1 Active Shard, with a Timeout of {HealthTimeout} seconds.", healthTimeout.TotalSeconds);
+            }
+
+            var clusterHealthResponse = await WaitForClusterAsync(healthTimeout, cancellationToken);
+
+            if (!clusterHealthResponse.IsValidResponse)
+            {
+                _logger.LogError("Invalid Request to get Cluster Health: {DebugInformation}", clusterHealthResponse.DebugInformation);
+
+                return (false, clusterHealthResponse);
+            }
+
+            var indexExistsResponse = await IndexExistsAsync(cancellationToken);
+
+            if (!indexExistsResponse.Exists)
+            {
+                var createIndexResponse = await InternalCreateIndexAsync(cancellationToken);
+
+                if(!createIndexResponse.IsValidResponse)
+                {
+                    _logger.LogError("Invalid Request to create index: {DebugInformation}", createIndexResponse.DebugInformation);
+
+                    return (false, createIndexResponse);
+                }
+            }
+
+            return (true, null);
+        }
+
+        public async Task<DeleteByQueryResponse> DeleteByOwnerAsync(string owner, CancellationToken cancellationToken)
+        {
+            _logger.TraceMethodEntry();
+
+            // We have three fields, that must match.
+            var boolQuery = new BoolQuery
+            {
+                Must = new Query[]
+                {
+                    new TermQuery(Infer.Field<CodeSearchDocument>(f => f.Owner)) { Value = owner, CaseInsensitive = true }
+                }
+            };
+
+            var deleteByQueryResponse = await _client
+                .DeleteByQueryAsync<CodeSearchDocument>(_indexName, request => request.Query(boolQuery), cancellationToken)
+                .ConfigureAwait(false);
+
+            if (_logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("DeleteByQueryResponse DebugInformation: {DebugInformation}", deleteByQueryResponse.DebugInformation);
+            }
+
+            return deleteByQueryResponse;
+        }
+
+        public async Task<DeleteByQueryResponse> DeleteByOwnerRepositoryAndBranchAsync(string owner, string repository, string branch, CancellationToken cancellationToken)
+        {
+            _logger.TraceMethodEntry();
+
+            // We have three fields, that must match.
+            var boolQuery = new BoolQuery
+            {
+                Must = new Query[]
+                {
+                    new TermQuery(Infer.Field<CodeSearchDocument>(f => f.Owner)) { Value = owner, CaseInsensitive = true },
+                    new TermQuery(Infer.Field<CodeSearchDocument>(f => f.Repository)) { Value = repository, CaseInsensitive = true },
+                    new TermQuery(Infer.Field<CodeSearchDocument>(f => f.Branch)) { Value = branch, CaseInsensitive = true },
+                }
+            };
+
+            var deleteByQueryResponse = await _client
+                .DeleteByQueryAsync<CodeSearchDocument>(_indexName, request => request.Query(boolQuery), cancellationToken)
+                .ConfigureAwait(false);
+
+            if (_logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("DeleteByQueryResponse DebugInformation: {DebugInformation}", deleteByQueryResponse.DebugInformation);
+            }
+
+            return deleteByQueryResponse;
+        }
+
+        private async Task<CreateIndexResponse> InternalCreateIndexAsync(CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
             var createIndexResponse = await _client.Indices.CreateAsync(_indexName, descriptor => descriptor
                 .Settings(settings => settings
+                    .Codec("best_compression")
                     .Analysis(analysis => analysis
                         .Normalizers(normalizers => normalizers
                             .Custom("sha_normalizer", normalizer => normalizer
@@ -162,6 +254,7 @@ namespace ElasticsearchCodeSearch.Elasticsearch
                                 .Analyzer("code_analyzer")
                                 .TermVector(TermVectorOption.WithPositionsOffsetsPayloads)
                                 .Store(true))
+                            .Keyword(properties => properties.Branch)
                             .Keyword(properties => properties.Permalink)
                             .Date(properties => properties.LatestCommitDate))), cancellationToken)
                 .ConfigureAwait(false);
@@ -190,6 +283,20 @@ namespace ElasticsearchCodeSearch.Elasticsearch
             return deleteByQueryResponse;
         }
 
+        public async Task<DeleteIndexResponse> DeleteIndexAsync(CancellationToken cancellationToken)
+        {
+            _logger.TraceMethodEntry();
+
+            var deleteIndexResponse = await _client.Indices.DeleteAsync(_indexName).ConfigureAwait(false);
+
+            if (_logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("DeleteIndexResponse DebugInformation: {DebugInformation}", deleteIndexResponse.DebugInformation);
+            }
+
+            return deleteIndexResponse;
+        }
+
         public async Task<IndicesStatsResponse> GetSearchStatistics(CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
@@ -197,7 +304,7 @@ namespace ElasticsearchCodeSearch.Elasticsearch
             var indicesStatResponse = await _client
                 .Indices.StatsAsync(request => request.Indices(_indexName))
                 .ConfigureAwait(false);
-            
+
             if (_logger.IsDebugEnabled())
             {
                 _logger.LogDebug("IndicesStatsResponse DebugInformation: {DebugInformation}", indicesStatResponse.DebugInformation);
@@ -285,7 +392,7 @@ namespace ElasticsearchCodeSearch.Elasticsearch
             var sortOptionsArray = searchRequest.Sort
                 .Select(sortField => ConvertToSortOptions(sortField))
                 .ToArray();
-            
+
             // Build the Search Query:
             return _client.SearchAsync<CodeSearchDocument>(searchRequestDescriptor => searchRequestDescriptor
                 // Query this Index:

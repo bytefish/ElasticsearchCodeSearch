@@ -8,11 +8,11 @@ using System.Text;
 
 namespace ElasticsearchCodeSearch.Indexer.Git
 {
-    public class GitClient
+    public class GitExecutor
     {
-        private readonly ILogger<GitClient> _logger;
+        private readonly ILogger<GitExecutor> _logger;
 
-        public GitClient(ILogger<GitClient> logger) 
+        public GitExecutor(ILogger<GitExecutor> logger) 
         {
             _logger = logger;
         }
@@ -58,6 +58,8 @@ namespace ElasticsearchCodeSearch.Indexer.Git
 
         public async Task<string[]> ListFiles(string repository_directory, CancellationToken cancellationToken)
         {
+            _logger.TraceMethodEntry();
+
             var result = await RunAsync($"ls-files", repository_directory, cancellationToken);
 
             var files = result

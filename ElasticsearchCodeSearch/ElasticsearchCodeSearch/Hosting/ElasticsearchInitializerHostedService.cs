@@ -1,6 +1,6 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using ElasticsearchCodeSearch.Elasticsearch;
+using ElasticsearchCodeSearch.Shared.Elasticsearch;
 using ElasticsearchCodeSearch.Shared.Logging;
 
 namespace ElasticsearchCodeSearch.Hosting
@@ -22,27 +22,15 @@ namespace ElasticsearchCodeSearch.Hosting
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
-
-            var healthTimeout = TimeSpan.FromSeconds(60);
-
-            if (_logger.IsDebugEnabled())
-            {
-                _logger.LogDebug("Waiting for at least 1 Node and at least 1 Active Shard, with a Timeout of {HealthTimeout} seconds.", healthTimeout.TotalSeconds);
-            }
-
-            var clusterHealthResponse = await _elasticsearchClient.WaitForClusterAsync(healthTimeout, cancellationToken);
-
-            if (!clusterHealthResponse.IsValidResponse)
-            {
-                _logger.LogError("Invalid Request to get Cluster Health: {DebugInformation}", clusterHealthResponse.DebugInformation);
-            }
-
-            var indexExistsResponse = await _elasticsearchClient.IndexExistsAsync(cancellationToken);
-
-            if (!indexExistsResponse.Exists)
+            
+            try
             {
                 await _elasticsearchClient.CreateIndexAsync(cancellationToken);
-            }
+            } 
+            catch(Exception e)
+            {
+                _logger.LogError(e, "Failed to create Search Index");
+            }            
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

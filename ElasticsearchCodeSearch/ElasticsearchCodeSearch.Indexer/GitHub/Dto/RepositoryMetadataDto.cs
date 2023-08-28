@@ -2,7 +2,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace ElasticsearchCodeSearch.Indexer.Client.Dto
+namespace ElasticsearchCodeSearch.Indexer.GitHub.Dto
 {
     public class RepositoryMetadataDto
     {
@@ -29,7 +29,7 @@ namespace ElasticsearchCodeSearch.Indexer.Client.Dto
 
         [JsonPropertyName("git_url")]
         public string? GitUrl { get; set; }
-        
+
         [JsonPropertyName("clone_url")]
         public string? CloneUrl { get; set; }
 
@@ -38,7 +38,7 @@ namespace ElasticsearchCodeSearch.Indexer.Client.Dto
 
         [JsonPropertyName("updated_at")]
         public required DateTime UpdatedAt { get; set; }
-        
+
         [JsonPropertyName("created_at")]
         public required DateTime CreatedAt { get; set; }
 

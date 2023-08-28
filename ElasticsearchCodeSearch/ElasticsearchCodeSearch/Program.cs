@@ -1,9 +1,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using ElasticsearchCodeSearch.Elasticsearch;
 using ElasticsearchCodeSearch.Hosting;
-using ElasticsearchCodeSearch.Options;
 using System.Text.Json.Serialization;
+using ElasticsearchCodeSearch.Shared.Elasticsearch;
 
 var builder = WebApplication.CreateBuilder(args);
 

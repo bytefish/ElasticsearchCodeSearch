@@ -3,8 +3,11 @@
 using ElasticsearchCodeSearch.Models;
 using System.Text.RegularExpressions;
 
-namespace ElasticsearchCodeSearch.Elasticsearch
+namespace ElasticsearchCodeSearch.Shared.Elasticsearch.Utils
 {
+    /// <summary>
+    /// Auxillary methods to simplify working with Elasticsearch.
+    /// </summary>
     public static class ElasticsearchUtils
     {
         /// <summary>

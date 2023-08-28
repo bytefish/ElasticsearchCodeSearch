@@ -1,116 +1,141 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-using ElasticsearchCodeSearch.Indexer.Client;
-using ElasticsearchCodeSearch.Indexer.Client.Options;
 using ElasticsearchCodeSearch.Indexer.Git;
+using ElasticsearchCodeSearch.Indexer.GitHub;
+using ElasticsearchCodeSearch.Indexer.GitHub.Options;
+using ElasticsearchCodeSearch.Indexer.Hosted;
 using ElasticsearchCodeSearch.Indexer.Services;
-using ElasticsearchCodeSearch.Shared.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using ElasticsearchCodeSearch.Shared.Elasticsearch;
+using System.Text.Json.Serialization;
 
-HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
-// Create the GitClientOptions by using the GH_TOKEN Key:
-builder.Services.Configure<GitHubClientOptions>(o =>
-{
-    o.RequestDelayInMilliseconds = 0;
-    o.AccessToken = Environment.GetEnvironmentVariable("GH_TOKEN")!;
-});
+// Add services to the container.
+builder.Services.AddCors();
 
-builder.Services.AddHttpClient<ElasticsearchCodeSearchService>((services, client) =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["ElasticsearchCodeSearchApi:BaseAddress"]!);
-});
+// Configure the Indexer
+ConfigureIndexingServices(builder);
 
-builder.Services.Configure<GitIndexerOptions>(o =>
-{
-    o.BaseDirectory = @"C:\Temp";
-    o.MaxParallelClones = 1;
-    o.MaxParallelBulkRequests = 4;
-    o.BatchSize = 20;
-    o.AllowedFilenames = new[]
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
     {
-        ".gitignore",
-        ".editorconfig",
-        "README",
-        "CHANGELOG"
-    };
-    o.AllowedExtensions = new[]
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+app.UseHttpsRedirection();
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.UseCors(x => x
+    .AllowAnyOrigin()
+    .AllowAnyHeader()
+    .AllowAnyMethod());
+
+app.MapControllers();
+
+app.Run();
+
+static void ConfigureIndexingServices(WebApplicationBuilder builder)
+{
+    // Add Options
+    builder.Services.Configure<ElasticCodeSearchOptions>(builder.Configuration.GetSection("Elasticsearch"));
+
+    // Add Client
+    builder.Services.AddSingleton<ElasticCodeSearchClient>();
+
+    // Create the GitClientOptions by using the GH_TOKEN Key:
+    builder.Services.Configure<GitHubClientOptions>(o =>
     {
-        // C / C++
-        ".c",
-        ".cpp",
-        ".h",
-        ".hpp",
-        // .NET
-        ".cs",
-        ".cshtml",
-        ".csproj",
-        ".fs",
-        ".razor",
-        ".sln",
-        ".xaml",
-        // CSS
-        ".css",
-        ".scss",
-        ".sass",
-        // CSV / TSV
-        ".csv",
-        ".tsv",
-        // HTML
-        ".html",
-        ".htm",
-        // JSON
-        ".json", 
-        // JavaScript
-        ".js",
-        ".jsx",
-        ".spec.js",
-        ".config.js",
-        // Typescript
-        ".ts",
-        ".tsx", 
-        // TXT
-        ".txt", 
-        // Powershell
-        ".ps1",
-        // Python
-        ".py",
-        // Configuration
-        ".ini",
-        ".config",
-        // XML
-        ".xml",
-        ".xsl",
-        ".xsd",
-        ".dtd",
-        ".wsdl",
-        // Markdown
-        ".md",
-        ".markdown",
-        // reStructured Text
-        ".rst",
-        // LaTeX
-        ".tex",
-        ".bib",
-        ".bbx",
-        ".cbx"
-    };
-});
+        o.RequestDelayInMilliseconds = 0;
+        o.AccessToken = Environment.GetEnvironmentVariable("GH_TOKEN")!;
+    });
 
-builder.Services.AddSingleton<GitClient>();
-builder.Services.AddSingleton<GitHubClient>();
-builder.Services.AddSingleton<GitIndexerService>();
+    builder.Services.Configure<GitIndexerOptions>(o =>
+    {
+        o.BaseDirectory = @"C:\Temp";
+        o.MaxParallelClones = 1;
+        o.MaxParallelBulkRequests = 4;
+        o.BatchSize = 20;
+        o.AllowedFilenames = new[]
+        {
+            ".gitignore",
+            ".editorconfig",
+            "README",
+            "CHANGELOG"
+        };
+        o.AllowedExtensions = new[]
+        {
+            // C / C++
+            ".c",
+            ".cpp",
+            ".h",
+            ".hpp",
+            // .NET
+            ".cs",
+            ".cshtml",
+            ".csproj",
+            ".fs",
+            ".razor",
+            ".sln",
+            ".xaml",
+            // CSS
+            ".css",
+            ".scss",
+            ".sass",
+            // CSV / TSV
+            ".csv",
+            ".tsv",
+            // HTML
+            ".html",
+            ".htm",
+            // JSON
+            ".json", 
+            // JavaScript
+            ".js",
+            ".jsx",
+            ".spec.js",
+            ".config.js",
+            // Typescript
+            ".ts",
+            ".tsx", 
+            // TXT
+            ".txt", 
+            // Powershell
+            ".ps1",
+            // Python
+            ".py",
+            // Configuration
+            ".ini",
+            ".config",
+            // XML
+            ".xml",
+            ".xsl",
+            ".xsd",
+            ".dtd",
+            ".wsdl",
+            // Markdown
+            ".md",
+            ".markdown",
+            // reStructured Text
+            ".rst",
+            // LaTeX
+            ".tex",
+            ".bib",
+            ".bbx",
+            ".cbx"
+        };
+    });
 
-using IHost host = builder.Build();
+    builder.Services.AddSingleton<GitExecutor>();
+    builder.Services.AddSingleton<GitHubClient>();
+    builder.Services.AddSingleton<GitHubIndexerService>();
 
-// create a service scope
-using var scope = host.Services.CreateScope();
-
-var services = scope.ServiceProvider;
-
-var indexer = services.GetRequiredService<GitIndexerService>();
-
-await indexer.IndexOrganizationAsync("microsoft", default);
-
-await host.RunAsync();
+    builder.Services.AddSingleton<IndexerJobQueues>();
+    builder.Services.AddHostedService<ElasticsearchIndexerHostedService>();
+}

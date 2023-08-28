@@ -2,7 +2,7 @@
 
 using System.Runtime.Serialization;
 
-namespace ElasticsearchCodeSearch.Indexer.Client.Exceptions
+namespace ElasticsearchCodeSearch.Indexer.GitHub.Exceptions
 {
     [Serializable]
     public class GitHubApiException : Exception

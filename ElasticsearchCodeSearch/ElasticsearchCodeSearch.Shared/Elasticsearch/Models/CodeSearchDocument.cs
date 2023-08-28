@@ -37,7 +37,12 @@ namespace ElasticsearchCodeSearch.Models
         /// <summary>
         /// Gets or sets the content to index.
         /// </summary>
-        public required string Content { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the branch.
+        /// </summary>
+        public string Branch { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the Permalink to the file.

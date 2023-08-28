@@ -1,15 +1,13 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using ElasticsearchCodeSearch.Indexer.Client.Dto;
-using ElasticsearchCodeSearch.Indexer.Client.Options;
+using ElasticsearchCodeSearch.Indexer.GitHub.Dto;
+using ElasticsearchCodeSearch.Indexer.GitHub.Options;
 using ElasticsearchCodeSearch.Shared.Exceptions;
 using ElasticsearchCodeSearch.Shared.Logging;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Globalization;
-using System.Net.Http.Json;
 
-namespace ElasticsearchCodeSearch.Indexer.Client
+namespace ElasticsearchCodeSearch.Indexer.GitHub
 {
     public class GitHubClient : IDisposable
     {
@@ -62,6 +60,45 @@ namespace ElasticsearchCodeSearch.Indexer.Client
             return repositories;
         }
 
+        public async Task<RepositoryMetadataDto?> GetRepositoryByOwnerAndRepositoryAsync(string owner, string repository, CancellationToken cancellationToken)
+        {
+            _logger.TraceMethodEntry();
+
+            var httpRequestMessage = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri($"https://api.github.com/orgs/repos/{owner}/{repository}"),
+                Headers =
+                {
+                    { "User-Agent", "curl/8.0.1" },
+                    { "Accept", "application/vnd.github+json" },
+                    { "Authorization", $"Bearer {_options.AccessToken}" },
+                    { "X-GitHub-Api-Version", $"2022-11-28" },
+                }
+            };
+
+            var response = await _httpClient
+                .SendAsync(httpRequestMessage, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new ApiException(string.Format(CultureInfo.InvariantCulture,
+                    "HTTP Request failed with Status: '{0}' ({1})",
+                    (int)response.StatusCode,
+                    response.StatusCode))
+                {
+                    StatusCode = response.StatusCode
+                };
+            }
+
+            var repositoryMetadata = await response.Content
+                .ReadFromJsonAsync<RepositoryMetadataDto>(cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+
+            return repositoryMetadata;
+        }
+
         public async Task<PaginatedResultsDto<RepositoryMetadataDto>> GetRepositoriesByOrganizationAsync(string organization, int pageNum, int pageSize, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
@@ -70,9 +107,9 @@ namespace ElasticsearchCodeSearch.Indexer.Client
             {
                 Method = HttpMethod.Get,
                 RequestUri = new Uri($"https://api.github.com/orgs/{organization}/repos?page={pageNum}&per_page={pageSize}"),
-                Headers = 
+                Headers =
                 {
-                    {"User-Agent", "curl/8.0.1" },
+                    { "User-Agent", "curl/8.0.1" },
                     { "Accept", "application/vnd.github+json" },
                     { "Authorization", $"Bearer {_options.AccessToken}" },
                     { "X-GitHub-Api-Version", $"2022-11-28" },
@@ -120,11 +157,13 @@ namespace ElasticsearchCodeSearch.Indexer.Client
         /// <returns>Links to the various pages</returns>
         public (string? FirstUrl, string? PrevUrl, string? NextUrl, string? LastUrl) ParseLinks(HttpResponseMessage httpResponseMessage)
         {
+            _logger.TraceMethodEntry();
+
             // Get the Value for the first "Links" header, which looks like this
             //
             // <https://api.github.com/organizations/6154722/repos?per_page=1&page=2>; rel="next", <https://api.github.com/organizations/6154722/repos?per_page=1&page=5762>; rel="last"
             //
-            if(!httpResponseMessage.Headers.TryGetValues("Link", out var linkHeaders)) 
+            if (!httpResponseMessage.Headers.TryGetValues("Link", out var linkHeaders))
             {
                 return (null, null, null, null);
             }
@@ -163,6 +202,8 @@ namespace ElasticsearchCodeSearch.Indexer.Client
 
         private string GetLinkType(string source)
         {
+            _logger.TraceMethodEntry();
+
             return source
                 .Replace("rel=\"", string.Empty)
                 .Replace("\"", string.Empty);
@@ -170,6 +211,8 @@ namespace ElasticsearchCodeSearch.Indexer.Client
 
         private string GetLinkValue(string source)
         {
+            _logger.TraceMethodEntry();
+
             return source
                 .Replace("<", string.Empty)
                 .Replace(">", string.Empty);

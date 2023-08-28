@@ -31,7 +31,7 @@ namespace ElasticsearchCodeSearch.Shared.Dto
         /// </summary>
         [JsonPropertyName("totalNumberOfDocumentsIndexed")]
         public required long? TotalNumberOfDocumentsIndexed { get; set; }
-        
+
         /// <summary>
         /// Number of documents currently being indexed (indices.indexing.index_current).
         /// </summary>

@@ -2,10 +2,11 @@
 
 using Elastic.Clients.Elasticsearch;
 using ElasticsearchCodeSearch.Converters;
-using ElasticsearchCodeSearch.Elasticsearch;
 using ElasticsearchCodeSearch.Shared.Logging;
-using ElasticsearchCodeSearch.Shared.Dto;
 using Microsoft.AspNetCore.Mvc;
+using ElasticsearchCodeSearch.Hosting;
+using ElasticsearchCodeSearch.Shared.Elasticsearch;
+using ElasticsearchCodeSearch.Shared.Dto;
 
 namespace ElasticsearchCodeSearch.Controllers
 {
@@ -46,41 +47,6 @@ namespace ElasticsearchCodeSearch.Controllers
                 var result = CodeSearchStatisticsConverter.Convert(indicesStatResponse);
 
                 return Ok(result);
-            }
-            catch (Exception e)
-            {
-                if (_logger.IsErrorEnabled())
-                {
-                    _logger.LogError(e, "An unhandeled exception occured");
-                }
-
-                return StatusCode(500, "An internal Server Error occured");
-            }
-        }
-
-        [HttpPost]
-        [Route("/delete-all-documents")]
-        public async Task<IActionResult> DeleteAllDocuments(CancellationToken cancellationToken)
-        {
-            _logger.TraceMethodEntry();
-
-            try
-            {
-                var deleteAllResponse = await _elasticsearchClient.DeleteAllAsync(cancellationToken);
-
-                if (!deleteAllResponse.IsValidResponse)
-                {
-                    if (_logger.IsErrorEnabled())
-                    {
-                        deleteAllResponse.TryGetOriginalException(out var originalException);
-
-                        _logger.LogError(originalException, "Elasticsearch failed with an unhandeled Exception");
-                    }
-
-                    return BadRequest("Invalid Search Response from Elasticsearch");
-                }
-
-                return Ok();
             }
             catch (Exception e)
             {
@@ -138,43 +104,6 @@ namespace ElasticsearchCodeSearch.Controllers
                 }
 
                 return StatusCode(500, "An internal Server Error occured");
-            }
-        }
-
-        [HttpPost]
-        [Route("/index-documents")]
-        public async Task<IActionResult> IndexDocuments([FromBody] List<CodeSearchDocumentDto> codeSearchDocuments, CancellationToken cancellationToken)
-        {
-            _logger.TraceMethodEntry();
-
-            try
-            {
-                var documents = CodeSearchDocumentConverter.Convert(codeSearchDocuments);
-
-                var bulkIndexResponse = await _elasticsearchClient.BulkIndexAsync(documents, cancellationToken);
-
-                if (!bulkIndexResponse.IsSuccess())
-                {
-                    if (_logger.IsErrorEnabled())
-                    {
-                        bulkIndexResponse.TryGetOriginalException(out var originalException);
-
-                        _logger.LogError(originalException, "Indexing failed due to an invalid response from Elasticsearch");
-                    }
-
-                    return BadRequest($"ElasticSearch indexing failed with Errors");
-                }
-
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                if (_logger.IsErrorEnabled())
-                {
-                    _logger.LogError(e, "Failed to index documents");
-                }
-
-                return StatusCode(500);
             }
         }
     }

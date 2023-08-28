@@ -1,12 +1,12 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using ElasticsearchCodeSearch.Indexer.Client;
-using ElasticsearchCodeSearch.Indexer.Client.Dto;
 using ElasticsearchCodeSearch.Indexer.Git;
+using ElasticsearchCodeSearch.Indexer.GitHub;
+using ElasticsearchCodeSearch.Indexer.GitHub.Dto;
+using ElasticsearchCodeSearch.Models;
 using ElasticsearchCodeSearch.Shared.Dto;
+using ElasticsearchCodeSearch.Shared.Elasticsearch;
 using ElasticsearchCodeSearch.Shared.Logging;
-using ElasticsearchCodeSearch.Shared.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace ElasticsearchCodeSearch.Indexer.Services
@@ -14,46 +14,93 @@ namespace ElasticsearchCodeSearch.Indexer.Services
     /// <summary>
     /// Git Indexer.
     /// </summary>
-    public class GitIndexerService
+    public class GitHubIndexerService
     {
-        private readonly ILogger<GitIndexerService> _logger;
+        private readonly ILogger<GitHubIndexerService> _logger;
 
         private readonly GitIndexerOptions _options;
 
-        private readonly GitClient _git;
+        private readonly GitExecutor _gitExecutor;
         private readonly GitHubClient _gitHubClient;
-        private readonly ElasticsearchCodeSearchService _elasticCodeSearchService;
+        private readonly ElasticCodeSearchClient _elasticCodeSearchClient;
 
-        public GitIndexerService(ILogger<GitIndexerService> logger, IOptions<GitIndexerOptions> options, GitClient git, GitHubClient gitHubClient, ElasticsearchCodeSearchService elasticCodeSearchService)
+        public GitHubIndexerService(ILogger<GitHubIndexerService> logger, IOptions<GitIndexerOptions> options, GitExecutor gitExecutor, GitHubClient gitHubClient, ElasticCodeSearchClient elasticCodeSearchClient)
         {
             _logger = logger;
             _options = options.Value;
-            _git = git;
+            _gitExecutor = gitExecutor;
             _gitHubClient = gitHubClient;
-            _elasticCodeSearchService = elasticCodeSearchService;
+            _elasticCodeSearchClient = elasticCodeSearchClient;
+        }
+
+        public async Task CreateSearchIndexAsync(CancellationToken cancellationToken)
+        {
+            _logger.TraceMethodEntry();
+
+            await _elasticCodeSearchClient.CreateIndexAsync(cancellationToken);
         }
 
         public async Task IndexOrganizationAsync(string organization, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
+            // If we are instructed to index an organization, we start by deleting all their
+            // documents. The reasoning is simple: We don't want to introduce complex
+            // synchronization code to diff the repositories.
+            await _elasticCodeSearchClient.DeleteByOwnerAsync(organization, cancellationToken);
+
+            // Gets all Repositories of the Organization:
             var response = await _gitHubClient
                 .GetRepositoriesByOrganizationAsync(organization, 1, 20, cancellationToken)
                 .ConfigureAwait(false);
 
+            // Get the Repositories from the response.
             var repositories = response.Values!;
 
+            // We could introduce some parallelism, when processing the repositories. Cloning 
+            // a repository is probably blocking and so, we could for example clone 4
+            // repositories in parallel and process them.
             var parallelOptions = new ParallelOptions()
             {
                 MaxDegreeOfParallelism = _options.MaxParallelClones,
                 CancellationToken = cancellationToken
             };
 
+            // Now we throw off the Parallel Cloning for the repositories.
             await Parallel
                 .ForEachAsync(source: repositories, parallelOptions: parallelOptions, body: (source, cancellationToken) => IndexRepositoryAsync(source, cancellationToken))
                 .ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Indexes a GitHub Repository.
+        /// </summary>
+        /// <param name="owner">Name of the owner, which is a user or an organization</param>
+        /// <param name="repository">Name of the Repository</param>
+        /// <param name="cancellationToken">CancellationToken to cancel asynchronous processing</param>
+        /// <returns>Awaitable Task</returns>
+        public async Task IndexRepositoryAsync(string owner, string repository, CancellationToken cancellationToken)
+        {
+            _logger.TraceMethodEntry();
+
+            var repositoryMetadata = await _gitHubClient
+                .GetRepositoryByOwnerAndRepositoryAsync(owner, repository, cancellationToken)
+                .ConfigureAwait(false);
+
+            if(repositoryMetadata == null)
+            {
+                throw new Exception($"Unable to read repository metadata for Owner '{owner}' and Repository '{repository}'");
+            }
+
+            await IndexRepositoryAsync(repositoryMetadata, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Indexes a GitHub Repository.
+        /// </summary>
+        /// <param name="repositoryMetadata">Metadata of the Repository</param>
+        /// <param name="cancellationToken">CancellationToken to cancel asynchronous processing</param>
+        /// <returns>An awaitable task</returns>
         public async ValueTask IndexRepositoryAsync(RepositoryMetadataDto repositoryMetadata, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
@@ -81,13 +128,18 @@ namespace ElasticsearchCodeSearch.Indexer.Services
                     }
                 }
 
-                await _git
+                await _elasticCodeSearchClient.DeleteByOwnerRepositoryAndBranchAsync(
+                    owner: repositoryMetadata.Owner.Login, 
+                    repository: repositoryMetadata.Name, 
+                    branch: repositoryMetadata.DefaultBranch, cancellationToken);
+
+                await _gitExecutor
                     .Clone(repositoryMetadata.CloneUrl, workingDirectory, cancellationToken)
                     .ConfigureAwait(false);
 
                 // Get the list of allowed files, by matching against allowed extensions (.c, .cpp, ...)
                 // and allowed filenames (.gitignore, README, ...). We don't want to parse binary data.
-                var batches =  (await _git.ListFiles(workingDirectory, cancellationToken).ConfigureAwait(false))
+                var batches =  (await _gitExecutor.ListFiles(workingDirectory, cancellationToken).ConfigureAwait(false))
                     .Where(filename => IsAllowedFile(filename, allowedExtensions, allowedFilenames))
                     .Chunk(_options.BatchSize);
 
@@ -128,7 +180,9 @@ namespace ElasticsearchCodeSearch.Indexer.Services
         }
 
         /// <summary>
-        /// Recursively deletes a directory as well as any subdirectories and files. If the files are read-only, they are flagged as normal and then deleted.
+        /// Recursively deletes a directory as well as any subdirectories and files. If the files are read-only, 
+        /// they are flagged as normal and then deleted. This is required for GIT folders, else you cannot empty 
+        /// the directory correctly.
         /// </summary>
         /// <param name="directory">The name of the directory to remove.</param>
         public static void DeleteReadOnlyDirectory(string directory)
@@ -144,20 +198,26 @@ namespace ElasticsearchCodeSearch.Indexer.Services
                 fileInfo.Attributes = FileAttributes.Normal;
                 fileInfo.Delete();
             }
+
             Directory.Delete(directory);
         }
 
+        /// <summary>
+        /// Indexes files, given by their relative path.
+        /// </summary>
+        /// <param name="repositoryMetadata">Repository Metadata</param>
+        /// <param name="files">List of Files</param>
+        /// <param name="cancellationToken">Cancellation Token</param>
+        /// <returns>An awaitable <see cref="ValueTask"/></returns>
         public async ValueTask IndexDocumentsAsync(RepositoryMetadataDto repositoryMetadata, string[] files, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
-            var workingDirectory = GetWorkingDirectory(repositoryMetadata);
-
-            List<CodeSearchDocumentDto> documents = new List<CodeSearchDocumentDto>();
+            List<CodeSearchDocument> documents = new List<CodeSearchDocument>();
 
             foreach (var file in files)
             {
-                var codeSearchDocument = await GetCodeSearchDocumentDtoAsync(repositoryMetadata, file, cancellationToken);
+                var codeSearchDocument = await GetCodeSearchDocumentAsync(repositoryMetadata, file, cancellationToken);
 
                 if (codeSearchDocument != null)
                 {
@@ -165,7 +225,7 @@ namespace ElasticsearchCodeSearch.Indexer.Services
                 }
             }
 
-            await _elasticCodeSearchService.IndexDocumentsAsync(documents, cancellationToken);
+            await _elasticCodeSearchClient.BulkIndexAsync(documents, cancellationToken);
         }
 
         /// <summary>
@@ -174,22 +234,22 @@ namespace ElasticsearchCodeSearch.Indexer.Services
         /// <param name="repository">Physical Repository</param>
         /// <param name="repositoryMetadata">Repository Metadata</param>
         /// <param name="relativeFilename">Filename to process</param>
-        /// <returns></returns>
-        private async Task<CodeSearchDocumentDto> GetCodeSearchDocumentDtoAsync(RepositoryMetadataDto repositoryMetadata, string relativeFilename, CancellationToken cancellationToken)
+        /// <returns>An awaitable Task with the <see cref="CodeSearchDocument"/></returns>
+        private async Task<CodeSearchDocument> GetCodeSearchDocumentAsync(RepositoryMetadataDto repositoryMetadata, string relativeFilename, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
             var workingDirectory = GetWorkingDirectory(repositoryMetadata);
 
-            var shaHash = await _git
+            var shaHash = await _gitExecutor
                 .SHA1(workingDirectory, relativeFilename, cancellationToken)
                 .ConfigureAwait(false);
 
-            var commitHash = await _git
+            var commitHash = await _gitExecutor
                 .CommitHash(workingDirectory, relativeFilename, cancellationToken)
                 .ConfigureAwait(false);
 
-            var latestCommitDate = await _git
+            var latestCommitDate = await _gitExecutor
                 .LatestCommitDate(workingDirectory, relativeFilename, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -197,13 +257,14 @@ namespace ElasticsearchCodeSearch.Indexer.Services
 
             var content = File.ReadAllText(absoluteFilename);
 
-            return new CodeSearchDocumentDto
+            return new CodeSearchDocument
             {
                 Id = shaHash,
                 Path = relativeFilename,
                 Repository = repositoryMetadata.Name,
                 Owner = repositoryMetadata.Owner.Login,
                 Content = content,
+                Branch = repositoryMetadata.DefaultBranch,
                 Filename = Path.GetFileName(relativeFilename),
                 CommitHash = commitHash,
                 Permalink = $"https://github.com/{repositoryMetadata.Owner}/{repositoryMetadata.Name}/blob/{commitHash}/{relativeFilename}",

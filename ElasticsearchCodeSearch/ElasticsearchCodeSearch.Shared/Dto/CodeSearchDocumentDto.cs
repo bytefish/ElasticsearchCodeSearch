@@ -59,6 +59,12 @@ namespace ElasticsearchCodeSearch.Shared.Dto
         public string? Content { get; set; } = string.Empty;
 
         /// <summary>
+        /// Gets or sets the branch.
+        /// </summary>
+        [JsonPropertyName("content")]
+        public string? Branch { get; set; } = string.Empty;
+
+        /// <summary>
         /// Gets or sets the Permalink to the file.
         /// </summary>
         [Required]

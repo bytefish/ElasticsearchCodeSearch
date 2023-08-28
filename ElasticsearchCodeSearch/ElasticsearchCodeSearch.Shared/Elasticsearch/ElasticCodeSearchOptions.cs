@@ -1,6 +1,6 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace ElasticsearchCodeSearch.Options
+namespace ElasticsearchCodeSearch.Shared.Elasticsearch
 {
     /// <summary>
     /// Elasticsearch options.

@@ -2,7 +2,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace ElasticsearchCodeSearch.Indexer.Client.Dto
+namespace ElasticsearchCodeSearch.Indexer.GitHub.Dto
 {
     public class RepositoryOwnerDto
     {

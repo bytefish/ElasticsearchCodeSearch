@@ -1,12 +1,12 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using ElasticsearchCodeSearch.Client.Infrastructure;
-using ElasticsearchCodeSearch.Shared.Dto;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components;
 using ElasticsearchCodeSearch.Shared.Services;
 using ElasticsearchCodeSearch.Client.Components;
 using ElasticsearchCodeSearch.Client.Models;
+using ElasticsearchCodeSearch.Shared.Dto;
 
 namespace ElasticsearchCodeSearch.Client.Pages
 {
