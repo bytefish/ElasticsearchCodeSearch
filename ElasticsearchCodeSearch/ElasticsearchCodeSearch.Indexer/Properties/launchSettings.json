@@ -3,11 +3,11 @@
     "ElasticsearchFulltextExample.Indexer": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "https://localhost:5000/swagger/index.html",
+      "launchUrl": "https://localhost:5001/swagger/index.html",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "https://localhost:5000"
+      "applicationUrl": "https://localhost:5001"
     }
   }
 }

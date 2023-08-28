@@ -3,19 +3,11 @@
     "ElasticsearchFulltextExample.Web": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "http://localhost:5000/swagger/index.html",
+      "launchUrl": "https://localhost:5000/swagger/index.html",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "http://localhost:5000"
-    }
-  },
-  "iisSettings": {
-    "windowsAuthentication": false,
-    "anonymousAuthentication": true,
-    "iisExpress": {
-      "applicationUrl": "http://localhost:9000",
-      "sslPort": 0
+      "applicationUrl": "https://localhost:5000"
     }
   }
 }
