@@ -60,7 +60,7 @@ static void ConfigureIndexingServices(WebApplicationBuilder builder)
     {
         o.BaseDirectory = @"C:\Temp";
         o.MaxParallelClones = 1;
-        o.MaxParallelBulkRequests = 4;
+        o.MaxParallelBulkRequests = 1;
         o.BatchSize = 20;
         o.AllowedFilenames = new[]
         {

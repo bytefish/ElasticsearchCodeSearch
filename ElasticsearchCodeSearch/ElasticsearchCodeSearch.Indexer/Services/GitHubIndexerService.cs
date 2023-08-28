@@ -83,16 +83,23 @@ namespace ElasticsearchCodeSearch.Indexer.Services
         {
             _logger.TraceMethodEntry();
 
-            var repositoryMetadata = await _gitHubClient
-                .GetRepositoryByOwnerAndRepositoryAsync(owner, repository, cancellationToken)
-                .ConfigureAwait(false);
-
-            if(repositoryMetadata == null)
+            try
             {
-                throw new Exception($"Unable to read repository metadata for Owner '{owner}' and Repository '{repository}'");
-            }
+                var repositoryMetadata = await _gitHubClient
+                    .GetRepositoryByOwnerAndRepositoryAsync(owner, repository, cancellationToken)
+                    .ConfigureAwait(false);
 
-            await IndexRepositoryAsync(repositoryMetadata, cancellationToken).ConfigureAwait(false);
+                if (repositoryMetadata == null)
+                {
+                    throw new Exception($"Unable to read repository metadata for Owner '{owner}' and Repository '{repository}'");
+                }
+
+                await IndexRepositoryAsync(repositoryMetadata, cancellationToken).ConfigureAwait(false);
+            } 
+            catch(Exception e)
+            {
+                _logger.LogError(e, "Failed to index repository '{Repository}'", $"{owner}/{repository}");
+            }
         }
 
         /// <summary>

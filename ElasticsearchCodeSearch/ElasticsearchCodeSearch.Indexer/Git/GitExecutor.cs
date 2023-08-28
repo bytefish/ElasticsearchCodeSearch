@@ -28,7 +28,7 @@ namespace ElasticsearchCodeSearch.Indexer.Git
         {
             _logger.TraceMethodEntry();
 
-            var result = await RunAsync($"ls-files -s {path}", repository_directory, cancellationToken);
+            var result = await RunAsync($"ls-files -s \"{path}\"", repository_directory, cancellationToken);
 
             return result.Split(" ").Skip(1).First();
         }
@@ -37,7 +37,7 @@ namespace ElasticsearchCodeSearch.Indexer.Git
         {
             _logger.TraceMethodEntry();
 
-            var result = await RunAsync($"log --pretty=format:\"%H\" -n 1 -- {path}", repository_directory, cancellationToken);
+            var result = await RunAsync($"log --pretty=format:\"%H\" -n 1 -- \"{path}\"", repository_directory, cancellationToken);
 
             return result;
         }
@@ -46,7 +46,7 @@ namespace ElasticsearchCodeSearch.Indexer.Git
         {
             _logger.TraceMethodEntry();
 
-            var result = await RunAsync($" log -1  --date=iso-strict --format=\"%ad\" -- {path}", repository_directory, cancellationToken);
+            var result = await RunAsync($" log -1  --date=iso-strict --format=\"%ad\" -- \"{path}\"", repository_directory, cancellationToken);
 
             if(DateTime.TryParse(result, out var date))
             {
