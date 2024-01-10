@@ -5,14 +5,14 @@ Elasticsearch .NET client.
 
 There is a Page to get an overview for your Elasticsearch index:
 
-<a href="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/Screenshots/ElasticsearchCodeSearch_Home_Light.jpg">
-    <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/Screenshots/ElasticsearchCodeSearch_Home_Light.jpg" alt="The final Code Search with the Blazor Frontend" width="100%" />
+<a href="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_Home_Light.jpg">
+    <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_Home_Light.jpg" alt="The final Code Search with the Blazor Frontend" width="100%" />
 </a>
 
 And there's a page to query the Elasticsearch index:
 
-<a href="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/Screenshots/ElasticsearchCodeSearch_Search_Light.jpg">
-    <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/Screenshots/ElasticsearchCodeSearch_Search_Light.jpg" alt="The final Code Search with the Blazor Frontend" width="100%" />
+<a href="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_Search_Light.jpg">
+    <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_Search_Light.jpg" alt="The final Code Search with the Blazor Frontend" width="100%" />
 </a>
 
 The Git Repositories are read by a Powershell script in `ElasticsearchCodeSearch\ElasticsearchCodeSearch.Indexer\git_indexer.ps1`, 
