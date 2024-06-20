@@ -18,12 +18,9 @@ services:
       - ./.env
     environment:
       - node.name=es01
-      - discovery.seed_hosts=es01
       - discovery.type=single-node
       - ELASTICSEARCH_HOSTS=${ELASTIC_HOSTNAME:-es01}
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-secret}
-      - cluster.initial_master_nodes=es01
-      - cluster.name=${ELASTIC_CLUSTERNAME:-elasticsearch_cluster}
       - xpack.security.enabled=${ELASTIC_SECURITY:-true}
       - xpack.security.http.ssl.enabled=true
       - xpack.security.http.ssl.verification_mode=none
