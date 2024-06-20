@@ -4,15 +4,16 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Elasticsearch Code Search</title>
+    <title>FluentUI.Demo.Client</title>
     <base href="/" />
-    <link href="_content/Microsoft.Fast.Components.FluentUI/css/reboot.css" rel="stylesheet" />
     <link href="css/app.css" rel="stylesheet" />
+    <link href="_content/Microsoft.FluentUI.AspNetCore.Components/css/reboot.css" rel="stylesheet" />
     <link href="ElasticsearchCodeSearch.Client.styles.css" rel="stylesheet" />
-
 </head>
 
 <body>
+    <loading-theme storage-name="theme"></loading-theme>
+
     <div id="app">
         <svg class="loading-progress">
             <circle r="40%" cx="50%" cy="50%" />
@@ -27,7 +28,6 @@
         <a class="dismiss">🗙</a>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
-
 </body>
 
 </html>
