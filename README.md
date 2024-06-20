@@ -47,8 +47,97 @@ You configure the Credentials in the `ElasticsearchCodeSearch\ElasticsearchCodeS
 }
 ```
 
-By default the Backend sorts all matches by their latest commit date, that has been extracted 
-from the git repository. 
+## How it's done ##
+
+
+### Configuring HTTPS for Elasticsearch ###
+
+To secure the HTTPS communication with Elastsearch we need to generate a certificate 
+first. The easiest way to do this is to use the `elastsearch-certutil` command line 
+tool.
+
+We start by creating a Certificate Authority (CA):
+
+```
+.\elasticsearch-certutil ca --silent --pem -out ./elastic-cert/ca.zip
+```
+
+In the `docker/elasticsearch/elastic-cert` we will now find a `ca.zip` and unzip it.
+
+Next we create a `instances.yml`file for the local Elasticsearch instance `es01`:
+
+```yml
+instances:
+  - name: es01
+    dns:
+      - es01
+      - localhost
+    ip:
+        - 127.0.0.1
+```
+
+We can then pass the `instances.yml` to the `elasticsearch-certutil` command line tool:
+
+```
+elasticsearch-certutil cert --silent --pem -out ./certs.zip --in ./instances.yml --ca-cert ./elastic-cert/ca/ca.crt --ca-key ./elastic-cert/ca/ca.key
+```
+
+In the `docker-compose.yml` we the configure `elasticsearch` with our generated certificates as:
+
+```yml
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION:-8.14.1}
+    container_name: ${ELASTIC_HOSTNAME:-es01}
+    hostname: ${ELASTIC_HOSTNAME:-es01}
+    restart: ${RESTART_MODE:-unless-stopped}
+    healthcheck:
+      test: ["CMD-SHELL", "curl --user ${ELASTIC_USER:-elastic}:${ELASTIC_PASSWORD}:-secret} --silent --fail https://localhost:9200/_cluster/health -k || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    env_file:
+      - ./.env
+    environment:
+      - node.name=es01
+      - discovery.seed_hosts=es01
+      - ELASTICSEARCH_HOSTS=${ELASTIC_HOSTNAME:-es01}
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-secret}
+      - cluster.initial_master_nodes=es01
+      - cluster.name=${ELASTIC_CLUSTERNAME:-elasticsearch_cluster}
+      - xpack.security.enabled=${ELASTIC_SECURITY:-true}
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.verification_mode=none
+      - xpack.security.http.ssl.key=/usr/share/elasticsearch/config/cert/es01.key
+      - xpack.security.http.ssl.certificate=/usr/share/elasticsearch/config/cert/es01.crt
+      - xpack.security.http.ssl.certificate_authorities=/usr/share/elasticsearch/config/cert/ca/ca.crt
+      - xpack.security.transport.ssl.enabled=${ELASTIC_SECURITY:-true}
+      - xpack.security.transport.ssl.verification_mode=none
+      - xpack.security.transport.ssl.certificate_authorities=/usr/share/elasticsearch/config/cert/ca/ca.crt
+      - xpack.security.transport.ssl.certificate=/usr/share/elasticsearch/config/cert/es01.crt
+      - xpack.security.transport.ssl.key=/usr/share/elasticsearch/config/cert/es01.key
+    volumes:
+      - ${PWD}/elasticsearch/elastic-data:/usr/share/elasticsearch/data
+      - ${PWD}/elasticsearch/elastic-cert:/usr/share/elasticsearch/config/cert
+    networks:
+      - services
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+```
+
+### Setting up HTTPS Communication in ASP.NET Core with Docker ###
+
+We will create and trust the self-signed certificates with the following command:
+
+```powershell
+dotnet dev-certs https -ep $env:USERPROFILE\.aspnet\https\aspnetapp.pfx -p SuperStrongPassword
+dotnet dev-certs https --trust
+```
+
+
+## Contributions ##
 
 This is an Open Source project, feel free to contribute!
 

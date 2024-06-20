@@ -3,6 +3,10 @@
 using ElasticsearchCodeSearch.Hosting;
 using System.Text.Json.Serialization;
 using ElasticsearchCodeSearch.Shared.Elasticsearch;
+using ElasticsearchCodeSearch.Indexer.Git;
+using ElasticsearchCodeSearch.Indexer.GitHub.Options;
+using ElasticsearchCodeSearch.Indexer.GitHub;
+using ElasticsearchCodeSearch.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,13 +15,9 @@ builder.Services.AddCors();
 
 // Add Options
 builder.Services.AddOptions();
-builder.Services.Configure<ElasticCodeSearchOptions>(builder.Configuration.GetSection("Elasticsearch"));
 
-// Add Client
-builder.Services.AddSingleton<ElasticCodeSearchClient>();
-
-// Add Hosted Services
-builder.Services.AddHostedService<ElasticsearchInitializerHostedService>();
+ConfigureElasticsearch(builder);
+ConfigureIndexingServices(builder);
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -42,3 +42,107 @@ app.UseCors(x => x
 app.MapControllers();
 
 app.Run();
+
+static void ConfigureElasticsearch(WebApplicationBuilder builder)
+{
+    builder.Services.Configure<ElasticCodeSearchOptions>(builder.Configuration.GetSection("Elasticsearch"));
+
+    // Add Client
+    builder.Services.AddSingleton<ElasticCodeSearchClient>();
+
+    // Add Hosted Services
+    builder.Services.AddHostedService<ElasticsearchInitializerHostedService>();
+}
+
+static void ConfigureIndexingServices(WebApplicationBuilder builder)
+{
+    // Create the GitClientOptions by using the GH_TOKEN Key:
+    builder.Services.Configure<GitHubClientOptions>(o =>
+    {
+        o.RequestDelayInMilliseconds = 0;
+        o.AccessToken = Environment.GetEnvironmentVariable("GH_TOKEN")!;
+    });
+
+    builder.Services.Configure<GitIndexerOptions>(o =>
+    {
+        o.BaseDirectory = @"C:\Temp";
+        o.MaxParallelClones = 1;
+        o.MaxParallelBulkRequests = 1;
+        o.BatchSize = 20;
+        o.AllowedFilenames = new[]
+        {
+            ".gitignore",
+            ".editorconfig",
+            "README",
+            "CHANGELOG"
+        };
+        o.AllowedExtensions = new[]
+        {
+            // C / C++
+            ".c",
+            ".cpp",
+            ".h",
+            ".hpp",
+            // .NET
+            ".cs",
+            ".cshtml",
+            ".csproj",
+            ".fs",
+            ".razor",
+            ".sln",
+            ".xaml",
+            // CSS
+            ".css",
+            ".scss",
+            ".sass",
+            // CSV / TSV
+            ".csv",
+            ".tsv",
+            // HTML
+            ".html",
+            ".htm",
+            // JSON
+            ".json", 
+            // JavaScript
+            ".js",
+            ".jsx",
+            ".spec.js",
+            ".config.js",
+            // Typescript
+            ".ts",
+            ".tsx", 
+            // TXT
+            ".txt", 
+            // Powershell
+            ".ps1",
+            // Python
+            ".py",
+            // Configuration
+            ".ini",
+            ".config",
+            // XML
+            ".xml",
+            ".xsl",
+            ".xsd",
+            ".dtd",
+            ".wsdl",
+            // Markdown
+            ".md",
+            ".markdown",
+            // reStructured Text
+            ".rst",
+            // LaTeX
+            ".tex",
+            ".bib",
+            ".bbx",
+            ".cbx"
+        };
+    });
+
+    builder.Services.AddSingleton<GitExecutor>();
+    builder.Services.AddSingleton<GitHubClient>();
+    builder.Services.AddSingleton<GitHubIndexerService>();
+
+    builder.Services.AddSingleton<IndexerJobQueues>();
+    builder.Services.AddHostedService<ElasticsearchIndexerHostedService>();
+}

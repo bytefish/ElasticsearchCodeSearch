@@ -1,0 +1,43 @@
+networks:
+  services:
+    driver: bridge
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION:-8.14.1}
+    container_name: ${ELASTIC_HOSTNAME:-es01}
+    hostname: ${ELASTIC_HOSTNAME:-es01}
+    restart: ${RESTART_MODE:-unless-stopped}
+    healthcheck:
+      test: ["CMD-SHELL", "curl --user ${ELASTIC_USER:-elastic}:${ELASTIC_PASSWORD}:-secret} --silent --fail https://localhost:9200/_cluster/health -k || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    env_file:
+      - ./.env
+    environment:
+      - node.name=es01
+      - discovery.seed_hosts=es01
+      - ELASTICSEARCH_HOSTS=${ELASTIC_HOSTNAME:-es01}
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-secret}
+      - cluster.initial_master_nodes=es01
+      - cluster.name=${ELASTIC_CLUSTERNAME:-elasticsearch_cluster}
+      - xpack.security.enabled=${ELASTIC_SECURITY:-true}
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.verification_mode=none
+      - xpack.security.http.ssl.key=/usr/share/elasticsearch/config/cert/es01.key
+      - xpack.security.http.ssl.certificate=/usr/share/elasticsearch/config/cert/es01.crt
+      - xpack.security.http.ssl.certificate_authorities=/usr/share/elasticsearch/config/cert/ca/ca.crt
+      - xpack.security.transport.ssl.enabled=${ELASTIC_SECURITY:-true}
+      - xpack.security.transport.ssl.verification_mode=none
+      - xpack.security.transport.ssl.certificate_authorities=/usr/share/elasticsearch/config/cert/ca/ca.crt
+      - xpack.security.transport.ssl.certificate=/usr/share/elasticsearch/config/cert/es01.crt
+      - xpack.security.transport.ssl.key=/usr/share/elasticsearch/config/cert/es01.key
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./elasticsearch/elastic-data:/usr/share/elasticsearch/data
+      - ./elasticsearch/elastic-cert:/usr/share/elasticsearch/config/cert

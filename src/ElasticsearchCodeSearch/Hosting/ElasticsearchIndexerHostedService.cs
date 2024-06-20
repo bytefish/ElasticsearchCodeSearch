@@ -1,10 +1,9 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using ElasticsearchCodeSearch.Indexer.Services;
+using ElasticsearchCodeSearch.Services;
 using ElasticsearchCodeSearch.Shared.Logging;
-using System.Collections.Concurrent;
 
-namespace ElasticsearchCodeSearch.Indexer.Hosted
+namespace ElasticsearchCodeSearch.Hosting
 {
     /// <summary>
     /// A very simple Background Service to Process Indexing Requests in the Background. It basically 

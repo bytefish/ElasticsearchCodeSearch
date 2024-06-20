@@ -1,10 +1,8 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Elastic.Clients.Elasticsearch;
 using ElasticsearchCodeSearch.Converters;
 using ElasticsearchCodeSearch.Shared.Logging;
 using Microsoft.AspNetCore.Mvc;
-using ElasticsearchCodeSearch.Hosting;
 using ElasticsearchCodeSearch.Shared.Elasticsearch;
 using ElasticsearchCodeSearch.Shared.Dto;
 

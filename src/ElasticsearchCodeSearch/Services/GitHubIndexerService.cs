@@ -9,7 +9,7 @@ using ElasticsearchCodeSearch.Shared.Elasticsearch;
 using ElasticsearchCodeSearch.Shared.Logging;
 using Microsoft.Extensions.Options;
 
-namespace ElasticsearchCodeSearch.Indexer.Services
+namespace ElasticsearchCodeSearch.Services
 {
     /// <summary>
     /// Git Indexer.
@@ -95,8 +95,8 @@ namespace ElasticsearchCodeSearch.Indexer.Services
                 }
 
                 await IndexRepositoryAsync(repositoryMetadata, cancellationToken).ConfigureAwait(false);
-            } 
-            catch(Exception e)
+            }
+            catch (Exception e)
             {
                 _logger.LogError(e, "Failed to index repository '{Repository}'", $"{owner}/{repository}");
             }
@@ -113,7 +113,7 @@ namespace ElasticsearchCodeSearch.Indexer.Services
             _logger.TraceMethodEntry();
 
             // Nothing to do, if we cannot clone ...
-            if(repositoryMetadata.CloneUrl == null)
+            if (repositoryMetadata.CloneUrl == null)
             {
                 _logger.LogInformation("Not cloning repository '{Repository}, because it has no Clone URL'", repositoryMetadata.FullName);
 
@@ -127,7 +127,7 @@ namespace ElasticsearchCodeSearch.Indexer.Services
 
             try
             {
-                if (workingDirectory.StartsWith(@"C:\Temp"))
+                if (workingDirectory.StartsWith(_options.DataDirectory))
                 {
                     if (Directory.Exists(workingDirectory))
                     {
@@ -136,8 +136,8 @@ namespace ElasticsearchCodeSearch.Indexer.Services
                 }
 
                 await _elasticCodeSearchClient.DeleteByOwnerRepositoryAndBranchAsync(
-                    owner: repositoryMetadata.Owner.Login, 
-                    repository: repositoryMetadata.Name, 
+                    owner: repositoryMetadata.Owner.Login,
+                    repository: repositoryMetadata.Name,
                     branch: repositoryMetadata.DefaultBranch, cancellationToken);
 
                 await _gitExecutor
@@ -146,7 +146,7 @@ namespace ElasticsearchCodeSearch.Indexer.Services
 
                 // Get the list of allowed files, by matching against allowed extensions (.c, .cpp, ...)
                 // and allowed filenames (.gitignore, README, ...). We don't want to parse binary data.
-                var batches =  (await _gitExecutor.ListFiles(workingDirectory, cancellationToken).ConfigureAwait(false))
+                var batches = (await _gitExecutor.ListFiles(workingDirectory, cancellationToken).ConfigureAwait(false))
                     .Where(filename => IsAllowedFile(filename, allowedExtensions, allowedFilenames))
                     .Chunk(_options.BatchSize);
 
@@ -159,16 +159,16 @@ namespace ElasticsearchCodeSearch.Indexer.Services
                 await Parallel
                     .ForEachAsync(source: batches, parallelOptions: parallelOptions, body: (source, cancellationToken) => IndexDocumentsAsync(repositoryMetadata, source, cancellationToken))
                     .ConfigureAwait(false);
-            } 
-            catch(Exception e)
+            }
+            catch (Exception e)
             {
                 _logger.LogError(e, "Indexing Repository '{Repository}' failed", repositoryMetadata.FullName);
 
                 throw;
-            } 
+            }
             finally
             {
-                if(workingDirectory.StartsWith(@"C:\Temp")) 
+                if (workingDirectory.StartsWith(_options.DataDirectory))
                 {
                     try
                     {
@@ -176,12 +176,12 @@ namespace ElasticsearchCodeSearch.Indexer.Services
                         {
                             DeleteReadOnlyDirectory(workingDirectory);
                         }
-                    } 
-                    catch(Exception e) 
+                    }
+                    catch (Exception e)
                     {
                         _logger.LogError(e, "Error deleting '{Repository}'", repositoryMetadata.FullName);
                     }
-                   
+
                 }
             }
         }

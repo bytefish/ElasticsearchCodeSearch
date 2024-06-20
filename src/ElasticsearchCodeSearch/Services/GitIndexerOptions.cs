@@ -1,6 +1,6 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace ElasticsearchCodeSearch.Indexer.Services
+namespace ElasticsearchCodeSearch.Services
 {
     /// <summary>
     /// AppSettings for the Indexer.
@@ -11,6 +11,11 @@ namespace ElasticsearchCodeSearch.Indexer.Services
         /// Gets or sets the base directory to clone to.
         /// </summary>
         public required string BaseDirectory { get; set; }
+
+        /// <summary>
+        /// Gets or sets the base directory to clone to.
+        /// </summary>
+        public required string DataDirectory { get; set; }
 
         /// <summary>
         /// Gets or sets the allowed extensions.

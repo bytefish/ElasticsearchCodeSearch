@@ -4,11 +4,11 @@ using ElasticsearchCodeSearch.Shared.Logging;
 using Microsoft.AspNetCore.Mvc;
 using ElasticsearchCodeSearch.Shared.Elasticsearch;
 using ElasticsearchCodeSearch.Shared.Dto;
-using ElasticsearchCodeSearch.Indexer.Hosted;
 using Elastic.Clients.Elasticsearch;
 using ElasticsearchCodeSearch.Converters;
+using ElasticsearchCodeSearch.Hosting;
 
-namespace ElasticsearchCodeSearch.Indexer.Controllers
+namespace ElasticsearchCodeSearch.Controllers
 {
     [ApiController]
     public class CodeIndexController : ControllerBase
@@ -102,7 +102,7 @@ namespace ElasticsearchCodeSearch.Indexer.Controllers
             {
                 var result = await _elasticsearchClient.CreateIndexAsync(cancellationToken);
 
-                if(!result.Success)
+                if (!result.Success)
                 {
                     if (_logger.IsErrorEnabled())
                     {

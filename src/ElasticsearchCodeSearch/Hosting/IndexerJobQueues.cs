@@ -1,9 +1,9 @@
 ﻿using System.Collections.Concurrent;
 
-namespace ElasticsearchCodeSearch.Indexer.Hosted
+namespace ElasticsearchCodeSearch.Hosting
 {
     /// <summary>
-    /// Holds the Job Queues.
+    /// Simple In-Memory Job Queues to be processed by the Indexer.
     /// </summary>
     public class IndexerJobQueues
     {
