@@ -1,6 +1,5 @@
 networks:
   services:
-    driver: bridge
 
 services:
   elasticsearch:
@@ -19,7 +18,6 @@ services:
     environment:
       - node.name=es01
       - discovery.type=single-node
-      - ELASTICSEARCH_HOSTS=${ELASTIC_HOSTNAME:-es01}
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-secret}
       - xpack.security.enabled=${ELASTIC_SECURITY:-true}
       - xpack.security.http.ssl.enabled=true
@@ -39,3 +37,6 @@ services:
     volumes:
       - ./elasticsearch/elastic-data:/usr/share/elasticsearch/data
       - ./elasticsearch/elastic-cert:/usr/share/elasticsearch/config/cert
+    ports:
+      - "9200:9200"
+      - "9300:9300"

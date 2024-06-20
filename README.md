@@ -122,7 +122,46 @@ services:
     volumes:
       - ./elasticsearch/elastic-data:/usr/share/elasticsearch/data
       - ./elasticsearch/elastic-cert:/usr/share/elasticsearch/config/cert
+
 ```
+
+We can now verify, if Elasticsearch starts correctly by using `curl`:
+
+```Powershell
+C:\Users\philipp>curl -k https://127.0.0.1:9200  -u elastic:secret
+{
+  "name" : "es01",
+  "cluster_name" : "docker-cluster",
+  "cluster_uuid" : "2pvSQcC-Tnu-cbQuc1AONw",
+  "version" : {
+    "number" : "8.14.1",
+    "build_flavor" : "default",
+    "build_type" : "docker",
+    "build_hash" : "93a57a1a76f556d8aee6a90d1a95b06187501310",
+    "build_date" : "2024-06-10T23:35:17.114581191Z",
+    "build_snapshot" : false,
+    "lucene_version" : "9.10.0",
+    "minimum_wire_compatibility_version" : "7.17.0",
+    "minimum_index_compatibility_version" : "7.0.0"
+  },
+  "tagline" : "You Know, for Search"
+}
+```
+
+And finally we calculate the Certificate Fingerprint using:
+
+```powershell
+openssl.exe x509 -fingerprint -sha256 -in .\es01.crt
+```
+
+And get our Certificate Fingerprint as:
+
+```
+31a63ffca5275df7ea7d6fc7e92b42cfa774a0feed7d7fa8488c5e46ea9ade3f
+```
+
+Nice!
+
 ### Setting up HTTPS Communication in ASP.NET Core with Docker ###
 
 We will create and trust the self-signed certificates with the following command:
