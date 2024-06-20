@@ -9,7 +9,7 @@ services:
     hostname: ${ELASTIC_HOSTNAME:-es01}
     restart: ${RESTART_MODE:-unless-stopped}
     healthcheck:
-      test: ["CMD-SHELL", "curl --user ${ELASTIC_USER:-elastic}:${ELASTIC_PASSWORD}:-secret} --silent --fail https://localhost:9200/_cluster/health -k || exit 1" ]
+      test: ["CMD-SHELL", "curl --user ${ELASTIC_USER:-elastic}:${ELASTIC_PASSWORD:-secret} --silent --fail https://localhost:9200/_cluster/health -k || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -19,6 +19,7 @@ services:
     environment:
       - node.name=es01
       - discovery.seed_hosts=es01
+      - discovery.type=single-node
       - ELASTICSEARCH_HOSTS=${ELASTIC_HOSTNAME:-es01}
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-secret}
       - cluster.initial_master_nodes=es01
