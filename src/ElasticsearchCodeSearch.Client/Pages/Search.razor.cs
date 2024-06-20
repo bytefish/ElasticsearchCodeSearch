@@ -7,6 +7,7 @@ using ElasticsearchCodeSearch.Shared.Services;
 using ElasticsearchCodeSearch.Client.Components;
 using ElasticsearchCodeSearch.Client.Models;
 using ElasticsearchCodeSearch.Shared.Dto;
+using Microsoft.FluentUI.AspNetCore.Components;
 
 namespace ElasticsearchCodeSearch.Client.Pages
 {
@@ -47,8 +48,7 @@ namespace ElasticsearchCodeSearch.Client.Pages
         /// </summary>
         private PaginatorState _pagination = new PaginatorState
         {
-            ItemsPerPage = 10,
-            TotalItemCount = 10
+            ItemsPerPage = 10
         };
 
         /// <summary>
@@ -105,18 +105,15 @@ namespace ElasticsearchCodeSearch.Client.Pages
         }
 
         /// <inheritdoc />
-        protected override Task OnParametersSetAsync()
+        protected override async Task OnParametersSetAsync()
         {
             // Set bound values, so we don't modify the parameters directly
             _queryString = QueryString ?? string.Empty;
             _selectedSortOption = SortOption ?? SortOptionEnum.LatestCommitDateDescending;
-            _pagination.CurrentPageIndex = Page ?? 0;
             _pagination.ItemsPerPage = PageSize ?? 10;
 
             // The associated pagination state may have been added/removed/replaced
             _currentPageItemsChanged.SubscribeOrMove(_pagination.CurrentPageItemsChanged);
-
-            return Task.CompletedTask;
         }
 
         /// <summary>

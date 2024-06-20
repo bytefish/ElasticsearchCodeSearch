@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace ElasticsearchCodeSearch.Client.Infrastructure
 {
-    internal sealed class EventCallbackSubscriber<T> : IDisposable
+    public sealed class EventCallbackSubscriber<T> : IDisposable
     {
         private readonly EventCallback<T> _handler;
         private EventCallbackSubscribable<T>? _existingSubscription;

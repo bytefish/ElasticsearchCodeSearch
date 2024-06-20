@@ -1,83 +1,68 @@
-﻿@namespace ElasticsearchCodeSearch.Client.Shared
-
+﻿@using ElasticsearchCodeSearch.Client.Components
 @using Microsoft.AspNetCore.Components
 @using System.Runtime.InteropServices
-@inherits LayoutComponentBase
+
+@namespace ElasticsearchCodeSearch.Client.Shared
+
+@inject IStringLocalizer<SharedResource> Loc
+@inject ApplicationErrorMessageService ApplicationErrorMessageService
 
 <PageTitle>Elasticsearch Code Search</PageTitle>
+        <div>
+            <FluentLayout>
+                <FluentHeader Class="siteheader">
+                    <a href="/">
+                        Elasticsearch Code Search
+                    </a>
+                    <FluentSpacer />
+                    <div class="notifications">
+                        <NotificationCenter />
+                    </div>
+                    <div class="settings">
+                        <SiteSettings />
+                    </div>
+                </FluentHeader>
+                <FluentStack Class="body-stack" Orientation="Orientation.Horizontal" Width="100%" HorizontalGap="0">
+                    <NavMenu />
+                    <FluentBodyContent id="body-content">
+                        <div class="content">
+                            <article id="article">
+                                <FluentMessageBarProvider Section="@App.MESSAGES_TOP" />
+                                <ErrorBoundary @ref="_errorBoundary">
+                                    <ChildContent>
+                                        <div>@Body</div>
+                                    </ChildContent>
+                                    <ErrorContent Context="exception">
+                                        @{
+                                            ApplicationErrorMessageService.ShowErrorMessage(exception);
+                                        }
+                                    </ErrorContent>
+                                </ErrorBoundary>
+                            </article>
+                            <aside>
 
-<div id="container" @ref="container">
-    
-    <header>
-        <div class="title">
-            <span class="branding">Elasticsearch Code Search</span>
-        </div>
-        <div class="colorgroup">
-            <label for="color">Color</label>
-            <FluentSelect Id="color" 
-                          Items=@(Enum.GetValues<OfficeColor>()) 
-                          OptionValue="@(c => c.ToAttributeValue())"
-                          OptionSelected="@(c => c == _selectedColorOption)"
-                          TOption="OfficeColor"
-                          Position="SelectPosition.Below"
-                          @bind-SelectedOption="@_selectedColorOption"
-                          @onchange="@(x => HandleColorChange(x))" 
-                          aria-label="Accent color selector"/>
-        </div>
-        <div class="switches">
-            <FluentSwitch @bind-Value="@_inDarkMode" AfterBindValue="UpdateTheme" title="Switch theme">
-                <span class="label">Theme</span>
-                <span slot="unchecked-message">light</span>
-                <span slot="checked-message">dark</span>
-            </FluentSwitch>
-            <FluentSwitch @bind-Value="@_ltr" AfterBindValue="UpdateDirection" title="Switch direction">
-                <span>Direction</span>
-                <span slot="unchecked-message">LTR</span>
-                <span slot="checked-message">RTL</span>
-            </FluentSwitch>
-        </div>
-    </header>
+                            </aside>
+                            <FluentToastProvider MaxToastCount="10" />
+                            <FluentDialogProvider />
+                            <FluentTooltipProvider />
+                        </div>
+                    </FluentBodyContent>
+                </FluentStack>
 
-    <main>
-        <input type="checkbox" id="menu-toggle" checked=@menuchecked @onclick=HandleChecked />
-        <label for="menu-toggle" class="menu-icon">
-            <FluentIcon Icon="Icons.Regular.Size24.Navigation" />
-        </label>
-        <nav>
-            @if(_menuType == "list")
-            {
-                <NavMenuList />
-            }
-            else
-            {
-                <NavMenuTree />
-            }
-        </nav>
-        <div class="content">
-            <article id="article">
-                <ErrorBoundary @ref="errorBoundary">
-                    <ChildContent>
-                        @Body
-                    </ChildContent>
-                    <ErrorContent Context="ex">
-                        <div class="blazor-error-boundary">@ex.Message</div>
-                    </ErrorContent>
-                </ErrorBoundary>
-            </article>
+                <FluentFooter Style="@("height: 40px; color: white;")">
+                    <div class="version">
+                        <small>
+                            Version: @_version
+                            &nbsp;-&nbsp;
+                            <a href="https://dotnet.microsoft.com/en-us/learn/aspnet/what-is-aspnet-core">Powered by @RuntimeInformation.FrameworkDescription</a>
+                        </small>
+                    </div>
+                    <FluentSpacer />
+
+                    <div class="copy">
+                        <small>© 2023. All rights reserved.</small>
+                    </div>
+                </FluentFooter>
+
+            </FluentLayout>
         </div>
-        <FluentToastContainer MaxToastCount="10"  />
-        <FluentDialogContainer />
-    </main>
-    <footer>
-        <div class="version">
-            <small>
-                Version: @_version
-                &nbsp;-&nbsp;
-                <a href="https://dotnet.microsoft.com/en-us/learn/aspnet/what-is-aspnet-core">Powered by @RuntimeInformation.FrameworkDescription</a>
-            </small>
-        </div>
-        <div class="copy">
-            <small>Philipp Wagner © 2023</small>
-        </div>
-    </footer>
-</div>

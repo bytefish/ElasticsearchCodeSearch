@@ -351,7 +351,6 @@ namespace ElasticsearchCodeSearch.Shared.Elasticsearch
 
             var healthRequest = new HealthRequest()
             {
-                WaitForActiveShards = "1",
                 Timeout = timeout
             };
 

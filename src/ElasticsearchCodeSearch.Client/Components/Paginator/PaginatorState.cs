@@ -1,6 +1,4 @@
-﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-using ElasticsearchCodeSearch.Client.Infrastructure;
+﻿using ElasticsearchCodeSearch.Client.Infrastructure;
 
 namespace ElasticsearchCodeSearch.Client.Components
 {
@@ -17,13 +15,13 @@ namespace ElasticsearchCodeSearch.Client.Components
         /// <summary>
         /// Gets the current zero-based page index. To set it, call <see cref="SetCurrentPageIndexAsync(int)" />.
         /// </summary>
-        public int CurrentPageIndex { get; set; }
+        public int CurrentPageIndex { get; private set; }
 
         /// <summary>
         /// Gets the total number of items across all pages, if known. The value will be null until an
-        /// associated component assigns a value after loading data.
+        /// associated <see cref="FluentDataGrid{TGridItem}"/> assigns a value after loading data.
         /// </summary>
-        public int? TotalItemCount { get; set; }
+        public int? TotalItemCount { get; private set; }
 
         /// <summary>
         /// Gets the zero-based index of the last page, if known. The value will be null until <see cref="TotalItemCount"/> is known.
@@ -36,7 +34,6 @@ namespace ElasticsearchCodeSearch.Client.Components
         public event EventHandler<int?>? TotalItemCountChanged;
 
         internal EventCallbackSubscribable<PaginatorState> CurrentPageItemsChanged { get; } = new();
-
         internal EventCallbackSubscribable<PaginatorState> TotalItemCountChangedSubscribable { get; } = new();
 
         /// <inheritdoc />
@@ -55,7 +52,6 @@ namespace ElasticsearchCodeSearch.Client.Components
             return CurrentPageItemsChanged.InvokeCallbacksAsync(this);
         }
 
-        // Can be internal because this only needs to be called by FluentDataGrid itself, not any custom pagination UI components.
         public Task SetTotalItemCountAsync(int totalItemCount)
         {
             if (totalItemCount == TotalItemCount)
@@ -69,15 +65,12 @@ namespace ElasticsearchCodeSearch.Client.Components
             {
                 // If the number of items has reduced such that the current page index is no longer valid, move
                 // automatically to the final valid page index and trigger a further data load.
-                return SetCurrentPageIndexAsync(LastPageIndex.Value);
+                SetCurrentPageIndexAsync(LastPageIndex.Value);
             }
-            else
-            {
-                // Under normal circumstances, we just want any associated pagination UI to update
-                TotalItemCountChanged?.Invoke(this, TotalItemCount);
 
-                return TotalItemCountChangedSubscribable.InvokeCallbacksAsync(this);
-            }
+            // Under normal circumstances, we just want any associated pagination UI to update
+            TotalItemCountChanged?.Invoke(this, TotalItemCount);
+            return TotalItemCountChangedSubscribable.InvokeCallbacksAsync(this);
         }
     }
 }

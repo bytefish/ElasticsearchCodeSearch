@@ -1,6 +1,7 @@
-﻿﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿<FluentDesignTheme StorageName="theme" />
+<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)"></RouteView>
     </Found>
     <NotFound>
         <PageTitle>Not found</PageTitle>
@@ -8,4 +9,4 @@
             <p role="alert">Sorry, there's nothing at this address.</p>
         </LayoutView>
     </NotFound>
-</Router> 
+</Router>
