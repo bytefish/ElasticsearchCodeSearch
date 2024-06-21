@@ -76,13 +76,26 @@ instances:
         - 127.0.0.1
 ```
 
-We can then pass the `instances.yml` to the `elasticsearch-certutil` command line tool:
+We can then pass the `instances.yml` to the `elasticsearch-certutil` command line tool and 
+create a certificate using our previously generated CA certificate:
 
 ```powershell
 elasticsearch-certutil cert --silent --pem -out ./certs.zip --in ./instances.yml --ca-cert ./elastic-cert/ca/ca.crt --ca-key ./elastic-cert/ca/ca.key
 ```
 
-In the `docker-compose.yml` we the configure `elasticsearch` with our generated certificates as:
+In an `.env` file we are defining the Environment variables as:
+
+```
+ELASTIC_HOSTNAME=es01
+ELASTIC_USERNAME=elastic
+ELASTIC_PASSWORD=secret
+ELASTIC_PORT=9200
+ELASTIC_SECURITY=true
+ELASTIC_SCHEME=https
+ELASTIC_VERSION=8.14.1
+```
+
+In the `docker-compose.yml` we then configure `elasticsearch` with our generated certificates as:
 
 ```yaml
 services:
@@ -102,7 +115,6 @@ services:
     environment:
       - node.name=es01
       - discovery.type=single-node
-      - ELASTICSEARCH_HOSTS=${ELASTIC_HOSTNAME:-es01}
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-secret}
       - xpack.security.enabled=${ELASTIC_SECURITY:-true}
       - xpack.security.http.ssl.enabled=true
@@ -122,7 +134,9 @@ services:
     volumes:
       - ./elasticsearch/elastic-data:/usr/share/elasticsearch/data
       - ./elasticsearch/elastic-cert:/usr/share/elasticsearch/config/cert
-
+    ports:
+      - "9200:9200"
+      - "9300:9300"
 ```
 
 We can now verify, if Elasticsearch starts correctly by using `curl`:
