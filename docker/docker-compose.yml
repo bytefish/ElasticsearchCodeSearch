@@ -46,7 +46,7 @@ services:
       context: ..
       dockerfile: ./docker/codesearch/Dockerfile
     environment:
-      - ASPNETCORE_ENVIRONMENT=Linux
+      - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_HTTPS_PORTS=5000
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
       - ASPNETCORE_Kestrel__Certificates__Default__Password=SuperStrongPassword
@@ -58,4 +58,6 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ~/.aspnet/https:/https:ro
+      - ./codesearch/codesearch-data:/codesearch-data
+      - ~/.aspnet/https:/https:ro      
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro

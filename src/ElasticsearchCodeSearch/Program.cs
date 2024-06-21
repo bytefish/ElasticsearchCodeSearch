@@ -10,14 +10,24 @@ using ElasticsearchCodeSearch.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddCors();
+// Add Configuration Sources
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables()
+    .AddUserSecrets<Program>();
+
 
 // Add Options
 builder.Services.AddOptions();
 
+
+
 ConfigureElasticsearch(builder);
 ConfigureIndexingServices(builder);
+
+// Add CORS Services
+builder.Services.AddCors();
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -57,87 +67,8 @@ static void ConfigureElasticsearch(WebApplicationBuilder builder)
 static void ConfigureIndexingServices(WebApplicationBuilder builder)
 {
     // Create the GitClientOptions by using the GH_TOKEN Key:
-    builder.Services.Configure<GitHubClientOptions>(o =>
-    {
-        o.RequestDelayInMilliseconds = 0;
-        o.AccessToken = Environment.GetEnvironmentVariable("GH_TOKEN")!;
-    });
-
-    builder.Services.Configure<GitIndexerOptions>(o =>
-    {
-        o.BaseDirectory = @"C:\Temp";
-        o.MaxParallelClones = 1;
-        o.MaxParallelBulkRequests = 1;
-        o.BatchSize = 20;
-        o.AllowedFilenames = new[]
-        {
-            ".gitignore",
-            ".editorconfig",
-            "README",
-            "CHANGELOG"
-        };
-        o.AllowedExtensions = new[]
-        {
-            // C / C++
-            ".c",
-            ".cpp",
-            ".h",
-            ".hpp",
-            // .NET
-            ".cs",
-            ".cshtml",
-            ".csproj",
-            ".fs",
-            ".razor",
-            ".sln",
-            ".xaml",
-            // CSS
-            ".css",
-            ".scss",
-            ".sass",
-            // CSV / TSV
-            ".csv",
-            ".tsv",
-            // HTML
-            ".html",
-            ".htm",
-            // JSON
-            ".json", 
-            // JavaScript
-            ".js",
-            ".jsx",
-            ".spec.js",
-            ".config.js",
-            // Typescript
-            ".ts",
-            ".tsx", 
-            // TXT
-            ".txt", 
-            // Powershell
-            ".ps1",
-            // Python
-            ".py",
-            // Configuration
-            ".ini",
-            ".config",
-            // XML
-            ".xml",
-            ".xsl",
-            ".xsd",
-            ".dtd",
-            ".wsdl",
-            // Markdown
-            ".md",
-            ".markdown",
-            // reStructured Text
-            ".rst",
-            // LaTeX
-            ".tex",
-            ".bib",
-            ".bbx",
-            ".cbx"
-        };
-    });
+    builder.Services.Configure<GitHubClientOptions>(builder.Configuration.GetSection("GitHubClient"));
+    builder.Services.Configure<GitIndexerOptions>(builder.Configuration.GetSection("GitIndexer"));
 
     builder.Services.AddSingleton<GitExecutor>();
     builder.Services.AddSingleton<GitHubClient>();
