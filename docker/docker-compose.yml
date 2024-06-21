@@ -10,8 +10,8 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "curl --user ${ELASTIC_USER:-elastic}:${ELASTIC_PASSWORD:-secret} --silent --fail https://localhost:9200/_cluster/health -k || exit 1" ]
       interval: 10s
-      timeout: 5s
-      retries: 3
+      timeout: 10s
+      retries: 20
       start_period: 30s
     env_file:
       - ./.env

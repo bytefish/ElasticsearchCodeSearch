@@ -105,8 +105,8 @@ namespace ElasticsearchCodeSearch.Hosting
                 return false;
             }
 
-            repository = components[0];
-            owner = components[1];
+            owner = components[0];
+            repository = components[1];
 
             return true;
         }
