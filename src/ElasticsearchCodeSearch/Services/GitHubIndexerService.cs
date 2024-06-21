@@ -127,7 +127,7 @@ namespace ElasticsearchCodeSearch.Services
 
             try
             {
-                if (workingDirectory.StartsWith(_options.DataDirectory))
+                if (workingDirectory.StartsWith(_options.BaseDirectory))
                 {
                     if (Directory.Exists(workingDirectory))
                     {
@@ -168,7 +168,7 @@ namespace ElasticsearchCodeSearch.Services
             }
             finally
             {
-                if (workingDirectory.StartsWith(_options.DataDirectory))
+                if (workingDirectory.StartsWith(_options.BaseDirectory))
                 {
                     try
                     {

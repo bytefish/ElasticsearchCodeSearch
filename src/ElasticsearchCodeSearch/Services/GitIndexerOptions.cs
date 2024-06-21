@@ -13,11 +13,6 @@ namespace ElasticsearchCodeSearch.Services
         public required string BaseDirectory { get; set; }
 
         /// <summary>
-        /// Gets or sets the base directory to clone to.
-        /// </summary>
-        public required string DataDirectory { get; set; }
-
-        /// <summary>
         /// Gets or sets the allowed extensions.
         /// </summary>
         public required string[] AllowedExtensions { get; set; }

@@ -201,3 +201,4 @@ FakesAssemblies/
 # Database Project
 *.jfm
 elastic-data
+codesearch-data

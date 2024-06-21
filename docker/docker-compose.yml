@@ -40,3 +40,22 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
+  codesearch:
+    container_name: codesearch
+    build:
+      context: ..
+      dockerfile: ./docker/codesearch/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Linux
+      - ASPNETCORE_HTTPS_PORTS=5000
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=SuperStrongPassword
+    env_file:
+      - ./.env
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    volumes:
+      - ~/.aspnet/https:/https:ro
