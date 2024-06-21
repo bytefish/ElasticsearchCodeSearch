@@ -67,7 +67,7 @@ namespace ElasticsearchCodeSearch.Indexer.GitHub
             var httpRequestMessage = new HttpRequestMessage
             {
                 Method = HttpMethod.Get,
-                RequestUri = new Uri($"https://api.github.com/orgs/repos/{owner}/{repository}"),
+                RequestUri = new Uri($"https://api.github.com/repos/{owner}/{repository}"),
                 Headers =
                 {
                     { "User-Agent", "curl/8.0.1" },

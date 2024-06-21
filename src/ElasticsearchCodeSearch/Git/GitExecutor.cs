@@ -149,7 +149,7 @@ namespace ElasticsearchCodeSearch.Indexer.Git
             var result = await RunAsync($"ls-files", repositoryDirectory, cancellationToken);
 
             var files = result
-                .Split("\r\n")
+                .Split(Environment.NewLine)
                 .ToArray();
 
             return files;
