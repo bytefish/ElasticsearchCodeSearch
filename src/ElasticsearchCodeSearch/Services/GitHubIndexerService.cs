@@ -274,7 +274,7 @@ namespace ElasticsearchCodeSearch.Services
                 Branch = repositoryMetadata.DefaultBranch,
                 Filename = Path.GetFileName(relativeFilename),
                 CommitHash = commitHash,
-                Permalink = $"https://github.com/{repositoryMetadata.Owner}/{repositoryMetadata.Name}/blob/{commitHash}/{relativeFilename}",
+                Permalink = $"https://github.com/{repositoryMetadata.Owner.Login}/{repositoryMetadata.Name}/blob/{commitHash}/{relativeFilename}",
                 LatestCommitDate = latestCommitDate
             };
         }
