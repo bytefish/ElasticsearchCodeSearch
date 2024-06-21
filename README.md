@@ -52,8 +52,8 @@ You configure the Credentials in the `ElasticsearchCodeSearch\ElasticsearchCodeS
 
 ### Configuring HTTPS for Elasticsearch ###
 
-To secure the HTTPS communication with Elastsearch we need to generate a certificate 
-first. The easiest way to do this is to use the `elastsearch-certutil` command line 
+To secure the HTTPS communication with Elasticsearch we need to generate a certificate 
+first. The easiest way to do this is to use the `elasticsearch-certutil` command line 
 tool.
 
 We start by creating a Certificate Authority (CA):
@@ -185,6 +185,15 @@ dotnet dev-certs https -ep $env:USERPROFILE\.aspnet\https\aspnetapp.pfx -p Super
 dotnet dev-certs https --trust
 ```
 
+Next is setting the GH Token for the Client:
+
+```powershell
+dotnet user-secrets set "GitHubClient:AccessToken" "<Your GH Token Here>"
+```
+
+Why is it a User Secret? Because I want to be 100% sure I am not accidentally leak my 
+GitHub Token. If you want to do something similar in Production, you might want to 
+consider using Azure KeyVault, Consul, ... or any safe secret store.
 
 ## Contributions ##
 

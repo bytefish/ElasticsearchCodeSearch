@@ -3,7 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>  
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>f59920c1-b8bc-4e86-854b-44f7da4557b4</UserSecretsId>  
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,6 +14,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ElasticsearchCodeSearch.Shared\ElasticsearchCodeSearch.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.Docker.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

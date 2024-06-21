@@ -68,7 +68,7 @@ static void ConfigureIndexingServices(WebApplicationBuilder builder)
 {
     // Create the GitClientOptions by using the GH_TOKEN Key:
     builder.Services.Configure<GitHubClientOptions>(builder.Configuration.GetSection("GitHubClient"));
-    builder.Services.Configure<GitIndexerOptions>(builder.Configuration.GetSection("GitIndexer"));
+    builder.Services.Configure<GitIndexerOptions>(builder.Configuration.GetSection("GitHubIndexer"));
 
     builder.Services.AddSingleton<GitExecutor>();
     builder.Services.AddSingleton<GitHubClient>();
