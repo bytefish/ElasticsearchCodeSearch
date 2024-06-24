@@ -1,0 +1,26 @@
+﻿@page "/CodeIndex"
+
+@using ElasticsearchCodeSearch.Client.Components
+@using ElasticsearchCodeSearch.Client.Extensions;
+@using ElasticsearchCodeSearch.Client.Infrastructure;
+@using ElasticsearchCodeSearch.Shared.Dto;
+
+<PageTitle>Elasticsearch Code Search Experiments</PageTitle>
+
+<FluentGrid>
+    <FluentGridItem xs="12">
+        <FluentTextArea @bind-Value=GitHubOrganizations Label="GitHub Organizations:" />
+    </FluentGridItem>
+    <FluentGridItem xs="12">
+        <FluentDivider Style="width: 100%;" Role="DividerRole.Presentation"></FluentDivider>
+    </FluentGridItem>
+    <FluentGridItem xs="12">
+        <FluentTextArea @bind-Value=GitHubRepositories Label="GitHub Repositories:" />
+    </FluentGridItem>
+    <FluentGridItem xs="12">
+        <FluentDivider Style="width: 100%;" Role="DividerRole.Presentation"></FluentDivider>
+    </FluentGridItem>
+    <FluentGridItem xs="3">
+        <FluentButton @onclick=@SendIndexRequests>Index Git Repositories</FluentButton>
+    </FluentGridItem>
+</FluentGrid>

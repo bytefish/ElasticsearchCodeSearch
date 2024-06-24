@@ -44,6 +44,46 @@ namespace ElasticsearchCodeSearch.Shared.Services
                 .ConfigureAwait(false);
         }
 
+        public async Task IndexGitHubOrganizationAsync(IndexOrganizationRequestDto indexOrganizationRequest, CancellationToken cancellationToken)
+        {
+            _logger.TraceMethodEntry();
+
+            var response = await _httpClient
+                .PostAsJsonAsync("index-github-organization", indexOrganizationRequest, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new ApiException(string.Format(CultureInfo.InvariantCulture,
+                    "HTTP Request failed with Status: '{0}' ({1})",
+                    (int)response.StatusCode,
+                    response.StatusCode))
+                {
+                    StatusCode = response.StatusCode
+                };
+            }
+        }
+
+        public async Task IndexGitHubRepositoryAsync(IndexGitHubRepositoryRequestDto indexRepositoryRequest, CancellationToken cancellationToken)
+        {
+            _logger.TraceMethodEntry();
+
+            var response = await _httpClient
+                .PostAsJsonAsync("index-github-repository", indexRepositoryRequest, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new ApiException(string.Format(CultureInfo.InvariantCulture,
+                    "HTTP Request failed with Status: '{0}' ({1})",
+                    (int)response.StatusCode,
+                    response.StatusCode))
+                {
+                    StatusCode = response.StatusCode
+                };
+            }
+        }
+
         public async Task IndexDocumentsAsync(List<CodeSearchDocumentDto> documents, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();

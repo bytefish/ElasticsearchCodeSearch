@@ -11,7 +11,7 @@ using Microsoft.FluentUI.AspNetCore.Components;
 
 namespace ElasticsearchCodeSearch.Client.Pages
 {
-    public partial class Search : IAsyncDisposable
+    public partial class CodeSearch : IAsyncDisposable
     {
         /// <summary>
         /// Elasticsearch Search Client.
@@ -99,7 +99,7 @@ namespace ElasticsearchCodeSearch.Client.Pages
         /// </summary>
         private decimal _tookInSeconds { get; set; } = 0;
 
-        public Search()
+        public CodeSearch()
         {
             _currentPageItemsChanged = new(EventCallback.Factory.Create<PaginatorState>(this, QueryAsync));
         }

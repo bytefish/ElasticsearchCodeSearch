@@ -16,5 +16,10 @@ namespace ElasticsearchCodeSearch.Hosting
         /// GitHub Repositories to index.
         /// </summary>
         public readonly ConcurrentQueue<string> GitHubRepositories = new ConcurrentQueue<string>();
+
+        /// <summary>
+        /// GitHub Repositories to index.
+        /// </summary>
+        public readonly ConcurrentQueue<string> GitRepositoryUrls = new ConcurrentQueue<string>();
     }
 }

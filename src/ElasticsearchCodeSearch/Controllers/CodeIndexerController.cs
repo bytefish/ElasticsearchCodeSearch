@@ -168,8 +168,29 @@ namespace ElasticsearchCodeSearch.Controllers
         }
 
         [HttpPost]
-        [Route("/index-repository")]
-        public IActionResult IndexRepository([FromServices] IndexerJobQueues jobQueue, [FromBody] IndexRepositoryRequestDto indexRepositoryRequest)
+        [Route("/index-git-repository")]
+        public IActionResult IndexGitRepository([FromServices] IndexerJobQueues jobQueue, [FromBody] IndexGitHubRepositoryRequestDto indexRepositoryRequest)
+        {
+            _logger.TraceMethodEntry();
+
+            try
+            {
+                return BadRequest("Not implemented yet");
+            }
+            catch (Exception e)
+            {
+                if (_logger.IsErrorEnabled())
+                {
+                    _logger.LogError(e, "Failed to index documents");
+                }
+
+                return StatusCode(500);
+            }
+        }
+
+        [HttpPost]
+        [Route("/index-github-repository")]
+        public IActionResult IndexGitHubRepository([FromServices] IndexerJobQueues jobQueue, [FromBody] IndexGitHubRepositoryRequestDto indexRepositoryRequest)
         {
             _logger.TraceMethodEntry();
 
@@ -191,8 +212,8 @@ namespace ElasticsearchCodeSearch.Controllers
         }
 
         [HttpPost]
-        [Route("/index-organization")]
-        public IActionResult IndexOrganization([FromServices] IndexerJobQueues jobQueue, [FromBody] IndexOrganizationRequestDto indexOrganizationRequest)
+        [Route("/index-github-organization")]
+        public IActionResult IndexGitHubOrganization([FromServices] IndexerJobQueues jobQueue, [FromBody] IndexOrganizationRequestDto indexOrganizationRequest)
         {
             _logger.TraceMethodEntry();
 
@@ -212,5 +233,36 @@ namespace ElasticsearchCodeSearch.Controllers
                 return StatusCode(500);
             }
         }
+
+        
+        [HttpGet]
+        [Route("/queue")]
+        public IActionResult GetIndexingQueue([FromServices] IndexerJobQueues jobQueue)
+        {
+            _logger.TraceMethodEntry();
+
+            try
+            {
+                var result = new CodeIndexQueueDto 
+                {
+                    Organizations = jobQueue.GitHubOrganizations.ToList(),
+                    Repositories = jobQueue.GitHubRepositories.ToList(),
+                    Urls = jobQueue.GitRepositoryUrls.ToList(),
+                };
+
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                if (_logger.IsErrorEnabled())
+                {
+                    _logger.LogError(e, "Failed to index documents");
+                }
+
+                return StatusCode(500);
+            }
+        }
+
+
     }
 }

@@ -246,6 +246,8 @@ namespace ElasticsearchCodeSearch.Services
         {
             _logger.TraceMethodEntry();
 
+            _logger.LogWarning("Indexing {Repository}: {Filename}", repositoryMetadata.FullName, relativeFilename);
+
             var workingDirectory = GetWorkingDirectory(repositoryMetadata);
 
             var shaHash = await _gitExecutor

@@ -7,15 +7,12 @@ namespace ElasticsearchCodeSearch.Shared.Dto
     /// <summary>
     /// A Request for indexing a repository.
     /// </summary>
-    public class IndexRepositoryRequestDto
+    public class IndexGitRepositoryRequestDto
     {
         /// <summary>
         /// Gets or sets the repository url to index.
         /// </summary>
-        [JsonPropertyName("owner")]
-        public required string Owner { get; set; }
-
-        [JsonPropertyName("repository")]
-        public required string Repository { get; set; }
+        [JsonPropertyName("url")]
+        public required string Url { get; set; }
     }
 }
