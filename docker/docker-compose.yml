@@ -13,6 +13,7 @@ services:
       timeout: 10s
       retries: 20
       start_period: 30s
+    profiles:  ["elastic", "dev"]
     env_file:
       - ./.env
     environment:
@@ -50,6 +51,7 @@ services:
       - ASPNETCORE_HTTPS_PORTS=5000
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
       - ASPNETCORE_Kestrel__Certificates__Default__Password=SuperStrongPassword
+    profiles:  ["dev"]
     env_file:
       - ./.env
     depends_on:

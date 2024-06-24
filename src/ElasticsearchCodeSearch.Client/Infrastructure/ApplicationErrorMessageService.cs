@@ -40,7 +40,7 @@ namespace ElasticsearchCodeSearch.Client.Infrastructure
                     Text = _sharedLocalizer["Message_ShowHelp"],
                     OnClick = (message) =>
                     {
-                        _navigationManager.NavigateTo($"Help/Errors/{errorCode}");
+                        _navigationManager.NavigateTo($"https://www.bytefish.de");
 
                         return Task.CompletedTask;
                     }
