@@ -14,9 +14,9 @@ namespace ElasticsearchCodeSearch.Services
     /// <summary>
     /// Git Indexer.
     /// </summary>
-    public class GitHubIndexerService
+    public class GitIndexerService
     {
-        private readonly ILogger<GitHubIndexerService> _logger;
+        private readonly ILogger<GitIndexerService> _logger;
 
         private readonly GitIndexerOptions _options;
 
@@ -24,7 +24,7 @@ namespace ElasticsearchCodeSearch.Services
         private readonly GitHubClient _gitHubClient;
         private readonly ElasticCodeSearchClient _elasticCodeSearchClient;
 
-        public GitHubIndexerService(ILogger<GitHubIndexerService> logger, IOptions<GitIndexerOptions> options, GitExecutor gitExecutor, GitHubClient gitHubClient, ElasticCodeSearchClient elasticCodeSearchClient)
+        public GitIndexerService(ILogger<GitIndexerService> logger, IOptions<GitIndexerOptions> options, GitExecutor gitExecutor, GitHubClient gitHubClient, ElasticCodeSearchClient elasticCodeSearchClient)
         {
             _logger = logger;
             _options = options.Value;
@@ -50,16 +50,21 @@ namespace ElasticsearchCodeSearch.Services
             await _elasticCodeSearchClient.DeleteByOwnerAsync(organization, cancellationToken);
 
             // Gets all Repositories of the Organization:
-            var response = await _gitHubClient
-                .GetRepositoriesByOrganizationAsync(organization, 1, 20, cancellationToken)
+            var repositories = await _gitHubClient
+                .GetAllRepositoriesByOrganizationAsync(organization, 20, cancellationToken)
                 .ConfigureAwait(false);
 
-            // Get the Repositories from the response.
-            var repositories = response.Values!;
+            // Filter for languages, if any languages are preferred:
+            if(_options.FilterLanguages.Any())
+            {
+                repositories = repositories
+                    .Where(x => _options.FilterLanguages.Contains(x.Language))
+                    .ToList();
+            }
 
             // We could introduce some parallelism, when processing the repositories. Cloning 
-            // a repository is probably blocking and so, we could for example clone 4
-            // repositories in parallel and process them.
+            // a repository is probably blocking while sending or cloning. And so, we could
+            // for example clone 4 repositories in parallel and process them.
             var parallelOptions = new ParallelOptions()
             {
                 MaxDegreeOfParallelism = _options.MaxParallelClones,
@@ -131,6 +136,11 @@ namespace ElasticsearchCodeSearch.Services
                 {
                     if (Directory.Exists(repositoryDirectory))
                     {
+                        if(_logger.IsDebugEnabled())
+                        {
+                            _logger.LogDebug("Deleting Repository '{RepositoryDirectory}' for a fresh Clone", repositoryDirectory)
+                        }
+
                         DeleteReadOnlyDirectory(repositoryDirectory);
                     }
                 }
@@ -180,7 +190,6 @@ namespace ElasticsearchCodeSearch.Services
                     {
                         _logger.LogError(e, "Error deleting '{Repository}'", repositoryMetadata.FullName);
                     }
-
                 }
             }
         }

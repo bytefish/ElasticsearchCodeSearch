@@ -17,7 +17,7 @@ namespace ElasticsearchCodeSearch.Hosting
         /// <summary>
         /// Indexer for GitHub Repositories.
         /// </summary>
-        private readonly GitHubIndexerService _gitIndexerService;
+        private readonly GitIndexerService _gitIndexerService;
 
         /// <summary>
         /// Indexer Job Queues to process.
@@ -29,7 +29,7 @@ namespace ElasticsearchCodeSearch.Hosting
         /// </summary>
         /// <param name="logger">Logger</param>
         /// <param name="gitIndexerService">GitHub Indexer Service</param>
-        public ElasticsearchIndexerHostedService(ILogger<ElasticsearchIndexerHostedService> logger, IndexerJobQueues jobQueues, GitHubIndexerService gitIndexerService)
+        public ElasticsearchIndexerHostedService(ILogger<ElasticsearchIndexerHostedService> logger, IndexerJobQueues jobQueues, GitIndexerService gitIndexerService)
         {
             _logger = logger;
             _gitIndexerService = gitIndexerService;

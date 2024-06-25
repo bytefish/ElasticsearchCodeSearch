@@ -23,6 +23,11 @@ namespace ElasticsearchCodeSearch.Services
         public required string[] AllowedFilenames { get; set; }
 
         /// <summary>
+        /// Gets or sets the allowed filenames.
+        /// </summary>
+        public string[] FilterLanguages { get; set; } = [];
+
+        /// <summary>
         /// Batch Size.
         /// </summary>
         public int BatchSize { get; set; }

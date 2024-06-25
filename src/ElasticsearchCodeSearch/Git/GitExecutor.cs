@@ -35,11 +35,16 @@ namespace ElasticsearchCodeSearch.Indexer.Git
         {
             _logger.TraceMethodEntry();
 
+            if(_logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("Cloning Repository '{RepositoryUrl}' to Directory '{RepositoryDirectory}'", repositoryUrl, repositoryDirectory);
+            }
+
             var repositoryPath = Repository.Clone(repositoryUrl, repositoryDirectory);
 
             if(_logger.IsDebugEnabled())
             {
-                _logger.LogDebug("Clone Repository Url '{RepositoryUrl}' to Path '{RepositoryPath}'", repositoryUrl, repositoryPath);
+                _logger.LogDebug("Cloned Repository Url '{RepositoryUrl}' to Path '{RepositoryPath}'", repositoryUrl, repositoryPath);
             }
 
             return repositoryPath;

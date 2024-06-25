@@ -73,7 +73,7 @@ static void ConfigureIndexingServices(WebApplicationBuilder builder)
     builder.Services.AddSingleton<GitExecutor>();
     builder.Services.AddSingleton<GitExecutor>();
     builder.Services.AddSingleton<GitHubClient>();
-    builder.Services.AddSingleton<GitHubIndexerService>();
+    builder.Services.AddSingleton<GitIndexerService>();
 
     builder.Services.AddSingleton<IndexerJobQueues>();
     builder.Services.AddHostedService<ElasticsearchIndexerHostedService>();
