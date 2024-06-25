@@ -123,15 +123,15 @@ namespace ElasticsearchCodeSearch.Services
             var allowedFilenames = _options.AllowedFilenames.ToHashSet();
             var allowedExtensions = _options.AllowedExtensions.ToHashSet();
 
-            var workingDirectory = GetWorkingDirectory(repositoryMetadata);
+            var repositoryDirectory = GetRepositoryDirectory(repositoryMetadata);
 
             try
             {
-                if (workingDirectory.StartsWith(_options.BaseDirectory))
+                if (repositoryDirectory.StartsWith(_options.BaseDirectory))
                 {
-                    if (Directory.Exists(workingDirectory))
+                    if (Directory.Exists(repositoryDirectory))
                     {
-                        DeleteReadOnlyDirectory(workingDirectory);
+                        DeleteReadOnlyDirectory(repositoryDirectory);
                     }
                 }
 
@@ -140,13 +140,12 @@ namespace ElasticsearchCodeSearch.Services
                     repository: repositoryMetadata.Name,
                     branch: repositoryMetadata.DefaultBranch, cancellationToken);
 
-                await _gitExecutor
-                    .Clone(repositoryMetadata.CloneUrl, workingDirectory, cancellationToken)
-                    .ConfigureAwait(false);
+                // Clone into the given Directory
+                _gitExecutor.Clone(repositoryMetadata.CloneUrl, repositoryDirectory);
 
                 // Get the list of allowed files, by matching against allowed extensions (.c, .cpp, ...)
                 // and allowed filenames (.gitignore, README, ...). We don't want to parse binary data.
-                var batches = (await _gitExecutor.ListFiles(workingDirectory, cancellationToken).ConfigureAwait(false))
+                var batches = _gitExecutor.ListFiles(repositoryDirectory)
                     .Where(filename => IsAllowedFile(filename, allowedExtensions, allowedFilenames))
                     .Chunk(_options.BatchSize);
 
@@ -168,13 +167,13 @@ namespace ElasticsearchCodeSearch.Services
             }
             finally
             {
-                if (workingDirectory.StartsWith(_options.BaseDirectory))
+                if (repositoryDirectory.StartsWith(_options.BaseDirectory))
                 {
                     try
                     {
-                        if (Directory.Exists(workingDirectory))
+                        if (Directory.Exists(repositoryDirectory))
                         {
-                            DeleteReadOnlyDirectory(workingDirectory);
+                            DeleteReadOnlyDirectory(repositoryDirectory);
                         }
                     }
                     catch (Exception e)
@@ -224,7 +223,7 @@ namespace ElasticsearchCodeSearch.Services
 
             foreach (var file in files)
             {
-                var codeSearchDocument = await GetCodeSearchDocumentAsync(repositoryMetadata, file, cancellationToken);
+                var codeSearchDocument = GetCodeSearchDocument(repositoryMetadata, file);
 
                 if (codeSearchDocument != null)
                 {
@@ -242,31 +241,27 @@ namespace ElasticsearchCodeSearch.Services
         /// <param name="repositoryMetadata">Repository Metadata</param>
         /// <param name="relativeFilename">Filename to process</param>
         /// <returns>An awaitable Task with the <see cref="CodeSearchDocument"/></returns>
-        private async Task<CodeSearchDocument> GetCodeSearchDocumentAsync(RepositoryMetadataDto repositoryMetadata, string relativeFilename, CancellationToken cancellationToken)
+        private CodeSearchDocument GetCodeSearchDocument(RepositoryMetadataDto repositoryMetadata, string relativeFilename)
         {
             _logger.TraceMethodEntry();
 
-            _logger.LogWarning("Indexing {Repository}: {Filename}", repositoryMetadata.FullName, relativeFilename);
+            var repositoryDirectory = GetRepositoryDirectory(repositoryMetadata);
 
-            var workingDirectory = GetWorkingDirectory(repositoryMetadata);
+            if (_logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("Start indexing {Repository}: {Filename}", repositoryDirectory, relativeFilename);
+            }
 
-            var shaHash = await _gitExecutor
-                .SHA1(workingDirectory, relativeFilename, cancellationToken)
-                .ConfigureAwait(false);
+            // Get the Commit Information to index, such as the File SHA1 Hash, the Commit Hash, ...
+            (var shaHash, var commitHash, var latestCommitDate) = _gitExecutor.GetCommitInformation(repositoryDirectory, relativeFilename);
 
-            var commitHash = await _gitExecutor
-                .CommitHash(workingDirectory, relativeFilename, cancellationToken)
-                .ConfigureAwait(false);
-
-            var latestCommitDate = await _gitExecutor
-                .LatestCommitDate(workingDirectory, relativeFilename, cancellationToken)
-                .ConfigureAwait(false);
-
-            var absoluteFilename = Path.Combine(workingDirectory, relativeFilename);
+            // Get the absolute Filename, so we can read it
+            var absoluteFilename = Path.Combine(repositoryDirectory, relativeFilename);
 
             var content = File.ReadAllText(absoluteFilename);
 
-            return new CodeSearchDocument
+            // Build the final CodeSearchDocument with all relevant information for indexing.
+            var codeSearchDocument = new CodeSearchDocument
             {
                 Id = shaHash,
                 Path = relativeFilename,
@@ -279,6 +274,8 @@ namespace ElasticsearchCodeSearch.Services
                 Permalink = $"https://github.com/{repositoryMetadata.Owner.Login}/{repositoryMetadata.Name}/blob/{commitHash}/{relativeFilename}",
                 LatestCommitDate = latestCommitDate
             };
+
+            return codeSearchDocument;
         }
 
         /// <summary>
@@ -310,11 +307,11 @@ namespace ElasticsearchCodeSearch.Services
         }
 
         /// <summary>
-        /// Returns the current Working Directory.
+        /// Returns the current GIT Working Directory.
         /// </summary>
-        /// <param name="repository"></param>
+        /// <param name="repository">GitHub Repository to index</param>
         /// <returns></returns>
-        private string GetWorkingDirectory(RepositoryMetadataDto repository)
+        private string GetRepositoryDirectory(RepositoryMetadataDto repository)
         {
             _logger.TraceMethodEntry();
 
