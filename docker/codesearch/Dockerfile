@@ -22,9 +22,5 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app ./
 
-# Install Git
-RUN apt-get -y update
-RUN apt-get -y install git
-
 # Start the Kestrel Server:
 ENTRYPOINT ["dotnet", "ElasticsearchCodeSearch.dll"]
