@@ -272,7 +272,7 @@ namespace ElasticsearchCodeSearch.Shared.Elasticsearch
             _logger.TraceMethodEntry();
 
             var deleteByQueryResponse = await _client
-                .DeleteByQueryAsync<CodeSearchDocument>(_indexName, request => request.Query(query => query.MatchAll()), cancellationToken)
+                .DeleteByQueryAsync<CodeSearchDocument>(_indexName, request => request.Query(query => query.MatchAll(x => { })), cancellationToken)
                 .ConfigureAwait(false);
 
             if (_logger.IsDebugEnabled())
@@ -409,20 +409,18 @@ namespace ElasticsearchCodeSearch.Shared.Elasticsearch
                 // Setup the Highlighters:
                 .Highlight(highlight => highlight
                     .Fields(fields => fields
-                        .Add(Infer.Field<CodeSearchDocument>(f => f.Content), new HighlightField
-                        {
-                            Fragmenter = HighlighterFragmenter.Span,
-                            PreTags = new[] { ElasticsearchConstants.HighlightStartTag },
-                            PostTags = new[] { ElasticsearchConstants.HighlightEndTag },
-                            NumberOfFragments = 0,
-                        })
-                        .Add(Infer.Field<CodeSearchDocument>(f => f.Filename), new HighlightField
-                        {
-                            Fragmenter = HighlighterFragmenter.Span,
-                            PreTags = new[] { ElasticsearchConstants.HighlightStartTag },
-                            PostTags = new[] { ElasticsearchConstants.HighlightEndTag },
-                            NumberOfFragments = 0,
-                        })
+                        .Add(Infer.Field<CodeSearchDocument>(f => f.Content), hf => hf
+                            .Fragmenter(HighlighterFragmenter.Span)
+                            .PreTags(new[] { ElasticsearchConstants.HighlightStartTag })
+                            .PostTags(new[] { ElasticsearchConstants.HighlightEndTag })
+                            .NumberOfFragments(0)
+                        )
+                        .Add(Infer.Field<CodeSearchDocument>(f => f.Filename), hf => hf
+                            .Fragmenter(HighlighterFragmenter.Span)
+                            .PreTags(new[] { ElasticsearchConstants.HighlightStartTag })
+                            .PostTags(new[] { ElasticsearchConstants.HighlightEndTag })
+                            .NumberOfFragments(0)
+                        )
                     )
                 )
                 // Setup the Search Order:
