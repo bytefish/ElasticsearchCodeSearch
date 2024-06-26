@@ -4,11 +4,15 @@
     <nav class="sitenav" aria-labelledby="main-menu" onclick="document.getElementById('navmenu-toggle').click()">
         <FluentNavMenu Id="main-menu" Title="Main menu">
             <FluentNavLink Icon="@(new Icons.Regular.Size20.Home())" Href="/" Match="NavLinkMatch.All">
-                <h3>Home</h3>
+                <h3>Overview</h3>
             </FluentNavLink>
             <FluentNavGroup Expanded="true" Title="Search" Gap="10px" Icon="@(new Icons.Regular.Size20.Search())">
-                <FluentNavLink Href="/CodeSearch">Search Code</FluentNavLink>
                 <FluentNavLink Href="/CodeIndex">Index Code</FluentNavLink>
+            </FluentNavGroup>
+            <FluentNavGroup Expanded="true" Title="Index" Gap="10px" Icon="@(new Icons.Regular.Size20.AirplaneTakeOff())">
+                <FluentNavLink Href="/IndexGitRepository">Index Git Repository</FluentNavLink>
+                <FluentNavLink Href="/IndexGitHubRepository">Index GitHub Repository</FluentNavLink>
+                <FluentNavLink Href="/IndexGitHubOrganization">Index GitHub Organization</FluentNavLink>
             </FluentNavGroup>
         </FluentNavMenu>
     </nav>
