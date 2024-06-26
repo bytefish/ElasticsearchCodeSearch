@@ -7,6 +7,7 @@ using ElasticsearchCodeSearch.Indexer.Git;
 using ElasticsearchCodeSearch.Indexer.GitHub.Options;
 using ElasticsearchCodeSearch.Indexer.GitHub;
 using ElasticsearchCodeSearch.Services;
+using ElasticsearchCodeSearch.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,9 +60,6 @@ static void ConfigureElasticsearch(WebApplicationBuilder builder)
 
     // Add Client
     builder.Services.AddSingleton<ElasticCodeSearchClient>();
-
-    // Add Hosted Services
-    builder.Services.AddHostedService<ElasticsearchInitializerHostedService>();
 }
 
 static void ConfigureIndexingServices(WebApplicationBuilder builder)
@@ -71,13 +69,12 @@ static void ConfigureIndexingServices(WebApplicationBuilder builder)
     builder.Services.Configure<GitIndexerOptions>(builder.Configuration.GetSection("GitHubIndexer"));
 
     builder.Services.AddSingleton<GitExecutor>();
-    builder.Services.AddSingleton<GitExecutor>();
     
     builder.Services.AddSingleton<GitHubClient>();
     builder.Services.AddSingleton<GitHubService>();
-
     builder.Services.AddSingleton<GitIndexerService>();
-
-    builder.Services.AddSingleton<IndexerJobQueue>();
-    builder.Services.AddHostedService<ElasticsearchIndexerHostedService>();
+    builder.Services.AddSingleton<GitRepositoryJobQueue>();
+    
+    // Background Service Processing Queued Jobs
+    builder.Services.AddHostedService<ElasticsearchIndexerBackgroundService>();
 }

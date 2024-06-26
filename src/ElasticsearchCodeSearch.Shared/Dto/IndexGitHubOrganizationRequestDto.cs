@@ -7,7 +7,7 @@ namespace ElasticsearchCodeSearch.Shared.Dto
     /// <summary>
     /// Holds the Search Results along with the highlighted matches.
     /// </summary>
-    public class IndexOrganizationRequestDto
+    public class IndexGitHubOrganizationRequestDto
     {
         /// <summary>
         /// Gets or sets the organization to index.

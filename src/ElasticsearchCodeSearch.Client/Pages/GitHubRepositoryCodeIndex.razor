@@ -1,0 +1,35 @@
+﻿@page "/CodeIndex"
+
+@using ElasticsearchCodeSearch.Client.Components
+@using ElasticsearchCodeSearch.Client.Extensions;
+@using ElasticsearchCodeSearch.Client.Infrastructure;
+@using ElasticsearchCodeSearch.Models
+@using ElasticsearchCodeSearch.Shared.Dto;
+@using ElasticsearchCodeSearch.Shared.Services
+
+@inject ElasticsearchCodeSearchService ElasticsearchCodeSearchService
+@inject IStringLocalizer<SharedResource> Loc
+
+<PageTitle>Index GitHub Repository</PageTitle>
+
+<EditForm Model="@CurrentGitRepository" OnValidSubmit="@(async () => await HandleValidSubmitAsync())" FormName="git_repository_index" novalidate>
+    <SimpleValidator TModel=IndexGitHubRepositoryRequestDto ValidationFunc="ValidateGitRepository" />
+
+    <FluentValidationSummary />
+    <FluentStack Orientation="Orientation.Vertical">
+        <div>
+            <FluentTextField Name="owner" @bind-Value="CurrentGitRepository.Owner" Label=@Loc["GitRepository_Owner"] Required />
+            <FluentValidationMessage For="@(() => CurrentGitRepository.Owner)" />
+         </div>
+        <div>
+            <FluentTextField Name="name" @bind-Value="CurrentGitRepository.Repository" Label=@Loc["GitRepository_Repository"] Required />
+            <FluentValidationMessage For="@(() => CurrentGitRepository.Repository)" />
+         </div>
+        <div>
+            <FluentStack Orientation="Orientation.Horizontal">
+                <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">Submit Repository to Index</FluentButton>
+                <FluentButton Appearance="Appearance.Accent" OnClick="@(async () => await HandleDiscardAsync())">Discard Changes</FluentButton>
+            </FluentStack>
+        </div>
+    </FluentStack>
+</EditForm>

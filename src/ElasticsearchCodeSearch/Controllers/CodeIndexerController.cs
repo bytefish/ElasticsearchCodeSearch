@@ -6,10 +6,8 @@ using ElasticsearchCodeSearch.Shared.Elasticsearch;
 using ElasticsearchCodeSearch.Shared.Dto;
 using Elastic.Clients.Elasticsearch;
 using ElasticsearchCodeSearch.Converters;
-using ElasticsearchCodeSearch.Hosting;
 using ElasticsearchCodeSearch.Services;
-using System.Threading;
-using ElasticsearchCodeSearch.Models;
+using ElasticsearchCodeSearch.Infrastructure;
 
 namespace ElasticsearchCodeSearch.Controllers
 {
@@ -174,7 +172,7 @@ namespace ElasticsearchCodeSearch.Controllers
 
         [HttpPost]
         [Route("/index-git-repository")]
-        public IActionResult IndexGitRepository([FromServices] IndexerJobQueue jobQueue, [FromBody] IndexGitHubRepositoryRequestDto indexRepositoryRequest)
+        public IActionResult IndexGitRepository([FromServices] GitRepositoryJobQueue jobQueue, [FromBody] IndexGitHubRepositoryRequestDto indexRepositoryRequest)
         {
             _logger.TraceMethodEntry();
 
@@ -195,7 +193,7 @@ namespace ElasticsearchCodeSearch.Controllers
 
         [HttpPost]
         [Route("/index-github-repository")]
-        public async Task<IActionResult> IndexGitHubRepository([FromServices] IndexerJobQueue jobQueue, [FromBody] IndexGitHubRepositoryRequestDto indexRepositoryRequest, CancellationToken cancellationToken)
+        public async Task<IActionResult> IndexGitHubRepository([FromServices] GitRepositoryJobQueue jobQueue, [FromBody] IndexGitHubRepositoryRequestDto indexRepositoryRequest, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
@@ -210,7 +208,7 @@ namespace ElasticsearchCodeSearch.Controllers
                     _logger.LogDebug("GitHub Repository '{GitHubRepository}' enqueued", repository.FullName);
                 }
 
-                jobQueue.GitRepositories.Enqueue(repository);
+                jobQueue.Post(repository);
 
                 return Ok();
             }
@@ -227,7 +225,7 @@ namespace ElasticsearchCodeSearch.Controllers
 
         [HttpPost]
         [Route("/index-github-organization")]
-        public async Task<IActionResult> IndexGitHubOrganization([FromServices] IndexerJobQueue jobQueue, [FromBody] IndexOrganizationRequestDto indexOrganizationRequest, CancellationToken cancellationToken)
+        public async Task<IActionResult> IndexGitHubOrganization([FromServices] GitRepositoryJobQueue jobQueue, [FromBody] IndexGitHubOrganizationRequestDto indexOrganizationRequest, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
@@ -246,7 +244,7 @@ namespace ElasticsearchCodeSearch.Controllers
 
                 foreach(var repository in repositories)
                 {
-                    jobQueue.GitRepositories.Enqueue(repository);
+                    jobQueue.Post(repository);
                 }
 
                 return Ok();
@@ -261,47 +259,5 @@ namespace ElasticsearchCodeSearch.Controllers
                 return StatusCode(500);
             }
         }
-
-        
-        [HttpGet]
-        [Route("/queue")]
-        public IActionResult GetIndexingQueue([FromServices] IndexerJobQueue jobQueue)
-        {
-            _logger.TraceMethodEntry();
-
-            try
-            {
-                var repositoriesInQueue = jobQueue.GitRepositories
-                    // Convert to Dto
-                    .Select(x => new GitRepositoryMetadataDto
-                    {
-                        Name = x.Name,
-                        Owner = x.Owner,
-                        Branch = x.Branch,
-                        CloneUrl = x.CloneUrl,
-                        Language = x.Language,
-                    })
-                    // Materialize as List
-                    .ToList();
-
-                var result = new CodeIndexQueueDto 
-                {
-                    Repositories = repositoriesInQueue
-                };
-
-                return Ok(result);
-            }
-            catch (Exception e)
-            {
-                if (_logger.IsErrorEnabled())
-                {
-                    _logger.LogError(e, "Failed to index documents");
-                }
-
-                return StatusCode(500);
-            }
-        }
-
-
     }
 }

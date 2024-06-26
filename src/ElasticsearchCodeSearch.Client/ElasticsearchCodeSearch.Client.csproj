@@ -53,7 +53,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Content Update="Pages\CodeIndex.razor">
+      <Content Update="Pages\GitRepositoryCodeIndex.razor">
         <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       </Content>
       <Content Update="wwwroot\appsettings.json">

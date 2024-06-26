@@ -64,7 +64,7 @@ namespace ElasticsearchCodeSearch.Shared.Services
             }
         }
 
-        public async Task IndexGitHubOrganizationAsync(IndexOrganizationRequestDto indexOrganizationRequest, CancellationToken cancellationToken)
+        public async Task IndexGitHubOrganizationAsync(IndexGitHubOrganizationRequestDto indexOrganizationRequest, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 

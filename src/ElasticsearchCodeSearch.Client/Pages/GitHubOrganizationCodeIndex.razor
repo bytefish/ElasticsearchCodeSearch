@@ -1,0 +1,31 @@
+﻿@page "/CodeIndex"
+
+@using ElasticsearchCodeSearch.Client.Components
+@using ElasticsearchCodeSearch.Client.Extensions;
+@using ElasticsearchCodeSearch.Client.Infrastructure;
+@using ElasticsearchCodeSearch.Models
+@using ElasticsearchCodeSearch.Shared.Dto;
+@using ElasticsearchCodeSearch.Shared.Services
+
+@inject ElasticsearchCodeSearchService ElasticsearchCodeSearchService
+@inject IStringLocalizer<SharedResource> Loc
+
+<PageTitle>Index GitHub Repository</PageTitle>
+
+<EditForm Model="@CurrentGitRepository" OnValidSubmit="@(async () => await HandleValidSubmitAsync())" FormName="git_repository_index" novalidate>
+    <SimpleValidator TModel=IndexGitHubOrganizationRequestDto ValidationFunc="ValidateGitRepository" />
+
+    <FluentValidationSummary />
+    <FluentStack Orientation="Orientation.Vertical">
+        <div>
+            <FluentTextField Name="owner" @bind-Value="CurrentGitRepository.Organization" Label=@Loc["GitRepository_Organization"] Required />
+            <FluentValidationMessage For="@(() => CurrentGitRepository.Organization)" />
+         </div>
+        <div>
+            <FluentStack Orientation="Orientation.Horizontal">
+                <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">Submit Repository to Index</FluentButton>
+                <FluentButton Appearance="Appearance.Accent" OnClick="@(async () => await HandleDiscardAsync())">Discard Changes</FluentButton>
+            </FluentStack>
+        </div>
+    </FluentStack>
+</EditForm>

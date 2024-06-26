@@ -1,6 +1,5 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.AspNetCore.Components;
 using ElasticsearchCodeSearch.Shared.Services;
 using ElasticsearchCodeSearch.Shared.Dto;
 using ElasticsearchCodeSearch.Client.Infrastructure;
@@ -8,7 +7,7 @@ using Microsoft.Extensions.Localization;
 
 namespace ElasticsearchCodeSearch.Client.Pages
 {
-    public partial class CodeIndex
+    public partial class GitRepositoryCodeIndex
     {
         /// <summary>
         /// GitHub Repositories.
@@ -57,11 +56,10 @@ namespace ElasticsearchCodeSearch.Client.Pages
             return Task.CompletedTask;
         }
 
-
         /// <summary>
-        /// Validates a <see cref="TaskItem"/>.
+        /// Validates a <see cref="GitRepositoryMetadataDto"/>.
         /// </summary>
-        /// <param name="taskItem">TaskItem to validate</param>
+        /// <param name="repository">Item to validate</param>
         /// <returns>The list of validation errors for the EditContext model fields</returns>
         private IEnumerable<ValidationError> ValidateGitRepository(GitRepositoryMetadataDto repository)
         {
@@ -100,8 +98,6 @@ namespace ElasticsearchCodeSearch.Client.Pages
                     ErrorMessage = Loc.GetString("Validation_IsRequired", nameof(repository.Branch))
                 };
             }
-
         }
-
     }
 }

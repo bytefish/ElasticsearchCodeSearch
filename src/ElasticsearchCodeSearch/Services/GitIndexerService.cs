@@ -1,8 +1,6 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using ElasticsearchCodeSearch.Indexer.Git;
-using ElasticsearchCodeSearch.Indexer.GitHub;
-using ElasticsearchCodeSearch.Indexer.GitHub.Dto;
 using ElasticsearchCodeSearch.Models;
 using ElasticsearchCodeSearch.Shared.Dto;
 using ElasticsearchCodeSearch.Shared.Elasticsearch;
