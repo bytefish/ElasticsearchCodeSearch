@@ -126,6 +126,9 @@
   <data name="GitRepository_Branch" xml:space="preserve">
     <value>Branch</value>
   </data>
+  <data name="GitRepository_CloneUrl" xml:space="preserve">
+    <value>Clone Url</value>
+  </data>
   <data name="GitRepository_Language" xml:space="preserve">
     <value>Language</value>
   </data>

@@ -14,18 +14,23 @@
 
 <EditForm Model="@CurrentGitRepository" OnValidSubmit="@(async () => await HandleValidSubmitAsync())" FormName="git_repository_index" novalidate>
     <SimpleValidator TModel=IndexGitHubOrganizationRequestDto ValidationFunc="ValidateGitRepository" />
-
-    <FluentValidationSummary />
     <FluentStack Orientation="Orientation.Vertical">
         <div>
-            <FluentTextField Name="owner" @bind-Value="CurrentGitRepository.Organization" Label=@Loc["GitRepository_Organization"] Required />
-            <FluentValidationMessage For="@(() => CurrentGitRepository.Organization)" />
-         </div>
+            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                <div>
+                    <FluentTextField Style="@("width: 300px;")" Name="owner" @bind-Value="CurrentGitRepository.Organization" Label=@Loc["GitRepository_Organization"] Required />
+                </div>
+                <FluentValidationMessage For="@(() => CurrentGitRepository.Organization)" />
+            </FluentStack> 
+        </div>
         <div>
-            <FluentStack Orientation="Orientation.Horizontal">
+            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
                 <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">Submit Repository to Index</FluentButton>
                 <FluentButton Appearance="Appearance.Accent" OnClick="@(async () => await HandleDiscardAsync())">Discard Changes</FluentButton>
             </FluentStack>
+        </div>
+        <div>
+            <FluentValidationSummary />
         </div>
     </FluentStack>
 </EditForm>

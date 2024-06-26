@@ -14,16 +14,22 @@
 
 <EditForm Model="@CurrentGitRepository" OnValidSubmit="@(async () => await HandleValidSubmitAsync())" FormName="git_repository_index" novalidate>
     <SimpleValidator TModel=IndexGitHubRepositoryRequestDto ValidationFunc="ValidateGitRepository" />
-
-    <FluentValidationSummary />
     <FluentStack Orientation="Orientation.Vertical">
         <div>
-            <FluentTextField Name="owner" @bind-Value="CurrentGitRepository.Owner" Label=@Loc["GitRepository_Owner"] Required />
-            <FluentValidationMessage For="@(() => CurrentGitRepository.Owner)" />
+            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                <div>
+                    <FluentTextField Style="@("width: 300px;")" Name="owner" @bind-Value="CurrentGitRepository.Owner" Label=@Loc["GitRepository_Owner"] Required />
+                </div>
+                <FluentValidationMessage For="@(() => CurrentGitRepository.Owner)" />
+            </FluentStack>
          </div>
         <div>
-            <FluentTextField Name="name" @bind-Value="CurrentGitRepository.Repository" Label=@Loc["GitRepository_Repository"] Required />
-            <FluentValidationMessage For="@(() => CurrentGitRepository.Repository)" />
+            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                <div>
+                    <FluentTextField Style="@("width: 300px;")" Name="name" @bind-Value="CurrentGitRepository.Repository" Label=@Loc["GitRepository_Repository"] Required />
+                </div>
+                <FluentValidationMessage For="@(() => CurrentGitRepository.Repository)" />
+            </FluentStack>
          </div>
         <div>
             <FluentStack Orientation="Orientation.Horizontal">
@@ -31,5 +37,8 @@
                 <FluentButton Appearance="Appearance.Accent" OnClick="@(async () => await HandleDiscardAsync())">Discard Changes</FluentButton>
             </FluentStack>
         </div>
+        <div>
+            <FluentValidationSummary />
+        </div>        
     </FluentStack>
 </EditForm>

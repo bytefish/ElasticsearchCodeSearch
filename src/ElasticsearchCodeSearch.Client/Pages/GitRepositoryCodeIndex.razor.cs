@@ -95,7 +95,7 @@ namespace ElasticsearchCodeSearch.Client.Pages
                 yield return new ValidationError
                 {
                     PropertyName = nameof(repository.CloneUrl),
-                    ErrorMessage = Loc.GetString("Validation_IsRequired", nameof(repository.Branch))
+                    ErrorMessage = Loc.GetString("Validation_IsRequired", nameof(repository.CloneUrl))
                 };
             }
         }
