@@ -1,6 +1,6 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using ElasticsearchCodeSearch.Indexer.Git;
+using ElasticsearchCodeSearch.Git;
 using ElasticsearchCodeSearch.Models;
 using ElasticsearchCodeSearch.Shared.Dto;
 using ElasticsearchCodeSearch.Shared.Elasticsearch;
@@ -86,14 +86,20 @@ namespace ElasticsearchCodeSearch.Services
                     branch: repositoryMetadata.Branch, cancellationToken);
 
                 // Clone into the given Directory
-                _gitExecutor.Clone(repositoryMetadata.CloneUrl, repositoryDirectory);
+                await _gitExecutor
+                    .Clone(repositoryMetadata.CloneUrl, repositoryDirectory, cancellationToken)
+                    .ConfigureAwait(false);
 
                 // Get the list of allowed files, by matching against allowed extensions (.c, .cpp, ...)
                 // and allowed filenames (.gitignore, README, ...). We don't want to parse binary data.
                 //
                 // We want to process the files in parallel, so we saturate the Hardware a bit better. So 
                 // the files to be processed are chunked.
-                var batches = _gitExecutor.ListFiles(repositoryDirectory)
+                var allFiles = await _gitExecutor
+                    .ListFiles(repositoryDirectory, cancellationToken)
+                    .ConfigureAwait(false);
+
+                var batches = allFiles
                     .Where(filename => IsAllowedFile(filename, allowedExtensions, allowedFilenames))
                     .Chunk(_options.BatchSize);
 
@@ -184,7 +190,7 @@ namespace ElasticsearchCodeSearch.Services
                         repositoryMetadata.FullName, repositoryMetadata.Branch, file);
                 }
 
-                var codeSearchDocument = BuildCodeSearchDocument(repositoryMetadata, file);
+                var codeSearchDocument = await BuildCodeSearchDocumentAsync(repositoryMetadata, file, cancellationToken).ConfigureAwait(false);
 
                 if (codeSearchDocument != null)
                 {
@@ -197,7 +203,9 @@ namespace ElasticsearchCodeSearch.Services
                 _logger.LogDebug("Bulk Indexing '{DocumentsCount}' Documents", documents.Count);
             }
 
-            await _elasticCodeSearchClient.BulkIndexAsync(documents, cancellationToken);
+            await _elasticCodeSearchClient
+                .BulkIndexAsync(documents, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -207,14 +215,24 @@ namespace ElasticsearchCodeSearch.Services
         /// <param name="repositoryMetadata">Repository Metadata</param>
         /// <param name="relativeFilename">Filename to process</param>
         /// <returns>An awaitable Task with the <see cref="CodeSearchDocument"/></returns>
-        private CodeSearchDocument BuildCodeSearchDocument(GitRepositoryMetadata repositoryMetadata, string relativeFilename)
+        private async Task<CodeSearchDocument> BuildCodeSearchDocumentAsync(GitRepositoryMetadata repositoryMetadata, string relativeFilename, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
             var repositoryDirectory = GetRepositoryDirectory(repositoryMetadata);
 
             // Get the Commit Information to index, such as the File SHA1 Hash, the Commit Hash, ...
-            (var shaHash, var commitHash, var latestCommitDate) = _gitExecutor.GetCommitInformation(repositoryDirectory, relativeFilename);
+            var shaHash = await _gitExecutor
+                .SHA1(repositoryDirectory, relativeFilename, cancellationToken)
+                .ConfigureAwait(false);
+
+            var commitHash = await _gitExecutor
+                .CommitHash(repositoryDirectory, relativeFilename, cancellationToken)
+                .ConfigureAwait(false);
+            
+            var latestCommitDate = await _gitExecutor
+                .LatestCommitDate(repositoryDirectory, relativeFilename, cancellationToken)
+                .ConfigureAwait(false);
 
             // Get the absolute Filename, so we can read it
             var absoluteFilename = Path.Combine(repositoryDirectory, relativeFilename);
