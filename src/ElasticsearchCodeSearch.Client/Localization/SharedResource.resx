@@ -141,6 +141,18 @@
   <data name="GitRepository_Repository" xml:space="preserve">
     <value>Repository</value>
   </data>
+  <data name="ManageSearchIndex_CreateSearchIndex" xml:space="preserve">
+    <value>Create Search Index</value>
+  </data>
+  <data name="ManageSearchIndex_DeleteAllDocuments" xml:space="preserve">
+    <value>Delete All Documents</value>
+  </data>
+  <data name="ManageSearchIndex_DeleteSearchIndex" xml:space="preserve">
+    <value>Delete Search Index</value>
+  </data>
+  <data name="ManageSearchIndex_RecreateSearchIndex" xml:space="preserve">
+    <value>Recreate Search Index</value>
+  </data>
   <data name="Message_Error_Title" xml:space="preserve">
     <value>Unexpected Error Occured</value>
   </data>
