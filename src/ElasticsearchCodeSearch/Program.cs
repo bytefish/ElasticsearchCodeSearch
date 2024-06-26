@@ -3,11 +3,11 @@
 using ElasticsearchCodeSearch.Hosting;
 using System.Text.Json.Serialization;
 using ElasticsearchCodeSearch.Shared.Elasticsearch;
-using ElasticsearchCodeSearch.Indexer.Git;
 using ElasticsearchCodeSearch.Indexer.GitHub.Options;
 using ElasticsearchCodeSearch.Indexer.GitHub;
 using ElasticsearchCodeSearch.Services;
 using ElasticsearchCodeSearch.Infrastructure;
+using ElasticsearchCodeSearch.Git;
 
 var builder = WebApplication.CreateBuilder(args);
 

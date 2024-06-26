@@ -43,7 +43,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Localization" Version="8.0.6" />
-        <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.8.0" />
+        <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.8.1" />
         <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Emoji" Version="4.6.0" />
         <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="4.8.0" />
     </ItemGroup>
