@@ -8,7 +8,7 @@ namespace ElasticsearchCodeSearch.Hosting
     /// <summary>
     /// A very simple Background Service to Process Indexing Requests in the Background. It basically 
     /// contains two concurrent queues to queue the repositories or organization to be indexed. This 
-    /// should be replaced by a proper framework, such as Quartz.NET.
+    /// should be replaced by a proper framework, such as Quartz.NET probably?
     /// </summary>
     public class ElasticsearchIndexerHostedService : BackgroundService
     {
@@ -22,18 +22,18 @@ namespace ElasticsearchCodeSearch.Hosting
         /// <summary>
         /// Indexer Job Queues to process.
         /// </summary>
-        private readonly IndexerJobQueues _jobQueues;
+        private readonly IndexerJobQueue _jobQueue;
 
         /// <summary>
         /// Creates a new Elasticsearch Indexer Background Service.
         /// </summary>
         /// <param name="logger">Logger</param>
         /// <param name="gitIndexerService">GitHub Indexer Service</param>
-        public ElasticsearchIndexerHostedService(ILogger<ElasticsearchIndexerHostedService> logger, IndexerJobQueues jobQueues, GitIndexerService gitIndexerService)
+        public ElasticsearchIndexerHostedService(ILogger<ElasticsearchIndexerHostedService> logger, IndexerJobQueue jobQueue, GitIndexerService gitIndexerService)
         {
             _logger = logger;
             _gitIndexerService = gitIndexerService;
-            _jobQueues = jobQueues;
+            _jobQueue = jobQueue;
         }
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -59,56 +59,17 @@ namespace ElasticsearchCodeSearch.Hosting
         {
             _logger.TraceMethodEntry();
 
-            while (_jobQueues.GitHubOrganizations.TryDequeue(out var organization))
+            while (_jobQueue.GitRepositories.TryDequeue(out var repository))
             {
                 try
                 {
-                    await _gitIndexerService.IndexOrganizationAsync(organization, cancellationToken);
+                    await _gitIndexerService.IndexRepositoryAsync(repository, cancellationToken);
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "Failed to index Organization '{Organization}'", organization);
+                    _logger.LogError(e, "Failed to index Organization '{Repository}'", repository.FullName);
                 }
             }
-
-            while (_jobQueues.GitHubRepositories.TryDequeue(out var repositoryAndOwner))
-            {
-                if (TryGetOwnerAndRepository(repositoryAndOwner, out var owner, out var repository))
-                {
-                    try
-                    {
-                        await _gitIndexerService.IndexRepositoryAsync(owner, repository, cancellationToken);
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.LogError(e, "Failed to index Repository '{RepositoryAndOwner}'", repositoryAndOwner);
-                    }
-                }
-            }
-        }
-
-        private bool TryGetOwnerAndRepository(string repositoryAndOwner, out string owner, out string repository)
-        {
-            _logger.TraceMethodEntry();
-
-            owner = repository = string.Empty;
-
-            if (repositoryAndOwner == null)
-            {
-                return false;
-            }
-
-            var components = repositoryAndOwner.Split("/");
-
-            if (components.Length != 2)
-            {
-                return false;
-            }
-
-            owner = components[0];
-            repository = components[1];
-
-            return true;
         }
     }
 }

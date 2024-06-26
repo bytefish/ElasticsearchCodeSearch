@@ -105,7 +105,7 @@ namespace ElasticsearchCodeSearch.Client.Pages
         }
 
         /// <inheritdoc />
-        protected override async Task OnParametersSetAsync()
+        protected override Task OnParametersSetAsync()
         {
             // Set bound values, so we don't modify the parameters directly
             _queryString = QueryString ?? string.Empty;
@@ -114,6 +114,8 @@ namespace ElasticsearchCodeSearch.Client.Pages
 
             // The associated pagination state may have been added/removed/replaced
             _currentPageItemsChanged.SubscribeOrMove(_pagination.CurrentPageItemsChanged);
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -168,10 +170,9 @@ namespace ElasticsearchCodeSearch.Client.Pages
                 // Refresh the Pagination:
                 await _pagination.SetTotalItemCountAsync(_totalItemCount);
             } 
-            catch(Exception e)
+            catch(Exception)
             {
-                // Pokemon Exception Handling for now. It should display an error and
-                // indicate, why the Search has failed (Backend not reachable, ...).
+                // Pokemon Exception Handling
             }
 
             StateHasChanged();
@@ -204,6 +205,7 @@ namespace ElasticsearchCodeSearch.Client.Pages
 
         private static SortFieldDto GetSortField(SortOptionEnum sortOptionEnum)
         {
+            // TODO This should be an enumeration in the Backend...
             return sortOptionEnum switch
             {
                 SortOptionEnum.OwnerAscending => new SortFieldDto() { Field = "owner", Order = SortOrderEnumDto.Asc },

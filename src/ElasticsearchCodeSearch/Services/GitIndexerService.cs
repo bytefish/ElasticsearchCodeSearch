@@ -21,18 +21,21 @@ namespace ElasticsearchCodeSearch.Services
         private readonly GitIndexerOptions _options;
 
         private readonly GitExecutor _gitExecutor;
-        private readonly GitHubClient _gitHubClient;
         private readonly ElasticCodeSearchClient _elasticCodeSearchClient;
 
-        public GitIndexerService(ILogger<GitIndexerService> logger, IOptions<GitIndexerOptions> options, GitExecutor gitExecutor, GitHubClient gitHubClient, ElasticCodeSearchClient elasticCodeSearchClient)
+        public GitIndexerService(ILogger<GitIndexerService> logger, IOptions<GitIndexerOptions> options, GitExecutor gitExecutor, ElasticCodeSearchClient elasticCodeSearchClient)
         {
             _logger = logger;
             _options = options.Value;
             _gitExecutor = gitExecutor;
-            _gitHubClient = gitHubClient;
             _elasticCodeSearchClient = elasticCodeSearchClient;
         }
 
+        /// <summary>
+        /// Creates the Search Elasticsearch Search Index to use for indexing and searching.
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation Token to cancel the asynchronous operations</param>
+        /// <returns>An awaitable Task</returns>
         public async Task CreateSearchIndexAsync(CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
@@ -40,89 +43,21 @@ namespace ElasticsearchCodeSearch.Services
             await _elasticCodeSearchClient.CreateIndexAsync(cancellationToken);
         }
 
-        public async Task IndexOrganizationAsync(string organization, CancellationToken cancellationToken)
-        {
-            _logger.TraceMethodEntry();
-
-            // If we are instructed to index an organization, we start by deleting all their
-            // documents. The reasoning is simple: We don't want to introduce complex
-            // synchronization code to diff the repositories.
-            await _elasticCodeSearchClient.DeleteByOwnerAsync(organization, cancellationToken);
-
-            // Gets all Repositories of the Organization:
-            var repositories = await _gitHubClient
-                .GetAllRepositoriesByOrganizationAsync(organization, 20, cancellationToken)
-                .ConfigureAwait(false);
-
-            // Filter for languages, if any languages are preferred:
-            if(_options.FilterLanguages.Any())
-            {
-                repositories = repositories
-                    .Where(x => _options.FilterLanguages.Contains(x.Language))
-                    .ToList();
-            }
-
-            // We could introduce some parallelism, when processing the repositories. Cloning 
-            // a repository is probably blocking while sending or cloning. And so, we could
-            // for example clone 4 repositories in parallel and process them.
-            var parallelOptions = new ParallelOptions()
-            {
-                MaxDegreeOfParallelism = _options.MaxParallelClones,
-                CancellationToken = cancellationToken
-            };
-
-            // Now we throw off the Parallel Cloning for the repositories.
-            await Parallel
-                .ForEachAsync(source: repositories, parallelOptions: parallelOptions, body: (source, cancellationToken) => IndexRepositoryAsync(source, cancellationToken))
-                .ConfigureAwait(false);
-        }
-
         /// <summary>
-        /// Indexes a GitHub Repository.
-        /// </summary>
-        /// <param name="owner">Name of the owner, which is a user or an organization</param>
-        /// <param name="repository">Name of the Repository</param>
-        /// <param name="cancellationToken">CancellationToken to cancel asynchronous processing</param>
-        /// <returns>Awaitable Task</returns>
-        public async Task IndexRepositoryAsync(string owner, string repository, CancellationToken cancellationToken)
-        {
-            _logger.TraceMethodEntry();
-
-            try
-            {
-                var repositoryMetadata = await _gitHubClient
-                    .GetRepositoryByOwnerAndRepositoryAsync(owner, repository, cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (repositoryMetadata == null)
-                {
-                    throw new Exception($"Unable to read repository metadata for Owner '{owner}' and Repository '{repository}'");
-                }
-
-                await IndexRepositoryAsync(repositoryMetadata, cancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Failed to index repository '{Repository}'", $"{owner}/{repository}");
-            }
-        }
-
-        /// <summary>
-        /// Indexes a GitHub Repository.
+        /// Indexes a Git Repository using the given <see cref="GitRepositoryMetadata.CloneUrl"/>.
         /// </summary>
         /// <param name="repositoryMetadata">Metadata of the Repository</param>
         /// <param name="cancellationToken">CancellationToken to cancel asynchronous processing</param>
         /// <returns>An awaitable task</returns>
-        public async ValueTask IndexRepositoryAsync(RepositoryMetadataDto repositoryMetadata, CancellationToken cancellationToken)
+        public async ValueTask IndexRepositoryAsync(GitRepositoryMetadata repositoryMetadata, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
-            // Nothing to do, if we cannot clone ...
             if (repositoryMetadata.CloneUrl == null)
             {
-                _logger.LogInformation("Not cloning repository '{Repository}, because it has no Clone URL'", repositoryMetadata.FullName);
+                _logger.LogWarning("Could not clone '{RepositoryFullName}', because it has no Clone URL'", repositoryMetadata.FullName);
 
-                return;
+                throw new InvalidOperationException($"A Clone was requested for '{repositoryMetadata.FullName}', but no CloneUrl was given");
             }
 
             var allowedFilenames = _options.AllowedFilenames.ToHashSet();
@@ -138,7 +73,9 @@ namespace ElasticsearchCodeSearch.Services
                     {
                         if(_logger.IsDebugEnabled())
                         {
-                            _logger.LogDebug("Deleting Repository '{RepositoryDirectory}' for a fresh Clone", repositoryDirectory)
+                            _logger.LogDebug("Deleting Repository '{RepositoryFullName}' in Directory '{RepositoryDirectory}' for a fresh clone", 
+                                repositoryMetadata.FullName,
+                                repositoryDirectory);
                         }
 
                         DeleteReadOnlyDirectory(repositoryDirectory);
@@ -146,15 +83,18 @@ namespace ElasticsearchCodeSearch.Services
                 }
 
                 await _elasticCodeSearchClient.DeleteByOwnerRepositoryAndBranchAsync(
-                    owner: repositoryMetadata.Owner.Login,
+                    owner: repositoryMetadata.Owner,
                     repository: repositoryMetadata.Name,
-                    branch: repositoryMetadata.DefaultBranch, cancellationToken);
+                    branch: repositoryMetadata.Branch, cancellationToken);
 
                 // Clone into the given Directory
                 _gitExecutor.Clone(repositoryMetadata.CloneUrl, repositoryDirectory);
 
                 // Get the list of allowed files, by matching against allowed extensions (.c, .cpp, ...)
                 // and allowed filenames (.gitignore, README, ...). We don't want to parse binary data.
+                //
+                // We want to process the files in parallel, so we saturate the Hardware a bit better. So 
+                // the files to be processed are chunked.
                 var batches = _gitExecutor.ListFiles(repositoryDirectory)
                     .Where(filename => IsAllowedFile(filename, allowedExtensions, allowedFilenames))
                     .Chunk(_options.BatchSize);
@@ -171,7 +111,10 @@ namespace ElasticsearchCodeSearch.Services
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Indexing Repository '{Repository}' failed", repositoryMetadata.FullName);
+                if(_logger.IsErrorEnabled())
+                {
+                    _logger.LogError(e, "Indexing Repository '{Repository}' failed", repositoryMetadata.Name);
+                }
 
                 throw;
             }
@@ -183,12 +126,17 @@ namespace ElasticsearchCodeSearch.Services
                     {
                         if (Directory.Exists(repositoryDirectory))
                         {
+                            if(_logger.IsDebugEnabled())
+                            {
+                                _logger.LogDebug("Deleting existing Repository '{RepositoryDirectory}'", repositoryDirectory);
+                            }
+
                             DeleteReadOnlyDirectory(repositoryDirectory);
                         }
                     }
                     catch (Exception e)
                     {
-                        _logger.LogError(e, "Error deleting '{Repository}'", repositoryMetadata.FullName);
+                        _logger.LogError(e, "Error deleting '{Repository}'", repositoryMetadata.Name);
                     }
                 }
             }
@@ -200,7 +148,7 @@ namespace ElasticsearchCodeSearch.Services
         /// the directory correctly.
         /// </summary>
         /// <param name="directory">The name of the directory to remove.</param>
-        public static void DeleteReadOnlyDirectory(string directory)
+        private static void DeleteReadOnlyDirectory(string directory)
         {
             foreach (var subdirectory in Directory.EnumerateDirectories(directory))
             {
@@ -218,13 +166,13 @@ namespace ElasticsearchCodeSearch.Services
         }
 
         /// <summary>
-        /// Indexes files, given by their relative path.
+        /// Indexes a list of files for a given <see cref="GitRepositoryMetadata"/>.
         /// </summary>
         /// <param name="repositoryMetadata">Repository Metadata</param>
         /// <param name="files">List of Files</param>
         /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>An awaitable <see cref="ValueTask"/></returns>
-        public async ValueTask IndexDocumentsAsync(RepositoryMetadataDto repositoryMetadata, string[] files, CancellationToken cancellationToken)
+        public async ValueTask IndexDocumentsAsync(GitRepositoryMetadata repositoryMetadata, string[] files, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
@@ -232,12 +180,23 @@ namespace ElasticsearchCodeSearch.Services
 
             foreach (var file in files)
             {
-                var codeSearchDocument = GetCodeSearchDocument(repositoryMetadata, file);
+                if (_logger.IsDebugEnabled()) 
+                {
+                    _logger.LogDebug("Processing File (Repository = '{RepositoryFullName}', Branch = '{Branch}', File = '{Filename}')",
+                        repositoryMetadata.FullName, repositoryMetadata.Branch, file);
+                }
+
+                var codeSearchDocument = BuildCodeSearchDocument(repositoryMetadata, file);
 
                 if (codeSearchDocument != null)
                 {
                     documents.Add(codeSearchDocument);
                 }
+            }
+
+            if(_logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("Bulk Indexing '{DocumentsCount}' Documents", documents.Count);
             }
 
             await _elasticCodeSearchClient.BulkIndexAsync(documents, cancellationToken);
@@ -250,16 +209,11 @@ namespace ElasticsearchCodeSearch.Services
         /// <param name="repositoryMetadata">Repository Metadata</param>
         /// <param name="relativeFilename">Filename to process</param>
         /// <returns>An awaitable Task with the <see cref="CodeSearchDocument"/></returns>
-        private CodeSearchDocument GetCodeSearchDocument(RepositoryMetadataDto repositoryMetadata, string relativeFilename)
+        private CodeSearchDocument BuildCodeSearchDocument(GitRepositoryMetadata repositoryMetadata, string relativeFilename)
         {
             _logger.TraceMethodEntry();
 
             var repositoryDirectory = GetRepositoryDirectory(repositoryMetadata);
-
-            if (_logger.IsDebugEnabled())
-            {
-                _logger.LogDebug("Start indexing {Repository}: {Filename}", repositoryDirectory, relativeFilename);
-            }
 
             // Get the Commit Information to index, such as the File SHA1 Hash, the Commit Hash, ...
             (var shaHash, var commitHash, var latestCommitDate) = _gitExecutor.GetCommitInformation(repositoryDirectory, relativeFilename);
@@ -275,12 +229,12 @@ namespace ElasticsearchCodeSearch.Services
                 Id = shaHash,
                 Path = relativeFilename,
                 Repository = repositoryMetadata.Name,
-                Owner = repositoryMetadata.Owner.Login,
+                Owner = repositoryMetadata.Owner,
                 Content = content,
-                Branch = repositoryMetadata.DefaultBranch,
+                Branch = repositoryMetadata.Branch,
                 Filename = Path.GetFileName(relativeFilename),
                 CommitHash = commitHash,
-                Permalink = $"https://github.com/{repositoryMetadata.Owner.Login}/{repositoryMetadata.Name}/blob/{commitHash}/{relativeFilename}",
+                Permalink = $"https://github.com/{repositoryMetadata.Owner}/{repositoryMetadata.Name}/blob/{commitHash}/{relativeFilename}", // TODO Pass Source Service and make this configurable
                 LatestCommitDate = latestCommitDate
             };
 
@@ -320,7 +274,7 @@ namespace ElasticsearchCodeSearch.Services
         /// </summary>
         /// <param name="repository">GitHub Repository to index</param>
         /// <returns></returns>
-        private string GetRepositoryDirectory(RepositoryMetadataDto repository)
+        private string GetRepositoryDirectory(GitRepositoryMetadata repository)
         {
             _logger.TraceMethodEntry();
 

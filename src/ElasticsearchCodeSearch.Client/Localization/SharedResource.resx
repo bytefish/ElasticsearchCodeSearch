@@ -123,6 +123,18 @@
   <data name="ClientError_UnexpectedError" xml:space="preserve">
     <value>An unexpected error occured</value>
   </data>
+  <data name="GitRepository_Branch" xml:space="preserve">
+    <value>Branch</value>
+  </data>
+  <data name="GitRepository_Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="GitRepository_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="GitRepository_Owner" xml:space="preserve">
+    <value>Owner</value>
+  </data>
   <data name="Message_Error_Title" xml:space="preserve">
     <value>Unexpected Error Occured</value>
   </data>
@@ -182,5 +194,8 @@
   </data>
   <data name="SortOptionEnum_RepositoryDescending" xml:space="preserve">
     <value>Repository (Desc)</value>
+  </data>
+  <data name="Validation_IsRequired" xml:space="preserve">
+    <value>{0} is required</value>
   </data>
 </root>

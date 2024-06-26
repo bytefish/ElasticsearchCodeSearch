@@ -44,6 +44,26 @@ namespace ElasticsearchCodeSearch.Shared.Services
                 .ConfigureAwait(false);
         }
 
+        public async Task IndexGitRepositoryAsync(GitRepositoryMetadataDto repositoryMetadata, CancellationToken cancellationToken)
+        {
+            _logger.TraceMethodEntry();
+
+            var response = await _httpClient
+                .PostAsJsonAsync("index-git-repository", repositoryMetadata, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new ApiException(string.Format(CultureInfo.InvariantCulture,
+                    "HTTP Request failed with Status: '{0}' ({1})",
+                    (int)response.StatusCode,
+                    response.StatusCode))
+                {
+                    StatusCode = response.StatusCode
+                };
+            }
+        }
+
         public async Task IndexGitHubOrganizationAsync(IndexOrganizationRequestDto indexOrganizationRequest, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();

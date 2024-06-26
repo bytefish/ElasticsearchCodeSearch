@@ -7,6 +7,9 @@ using ElasticsearchCodeSearch.Shared.Dto;
 using Elastic.Clients.Elasticsearch;
 using ElasticsearchCodeSearch.Converters;
 using ElasticsearchCodeSearch.Hosting;
+using ElasticsearchCodeSearch.Services;
+using System.Threading;
+using ElasticsearchCodeSearch.Models;
 
 namespace ElasticsearchCodeSearch.Controllers
 {
@@ -14,12 +17,14 @@ namespace ElasticsearchCodeSearch.Controllers
     public class CodeIndexController : ControllerBase
     {
         private readonly ILogger<CodeIndexController> _logger;
+        private readonly GitHubService _gitHubService;
         private readonly ElasticCodeSearchClient _elasticsearchClient;
 
-        public CodeIndexController(ILogger<CodeIndexController> logger, ElasticCodeSearchClient elasticsearchClient)
+        public CodeIndexController(ILogger<CodeIndexController> logger, GitHubService gitHubService, ElasticCodeSearchClient elasticsearchClient)
         {
-            _elasticsearchClient = elasticsearchClient;
             _logger = logger;
+            _gitHubService = gitHubService;
+            _elasticsearchClient = elasticsearchClient;
         }
 
         [HttpPost]
@@ -169,7 +174,7 @@ namespace ElasticsearchCodeSearch.Controllers
 
         [HttpPost]
         [Route("/index-git-repository")]
-        public IActionResult IndexGitRepository([FromServices] IndexerJobQueues jobQueue, [FromBody] IndexGitHubRepositoryRequestDto indexRepositoryRequest)
+        public IActionResult IndexGitRepository([FromServices] IndexerJobQueue jobQueue, [FromBody] IndexGitHubRepositoryRequestDto indexRepositoryRequest)
         {
             _logger.TraceMethodEntry();
 
@@ -190,13 +195,22 @@ namespace ElasticsearchCodeSearch.Controllers
 
         [HttpPost]
         [Route("/index-github-repository")]
-        public IActionResult IndexGitHubRepository([FromServices] IndexerJobQueues jobQueue, [FromBody] IndexGitHubRepositoryRequestDto indexRepositoryRequest)
+        public async Task<IActionResult> IndexGitHubRepository([FromServices] IndexerJobQueue jobQueue, [FromBody] IndexGitHubRepositoryRequestDto indexRepositoryRequest, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
             try
             {
-                jobQueue.GitHubRepositories.Enqueue($"{indexRepositoryRequest.Owner}/{indexRepositoryRequest.Repository}");
+                var repository = await _gitHubService
+                    .GetRepositoryByOwnerAndNameAsync(indexRepositoryRequest.Owner, indexRepositoryRequest.Repository, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if(_logger.IsDebugEnabled())
+                {
+                    _logger.LogDebug("GitHub Repository '{GitHubRepository}' enqueued", repository.FullName);
+                }
+
+                jobQueue.GitRepositories.Enqueue(repository);
 
                 return Ok();
             }
@@ -213,13 +227,27 @@ namespace ElasticsearchCodeSearch.Controllers
 
         [HttpPost]
         [Route("/index-github-organization")]
-        public IActionResult IndexGitHubOrganization([FromServices] IndexerJobQueues jobQueue, [FromBody] IndexOrganizationRequestDto indexOrganizationRequest)
+        public async Task<IActionResult> IndexGitHubOrganization([FromServices] IndexerJobQueue jobQueue, [FromBody] IndexOrganizationRequestDto indexOrganizationRequest, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
             try
             {
-                jobQueue.GitHubOrganizations.Enqueue(indexOrganizationRequest.Organization);
+                var repositories = await _gitHubService
+                    .GetAllRepositoriesByOrganizationAsync(indexOrganizationRequest.Organization, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (_logger.IsDebugEnabled())
+                {
+                    _logger.LogDebug("'{NumberOfRepositories}' GitHub Repositories for Organization '{Organization}' enqueued", 
+                        repositories.Count,
+                        indexOrganizationRequest.Organization);
+                }
+
+                foreach(var repository in repositories)
+                {
+                    jobQueue.GitRepositories.Enqueue(repository);
+                }
 
                 return Ok();
             }
@@ -237,17 +265,28 @@ namespace ElasticsearchCodeSearch.Controllers
         
         [HttpGet]
         [Route("/queue")]
-        public IActionResult GetIndexingQueue([FromServices] IndexerJobQueues jobQueue)
+        public IActionResult GetIndexingQueue([FromServices] IndexerJobQueue jobQueue)
         {
             _logger.TraceMethodEntry();
 
             try
             {
+                var repositoriesInQueue = jobQueue.GitRepositories
+                    // Convert to Dto
+                    .Select(x => new GitRepositoryMetadataDto
+                    {
+                        Name = x.Name,
+                        Owner = x.Owner,
+                        Branch = x.Branch,
+                        CloneUrl = x.CloneUrl,
+                        Language = x.Language,
+                    })
+                    // Materialize as List
+                    .ToList();
+
                 var result = new CodeIndexQueueDto 
                 {
-                    Organizations = jobQueue.GitHubOrganizations.ToList(),
-                    Repositories = jobQueue.GitHubRepositories.ToList(),
-                    Urls = jobQueue.GitRepositoryUrls.ToList(),
+                    Repositories = repositoriesInQueue
                 };
 
                 return Ok(result);
