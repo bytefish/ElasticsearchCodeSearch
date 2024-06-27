@@ -8,6 +8,7 @@ using Elastic.Clients.Elasticsearch;
 using ElasticsearchCodeSearch.Converters;
 using ElasticsearchCodeSearch.Services;
 using ElasticsearchCodeSearch.Infrastructure;
+using ElasticsearchCodeSearch.Models;
 
 namespace ElasticsearchCodeSearch.Controllers
 {
@@ -169,13 +170,30 @@ namespace ElasticsearchCodeSearch.Controllers
 
         [HttpPost]
         [Route("/index-git-repository")]
-        public IActionResult IndexGitRepository([FromServices] GitRepositoryJobQueue jobQueue, [FromBody] IndexGitHubRepositoryRequestDto indexRepositoryRequest)
+        public IActionResult IndexGitRepository([FromServices] GitRepositoryJobQueue jobQueue, [FromBody] GitRepositoryMetadataDto repositoryMetadataDto)
         {
             _logger.TraceMethodEntry();
 
             try
             {
-                return BadRequest("Not implemented yet");
+                if (_logger.IsDebugEnabled())
+                {
+                    _logger.LogDebug("GitHub Repository '{GitHubRepository}' enqueued", repositoryMetadataDto.FullName);
+                }
+
+                var repositoryMetadata = new GitRepositoryMetadata
+                {
+                    Name = repositoryMetadataDto.Name,
+                    Branch = repositoryMetadataDto.Branch,
+                    CloneUrl = repositoryMetadataDto.CloneUrl,
+                    Owner = repositoryMetadataDto.Owner,
+                    Source = repositoryMetadataDto.Source,
+                    Language = repositoryMetadataDto.Language,
+                };
+
+                jobQueue.Post(repositoryMetadata);
+
+                return Ok();
             }
             catch (Exception e)
             {

@@ -48,7 +48,7 @@ namespace ElasticsearchCodeSearch.Git
             }
             catch (GitException e)
             {
-                _logger.LogError("The Git CLI failed (ExitCode = {GitErrorCode}, Errors = {ErrorMessage})", e.ExitCode, e.Errors);
+                _logger.LogError("The Git CLI failed (ExitCode = '{GitErrorCode}', Errors = '{ErrorMessage}')", e.ExitCode, e.Errors);
 
                 throw;
             }
@@ -193,7 +193,7 @@ namespace ElasticsearchCodeSearch.Git
 
             if(_logger.IsTraceEnabled())
             {
-                _logger.LogTrace("Git listed the following files in directory '{RepositoryDirectory}': {FilesInGitRepository}", repositoryDirectory, files);
+                _logger.LogTrace("Git listed the following files in directory '{RepositoryDirectory}': '{FilesInGitRepository}'", repositoryDirectory, result);
             }
 
             return files;
@@ -213,7 +213,7 @@ namespace ElasticsearchCodeSearch.Git
 
             if (_logger.IsDebugEnabled())
             {
-                _logger.LogDebug("Executing Git (Arguments = '{GitCliArguments}', WorkingDirectory = '{GitCliWorkingDirectory}')", arguments, workingDirectory);
+                _logger.LogDebug("Executing Git Command (Arguments = '{GitCliArguments}', WorkingDirectory = '{GitCliWorkingDirectory}')", arguments, workingDirectory);
             }
 
             var result = await RunProcessAsync("git", arguments, workingDirectory, cancellationToken).ConfigureAwait(false);
@@ -227,14 +227,14 @@ namespace ElasticsearchCodeSearch.Git
             // after all. It's commented out for now, because I can probably make sense of it manually.
             if (_logger.IsTraceEnabled())
             {
-                _logger.LogTrace("Git Executable finished (Arguments = {GitCliArguments}, WorkingDirectory = {GitCliWorkingDirectory}, ExitCode = {GitCliExitCode}, Errors = {GitCliErrors}, Output = {GitCliOutput})",
+                _logger.LogTrace("Git Executable finished (Arguments = '{GitCliArguments}', WorkingDirectory = '{GitCliWorkingDirectory}', ExitCode = '{GitCliExitCode}', Errors = '{GitCliErrors}', Output = '{GitCliOutput}')",
                     arguments, workingDirectory, result.ExitCode, result.Errors, result.Output);
             }
 
             // In Debug, we omit the output. There might be a better way to enrich the logs depending on level.
             if (!_logger.IsTraceEnabled() && _logger.IsDebugEnabled())
             {
-                _logger.LogDebug("Git Executable finished (Arguments = {GitCliArguments}, WorkingDirectory = {GitCliWorkingDirectory}, ExitCode = {GitCliExitCode}, Errors = {GitCliErrors})", arguments, workingDirectory, result.ExitCode, result.Errors);
+                _logger.LogDebug("Finished Git Command (Arguments = '{GitCliArguments}', WorkingDirectory = '{GitCliWorkingDirectory}', ExitCode = '{GitCliExitCode}', Errors = '{GitCliErrors}')", arguments, workingDirectory, result.ExitCode, result.Errors);
             }
 
             return result.Output;
