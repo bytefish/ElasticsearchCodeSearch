@@ -253,7 +253,7 @@ namespace ElasticsearchCodeSearch.Services
                 Branch = repositoryMetadata.Branch,
                 Filename = Path.GetFileName(relativeFilename),
                 CommitHash = commitHash,
-                Permalink = _permalinkGenerator.GeneratePermalink(repositoryMetadata, commitHash, reö),
+                Permalink = _permalinkGenerator.GeneratePermalink(repositoryMetadata, commitHash, relativeFilename),
                 LatestCommitDate = latestCommitDate
             };
 

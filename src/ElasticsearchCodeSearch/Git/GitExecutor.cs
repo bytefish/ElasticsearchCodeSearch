@@ -37,7 +37,16 @@ namespace ElasticsearchCodeSearch.Git
         {
             _logger.TraceMethodEntry();
 
-            await RunAsync($"clone {repositoryUrl} {repositoryDirectory}", string.Empty, cancellationToken);
+            try
+            {
+                await RunAsync($"clone {repositoryUrl} {repositoryDirectory}", string.Empty, cancellationToken);
+            } 
+            catch(GitException e)
+            {
+                _logger.LogError("The Git CLI failed (ExitCode = {GitErrorCode}, Errors = {ErrorMessage})", e.ExitCode, e.Errors);
+
+                throw;
+            }
         }
 
         /// <summary>
