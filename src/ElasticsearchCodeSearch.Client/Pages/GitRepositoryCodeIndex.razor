@@ -4,6 +4,7 @@
 @using ElasticsearchCodeSearch.Client.Extensions;
 @using ElasticsearchCodeSearch.Client.Infrastructure;
 @using ElasticsearchCodeSearch.Models
+@using ElasticsearchCodeSearch.Shared.Constants
 @using ElasticsearchCodeSearch.Shared.Dto;
 @using ElasticsearchCodeSearch.Shared.Services
 
@@ -53,6 +54,19 @@
                     <FluentTextField Style="@("width: 300px;")" Name="language" @bind-Value="CurrentGitRepository.Language" Label=@Loc["GitRepository_Language"] />
                 </div>
                 <FluentValidationMessage For="@(() => CurrentGitRepository.Language)" />
+            </FluentStack>
+        </div>
+        <div>
+            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                <div>
+                    <FluentSelect Style="@("width: 300px;")" @bind-Value="CurrentGitRepository.Source" TOption="string" Label="@Loc["GitRepository_Source"]" Required>
+                        <FluentOption Value="@SourceSystems.GitHub" Selected="true">@Loc["SourceSystems_GitHub"]</FluentOption>
+                        <FluentOption Value="@SourceSystems.GitLab">@Loc["SourceSystems_GitLab"]</FluentOption>
+                        <FluentOption Value="@SourceSystems.Codeberg">@Loc["SourceSystems_Codeberg"]</FluentOption>
+                        <FluentOption Value="@SourceSystems.Unknown">@Loc["SourceSystems_Custom"]</FluentOption>
+                    </FluentSelect>
+                </div>
+                <FluentValidationMessage For="@(() => CurrentGitRepository.Source)" />
             </FluentStack>
         </div>
         <div>

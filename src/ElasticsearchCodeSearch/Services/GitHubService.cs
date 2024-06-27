@@ -4,6 +4,7 @@ using ElasticsearchCodeSearch.Git;
 using ElasticsearchCodeSearch.Indexer.GitHub;
 using ElasticsearchCodeSearch.Indexer.GitHub.Dto;
 using ElasticsearchCodeSearch.Models;
+using ElasticsearchCodeSearch.Shared.Constants;
 using ElasticsearchCodeSearch.Shared.Elasticsearch;
 using ElasticsearchCodeSearch.Shared.Logging;
 
@@ -80,7 +81,8 @@ namespace ElasticsearchCodeSearch.Services
                 Name = source.Name,
                 Branch = source.DefaultBranch,
                 CloneUrl = source.CloneUrl!,
-                Language = source.Language!
+                Language = source.Language!,
+                Source = SourceSystems.GitHub,
             };
 
             return result;

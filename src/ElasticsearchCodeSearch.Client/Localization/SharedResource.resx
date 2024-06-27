@@ -144,6 +144,9 @@
   <data name="GitRepository_Repository" xml:space="preserve">
     <value>Repository</value>
   </data>
+  <data name="GitRepository_Source" xml:space="preserve">
+    <value>Source System</value>
+  </data>
   <data name="ManageSearchIndex_CreateSearchIndex" xml:space="preserve">
     <value>Create Search Index</value>
   </data>
@@ -215,6 +218,18 @@
   </data>
   <data name="SortOptionEnum_RepositoryDescending" xml:space="preserve">
     <value>Repository (Desc)</value>
+  </data>
+  <data name="SourceSystems_Codeberg" xml:space="preserve">
+    <value>Codeberg</value>
+  </data>
+  <data name="SourceSystems_Custom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="SourceSystems_GitHub" xml:space="preserve">
+    <value>GitHub</value>
+  </data>
+  <data name="SourceSystems_GitLab" xml:space="preserve">
+    <value>GitLab</value>
   </data>
   <data name="Validation_IsRequired" xml:space="preserve">
     <value>{0} is required</value>

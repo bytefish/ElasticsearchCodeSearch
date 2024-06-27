@@ -4,6 +4,7 @@ using ElasticsearchCodeSearch.Shared.Services;
 using ElasticsearchCodeSearch.Shared.Dto;
 using ElasticsearchCodeSearch.Client.Infrastructure;
 using Microsoft.Extensions.Localization;
+using ElasticsearchCodeSearch.Shared.Constants;
 
 namespace ElasticsearchCodeSearch.Client.Pages
 {
@@ -19,6 +20,7 @@ namespace ElasticsearchCodeSearch.Client.Pages
             Branch = string.Empty,
             CloneUrl = string.Empty,
             Language = string.Empty,
+            Source = SourceSystems.GitHub,
         };
 
 
@@ -36,6 +38,7 @@ namespace ElasticsearchCodeSearch.Client.Pages
                 Name = string.Empty,
                 CloneUrl = string.Empty,
                 Owner = string.Empty,
+                Source = SourceSystems.GitHub,
             };
         }
 
@@ -51,6 +54,7 @@ namespace ElasticsearchCodeSearch.Client.Pages
                 Name = string.Empty,
                 CloneUrl = string.Empty,
                 Owner = string.Empty,
+                Source = SourceSystems.GitHub
             };
 
             return Task.CompletedTask;
@@ -96,6 +100,15 @@ namespace ElasticsearchCodeSearch.Client.Pages
                 {
                     PropertyName = nameof(repository.CloneUrl),
                     ErrorMessage = Loc.GetString("Validation_IsRequired", nameof(repository.CloneUrl))
+                };
+            }
+
+            if (string.IsNullOrWhiteSpace(repository.Source))
+            {
+                yield return new ValidationError
+                {
+                    PropertyName = nameof(repository.Source),
+                    ErrorMessage = Loc.GetString("Validation_IsRequired", nameof(repository.Source))
                 };
             }
         }

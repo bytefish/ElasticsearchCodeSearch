@@ -42,5 +42,13 @@ namespace ElasticsearchCodeSearch.Shared.Dto
         /// </summary>
         [JsonPropertyName("cloneUrl")]
         public required string CloneUrl { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Source System of this Repository.
+        /// </summary>
+        [JsonPropertyName("Source")]
+        public required string Source { get; set; }
+
+
     }
 }

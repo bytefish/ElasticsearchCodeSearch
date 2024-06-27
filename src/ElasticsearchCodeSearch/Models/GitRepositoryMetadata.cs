@@ -34,5 +34,10 @@
         /// Gets or sets the Url to clone from.
         /// </summary>
         public required string CloneUrl { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Source System.
+        /// </summary>
+        public required string Source { get; set; }
     }
 }

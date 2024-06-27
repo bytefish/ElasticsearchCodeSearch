@@ -1,6 +1,7 @@
 ﻿// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using ElasticsearchCodeSearch.Git;
+using ElasticsearchCodeSearch.Infrastructure;
 using ElasticsearchCodeSearch.Models;
 using ElasticsearchCodeSearch.Shared.Dto;
 using ElasticsearchCodeSearch.Shared.Elasticsearch;
@@ -19,13 +20,15 @@ namespace ElasticsearchCodeSearch.Services
         private readonly GitIndexerOptions _options;
 
         private readonly GitExecutor _gitExecutor;
+        private readonly PermalinkGenerator _permalinkGenerator;
         private readonly ElasticCodeSearchClient _elasticCodeSearchClient;
 
-        public GitIndexerService(ILogger<GitIndexerService> logger, IOptions<GitIndexerOptions> options, GitExecutor gitExecutor, ElasticCodeSearchClient elasticCodeSearchClient)
+        public GitIndexerService(ILogger<GitIndexerService> logger, IOptions<GitIndexerOptions> options, GitExecutor gitExecutor, PermalinkGenerator permalinkGenerator, ElasticCodeSearchClient elasticCodeSearchClient)
         {
             _logger = logger;
             _options = options.Value;
             _gitExecutor = gitExecutor;
+            _permalinkGenerator = permalinkGenerator;
             _elasticCodeSearchClient = elasticCodeSearchClient;
         }
 
@@ -250,7 +253,7 @@ namespace ElasticsearchCodeSearch.Services
                 Branch = repositoryMetadata.Branch,
                 Filename = Path.GetFileName(relativeFilename),
                 CommitHash = commitHash,
-                Permalink = $"https://github.com/{repositoryMetadata.Owner}/{repositoryMetadata.Name}/blob/{commitHash}/{relativeFilename}", // TODO Pass Source Service and make this configurable
+                Permalink = _permalinkGenerator.GeneratePermalink(repositoryMetadata, commitHash, reö),
                 LatestCommitDate = latestCommitDate
             };
 

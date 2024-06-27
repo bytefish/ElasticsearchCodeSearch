@@ -69,6 +69,7 @@ static void ConfigureIndexingServices(WebApplicationBuilder builder)
     builder.Services.Configure<GitIndexerOptions>(builder.Configuration.GetSection("GitHubIndexer"));
 
     builder.Services.AddSingleton<GitExecutor>();
+    builder.Services.AddSingleton<PermalinkGenerator>();
     
     builder.Services.AddSingleton<GitHubClient>();
     builder.Services.AddSingleton<GitHubService>();

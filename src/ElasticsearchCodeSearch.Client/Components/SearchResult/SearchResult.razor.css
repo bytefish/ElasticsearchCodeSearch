@@ -48,7 +48,9 @@
             .code-box .code-box-content .code-line .code-line-content {
                 display: grid;
                 text-align: left;
+                white-space: pre;
             }
+
 
 .noselect {
     -webkit-touch-callout: none; /* iOS Safari */
