@@ -61,16 +61,23 @@ namespace ElasticsearchCodeSearch.Hosting
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                ParallelOptions parallelOptions = new()
+                try
                 {
-                    MaxDegreeOfParallelism = _gitIndexerOptions.MaxParallelClones,
-                    CancellationToken = cancellationToken,
-                };
+                    ParallelOptions parallelOptions = new()
+                    {
+                        MaxDegreeOfParallelism = _gitIndexerOptions.MaxParallelClones,
+                        CancellationToken = cancellationToken,
+                    };
 
-                await Parallel.ForEachAsync(
-                    source: _jobQueue.ToAsyncEnumerable(cancellationToken), 
-                    parallelOptions: parallelOptions, 
-                    body: (x, ct) => ProcessRepositoryAsync(x, ct));
+                    await Parallel.ForEachAsync(
+                        source: _jobQueue.ToAsyncEnumerable(cancellationToken),
+                        parallelOptions: parallelOptions,
+                        body: (x, ct) => ProcessRepositoryAsync(x, ct));
+                } 
+                catch(Exception e)
+                {
+                    _logger.LogError(e, "Indexing stopped due an uncaught Exception. Restarting the Indexing Loop.");
+                }
             }
         }
 
