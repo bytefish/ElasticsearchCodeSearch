@@ -105,16 +105,13 @@ namespace ElasticsearchCodeSearch.Controllers
             {
                 var result = await _elasticsearchClient.CreateIndexAsync(cancellationToken);
 
-                if (!result.Success)
+                if (!result.IsValidResponse)
                 {
                     if (_logger.IsErrorEnabled())
                     {
-                        if (result.ErrorResponse != null)
-                        {
-                            result.ErrorResponse.TryGetOriginalException(out var originalException);
+                        result.TryGetOriginalException(out var originalException);
 
-                            _logger.LogError(originalException, "Elasticsearch failed with an unhandeled Exception");
-                        }
+                        _logger.LogError(originalException, "Elasticsearch failed with an unhandeled Exception");
                     }
 
                     return BadRequest("Invalid Search Response from Elasticsearch");

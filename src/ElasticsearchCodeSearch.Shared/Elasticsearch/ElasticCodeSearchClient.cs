@@ -11,7 +11,6 @@ using Elastic.Clients.Elasticsearch.Mapping;
 using ElasticsearchCodeSearch.Models;
 using ElasticsearchCodeSearch.Shared.Logging;
 using Microsoft.Extensions.Logging;
-using System.Threading;
 using Elastic.Transport.Products.Elasticsearch;
 
 namespace ElasticsearchCodeSearch.Shared.Elasticsearch
@@ -52,11 +51,6 @@ namespace ElasticsearchCodeSearch.Shared.Elasticsearch
                 _logger.LogDebug("ExistsResponse DebugInformation: {DebugInformation}", indexExistsResponse.DebugInformation);
             }
 
-            if (indexExistsResponse == null)
-            {
-                throw new Exception();
-            }
-
             return indexExistsResponse;
         }
 
@@ -74,43 +68,6 @@ namespace ElasticsearchCodeSearch.Shared.Elasticsearch
             }
 
             return pingResponse;
-        }
-
-        public async Task<(bool Success, ElasticsearchResponse? ErrorResponse)> CreateIndexAsync(CancellationToken cancellationToken)
-        {
-            _logger.TraceMethodEntry();
-
-            var healthTimeout = TimeSpan.FromSeconds(60);
-
-            if (_logger.IsDebugEnabled())
-            {
-                _logger.LogDebug("Waiting for at least 1 Node and at least 1 Active Shard, with a Timeout of {HealthTimeout} seconds.", healthTimeout.TotalSeconds);
-            }
-
-            var clusterHealthResponse = await WaitForClusterAsync(healthTimeout, cancellationToken);
-
-            if (!clusterHealthResponse.IsValidResponse)
-            {
-                _logger.LogError("Invalid Request to get Cluster Health: {DebugInformation}", clusterHealthResponse.DebugInformation);
-
-                return (false, clusterHealthResponse);
-            }
-
-            var indexExistsResponse = await IndexExistsAsync(cancellationToken);
-
-            if (!indexExistsResponse.Exists)
-            {
-                var createIndexResponse = await InternalCreateIndexAsync(cancellationToken);
-
-                if(!createIndexResponse.IsValidResponse)
-                {
-                    _logger.LogError("Invalid Request to create index: {DebugInformation}", createIndexResponse.DebugInformation);
-
-                    return (false, createIndexResponse);
-                }
-            }
-
-            return (true, null);
         }
 
         public async Task<DeleteByQueryResponse> DeleteByOwnerAsync(string owner, CancellationToken cancellationToken)
@@ -165,7 +122,7 @@ namespace ElasticsearchCodeSearch.Shared.Elasticsearch
             return deleteByQueryResponse;
         }
 
-        private async Task<CreateIndexResponse> InternalCreateIndexAsync(CancellationToken cancellationToken)
+        public async Task<CreateIndexResponse> CreateIndexAsync(CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
@@ -393,7 +350,7 @@ namespace ElasticsearchCodeSearch.Shared.Elasticsearch
                 .ToArray();
 
             // Build the Search Query:
-            return _client.SearchAsync<CodeSearchDocument>(searchRequestDescriptor => searchRequestDescriptor
+            var codeSearchDocuments = _client.SearchAsync<CodeSearchDocument>(searchRequestDescriptor => searchRequestDescriptor
                 // Query this Index:
                 .Index(_indexName)
                 // Setup Pagination:
@@ -425,6 +382,8 @@ namespace ElasticsearchCodeSearch.Shared.Elasticsearch
                 )
                 // Setup the Search Order:
                 .Sort(sortOptionsArray), cancellationToken);
+
+            return codeSearchDocuments;
         }
 
         private static SortOptions ConvertToSortOptions(SortField sortField)
