@@ -7,6 +7,7 @@ using ElasticsearchCodeSearch.Shared.Dto;
 using ElasticsearchCodeSearch.Shared.Elasticsearch;
 using ElasticsearchCodeSearch.Shared.Logging;
 using Microsoft.Extensions.Options;
+using System.Diagnostics;
 
 namespace ElasticsearchCodeSearch.Services
 {
@@ -41,7 +42,9 @@ namespace ElasticsearchCodeSearch.Services
         {
             _logger.TraceMethodEntry();
 
-            await _elasticCodeSearchClient.CreateIndexAsync(cancellationToken);
+            await _elasticCodeSearchClient
+                .CreateIndexAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -83,10 +86,9 @@ namespace ElasticsearchCodeSearch.Services
                     }
                 }
 
-                await _elasticCodeSearchClient.DeleteByOwnerRepositoryAndBranchAsync(
-                    owner: repositoryMetadata.Owner,
-                    repository: repositoryMetadata.Name,
-                    branch: repositoryMetadata.Branch, cancellationToken);
+                await _elasticCodeSearchClient
+                    .DeleteByOwnerRepositoryAndBranchAsync(owner: repositoryMetadata.Owner, repository: repositoryMetadata.Name,branch: repositoryMetadata.Branch, cancellationToken)
+                    .ConfigureAwait(false);
 
                 // Clone into the given Directory
                 await _gitExecutor
@@ -189,15 +191,25 @@ namespace ElasticsearchCodeSearch.Services
             {
                 if (_logger.IsDebugEnabled()) 
                 {
-                    _logger.LogDebug("Processing File (Repository = '{RepositoryFullName}', Branch = '{Branch}', File = '{Filename}')",
+                    _logger.LogDebug("Start Processing File (Repository = '{RepositoryFullName}', Branch = '{Branch}', File = '{Filename}')",
                         repositoryMetadata.FullName, repositoryMetadata.Branch, file);
                 }
 
+                Stopwatch codeSearchDocumentStopwatch = Stopwatch.StartNew();
+
                 var codeSearchDocument = await BuildCodeSearchDocumentAsync(repositoryMetadata, file, cancellationToken).ConfigureAwait(false);
+
+                codeSearchDocumentStopwatch.Stop();
 
                 if (codeSearchDocument != null)
                 {
                     documents.Add(codeSearchDocument);
+                }
+
+                if (_logger.IsDebugEnabled())
+                {
+                    _logger.LogDebug("Finished Processing File (Repository = '{RepositoryFullName}', Branch = '{Branch}', File = '{Filename}', ElapsedTimeInMilliseconds = '{ElapsedTimeInMilliseconds}')",
+                        repositoryMetadata.FullName, repositoryMetadata.Branch, file, codeSearchDocumentStopwatch.ElapsedMilliseconds);
                 }
             }
 
@@ -240,6 +252,7 @@ namespace ElasticsearchCodeSearch.Services
             // Get the absolute Filename, so we can read it
             var absoluteFilename = Path.Combine(repositoryDirectory, relativeFilename);
 
+            // Read all Content off the File
             var content = File.ReadAllText(absoluteFilename);
 
             // Build the final CodeSearchDocument with all relevant information for indexing.

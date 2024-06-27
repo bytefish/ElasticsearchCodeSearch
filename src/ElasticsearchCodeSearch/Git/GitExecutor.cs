@@ -4,6 +4,7 @@ using ElasticsearchCodeSearch.Git.Exceptions;
 using ElasticsearchCodeSearch.Shared.Logging;
 using System.Diagnostics;
 using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ElasticsearchCodeSearch.Git
 {
@@ -39,9 +40,14 @@ namespace ElasticsearchCodeSearch.Git
 
             try
             {
-                await RunAsync($"clone {repositoryUrl} {repositoryDirectory}", string.Empty, cancellationToken);
-            } 
-            catch(GitException e)
+                _logger.LogDebug("Start Cloning Git Url '{CloneUrl}' to Directory '{RepositoryDirectory}'", repositoryUrl, repositoryDirectory);
+
+                await RunGitAsync($"clone {repositoryUrl} {repositoryDirectory}", string.Empty, cancellationToken).ConfigureAwait(false);
+
+                _logger.LogDebug("Finished Cloning Git Url '{CloneUrl}' to Directory '{RepositoryDirectory}'", repositoryUrl, repositoryDirectory);
+
+            }
+            catch (GitException e)
             {
                 _logger.LogError("The Git CLI failed (ExitCode = {GitErrorCode}, Errors = {ErrorMessage})", e.ExitCode, e.Errors);
 
@@ -60,7 +66,7 @@ namespace ElasticsearchCodeSearch.Git
         {
             _logger.TraceMethodEntry();
 
-            var result = await RunAsync($"ls-files -s \"{path}\"", repositoryDirectory, cancellationToken);
+            var result = await RunGitAsync($"ls-files -s \"{path}\"", repositoryDirectory, cancellationToken).ConfigureAwait(false);
 
             // The Output looks like this <Irrelevant> <SHA1 Hash> <Irrelevant> <Irrelevant>
             var components = result.Split(" ");
@@ -77,7 +83,15 @@ namespace ElasticsearchCodeSearch.Git
                 return string.Empty;
             }
 
-            return components.Skip(1).First();
+            var hashValue = components.Skip(1).First();
+
+            if (_logger.IsTraceEnabled())
+            {
+                _logger.LogTrace("Determined Blob / File Hash (Repository = '{RepositoryDirectory}', Path '{RelativeFilename}', Sha1 = '{FileHash}')",
+                    repositoryDirectory, path, hashValue);
+            }
+
+            return hashValue;
         }
 
         /// <summary>
@@ -94,7 +108,7 @@ namespace ElasticsearchCodeSearch.Git
         {
             _logger.TraceMethodEntry();
 
-            var result = await RunAsync($"log --pretty=format:\"%H\" -n 1 -- \"{path}\"", repositoryDirectory, cancellationToken);
+            var result = await RunGitAsync($"log --pretty=format:\"%H\" -n 1 -- \"{path}\"", repositoryDirectory, cancellationToken).ConfigureAwait(false);
 
             if (string.IsNullOrWhiteSpace(result))
             {
@@ -106,6 +120,12 @@ namespace ElasticsearchCodeSearch.Git
                 }
 
                 return string.Empty;
+            }
+
+            if (_logger.IsTraceEnabled())
+            {
+                _logger.LogTrace("Determined Commit Hash (Repository = '{RepositoryDirectory}', Path '{RelativeFilename}', Sha1 = '{CommitHash}')",
+                    repositoryDirectory, path, result);
             }
 
             return result;
@@ -125,7 +145,7 @@ namespace ElasticsearchCodeSearch.Git
         {
             _logger.TraceMethodEntry();
 
-            var result = await RunAsync($"log -1  --date=iso-strict --format=\"%ad\" -- \"{path}\"", repositoryDirectory, cancellationToken);
+            var result = await RunGitAsync($"log -1  --date=iso-strict --format=\"%ad\" -- \"{path}\"", repositoryDirectory, cancellationToken).ConfigureAwait(false);
 
             if (!DateTime.TryParse(result, out var date))
             {
@@ -137,6 +157,12 @@ namespace ElasticsearchCodeSearch.Git
                 }
 
                 return default;
+            }
+
+            if(_logger.IsTraceEnabled())
+            {
+                _logger.LogTrace("Determined Commit Date (Repository = '{RepositoryDirectory}', Path '{RelativeFilename}', Date = '{LatestCommitDate}')",
+                    repositoryDirectory, path, date);
             }
 
             return date;
@@ -155,11 +181,21 @@ namespace ElasticsearchCodeSearch.Git
         {
             _logger.TraceMethodEntry();
 
-            var result = await RunAsync($"ls-files", repositoryDirectory, cancellationToken);
+            if(_logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("Listing Files in Directory '{RepositoryDirectory}'", repositoryDirectory);
+            }
+
+            var result = await RunGitAsync($"ls-files", repositoryDirectory, cancellationToken).ConfigureAwait(false);
 
             var files = result
                 .Split(Environment.NewLine)
                 .ToArray();
+
+            if(_logger.IsTraceEnabled())
+            {
+                _logger.LogTrace("Git listed the following files in directory '{RepositoryDirectory}': {FilesInGitRepository}", repositoryDirectory, files);
+            }
 
             return files;
         }
@@ -172,15 +208,34 @@ namespace ElasticsearchCodeSearch.Git
         /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>Output of the git command</returns>
         /// <exception cref="GitException">Thrown, if the git process has an exit code other that 0</exception>
-        public async Task<string> RunAsync(string arguments, string workingDirectory, CancellationToken cancellationToken)
+        public async Task<string> RunGitAsync(string arguments, string workingDirectory, CancellationToken cancellationToken)
         {
             _logger.TraceMethodEntry();
 
-            var result = await RunProcessAsync("git", arguments, workingDirectory, cancellationToken);
+            if (_logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("Executing Git (Arguments = '{GitCliArguments}', WorkingDirectory = '{GitCliWorkingDirectory}')", arguments, workingDirectory);
+            }
+
+            var result = await RunProcessAsync("git", arguments, workingDirectory, cancellationToken).ConfigureAwait(false);
 
             if (result.ExitCode != 0)
             {
                 throw new GitException(result.ExitCode, result.Errors);
+            }
+
+            // In Trace we want to also print the output. Not sure, if this isn't too large. It's the file content
+            // after all. It's commented out for now, because I can probably make sense of it manually.
+            if (_logger.IsTraceEnabled())
+            {
+                _logger.LogTrace("Git Executable finished (Arguments = {GitCliArguments}, WorkingDirectory = {GitCliWorkingDirectory}, ExitCode = {GitCliExitCode}, Errors = {GitCliErrors}, Output = {GitCliOutput})",
+                    arguments, workingDirectory, result.ExitCode, result.Errors, result.Output);
+            }
+
+            // In Debug, we omit the output. There might be a better way to enrich the logs depending on level.
+            if (!_logger.IsTraceEnabled() && _logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("Git Executable finished (Arguments = {GitCliArguments}, WorkingDirectory = {GitCliWorkingDirectory}, ExitCode = {GitCliExitCode}, Errors = {GitCliErrors})", arguments, workingDirectory, result.ExitCode, result.Errors);
             }
 
             return result.Output;
@@ -222,7 +277,9 @@ namespace ElasticsearchCodeSearch.Git
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
 
-                await process.WaitForExitAsync(cancellationToken);
+                await process
+                    .WaitForExitAsync(cancellationToken)
+                    .ConfigureAwait(false);
 
                 var exitCode = process.ExitCode;
                 var output = outputBuilder.ToString().Trim();

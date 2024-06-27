@@ -6,6 +6,7 @@ using ElasticsearchCodeSearch.Shared.Exceptions;
 using ElasticsearchCodeSearch.Shared.Logging;
 using Microsoft.Extensions.Options;
 using System.Globalization;
+using System.Threading;
 
 namespace ElasticsearchCodeSearch.Indexer.GitHub
 {
@@ -42,22 +43,38 @@ namespace ElasticsearchCodeSearch.Indexer.GitHub
                 repositories.AddRange(page.Values);
             }
 
-            await Task.Delay(_options.RequestDelayInMilliseconds, cancellationToken).ConfigureAwait(false);
+            await WaitForNextRequest(cancellationToken).ConfigureAwait(false);
 
             // If there is a next page, we iterate to it:
             while (page.NextPage != null)
             {
+                if (_logger.IsDebugEnabled())
+                {
+                    _logger.LogDebug("Gettings Repositories of Organization '{Organization}', Page '{PageNumber}' and Page Size = '{PageSize}'",
+                         organization, page.PageNumber + 1, page.PageSize);
+                }
+
                 page = await GetRepositoriesByOrganizationAsync(organization, page.PageNumber + 1, pageSize, cancellationToken).ConfigureAwait(false);
 
                 if (page.Values != null)
                 {
                     repositories.AddRange(page.Values);
                 }
-
-                await Task.Delay(_options.RequestDelayInMilliseconds, cancellationToken).ConfigureAwait(false);
             }
 
             return repositories;
+        }
+
+        public async Task WaitForNextRequest(CancellationToken cancellationToken)
+        {
+            if (_logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("Waiting '{RequestDelayInMilliseconds}' milliseconds to query for next Request",
+                    _options.RequestDelayInMilliseconds);
+            }
+
+            await Task.Delay(_options.RequestDelayInMilliseconds, cancellationToken).ConfigureAwait(false);
+
         }
 
         public async Task<RepositoryMetadataDto?> GetRepositoryByOwnerAndRepositoryAsync(string owner, string repository, CancellationToken cancellationToken)
@@ -83,10 +100,8 @@ namespace ElasticsearchCodeSearch.Indexer.GitHub
 
             if (!response.IsSuccessStatusCode)
             {
-                throw new ApiException(string.Format(CultureInfo.InvariantCulture,
-                    "HTTP Request failed with Status: '{0}' ({1})",
-                    (int)response.StatusCode,
-                    response.StatusCode))
+                throw new ApiException(string.Format(CultureInfo.InvariantCulture, 
+                    "HTTP Request failed with Status: '{0}' ({1})", (int)response.StatusCode, response.StatusCode))
                 {
                     StatusCode = response.StatusCode
                 };
@@ -138,7 +153,7 @@ namespace ElasticsearchCodeSearch.Indexer.GitHub
                 .ReadFromJsonAsync<List<RepositoryMetadataDto>>(cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
 
-            return new PaginatedResultsDto<RepositoryMetadataDto>
+            var result = new PaginatedResultsDto<RepositoryMetadataDto>
             {
                 PageNumber = pageNum,
                 PageSize = pageSize,
@@ -148,6 +163,14 @@ namespace ElasticsearchCodeSearch.Indexer.GitHub
                 LastPage = links.LastUrl,
                 Values = repositories
             };
+
+            if(_logger.IsDebugEnabled())
+            {
+                _logger.LogDebug("Paginated Repositories Response (PageNumber = '{PageNumber}', PageSize = '{PageSize}', FirstPage = '{FirstPage}', PreviousPage = '{PrevPage}', NextPage = '{NextPage}', LastPage = '{LastPage}')",
+                    result.PageNumber, result.PageSize, result.FirstPage, result.PreviousPage, result.NextPage, result.LastPage);
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -197,25 +220,47 @@ namespace ElasticsearchCodeSearch.Indexer.GitHub
                 .ToDictionary(x => GetLinkType(x[1]).Trim(), x => GetLinkValue(x[0]).Trim());
 
 
-            return (links.GetValueOrDefault("first"), links.GetValueOrDefault("prev"), links.GetValueOrDefault("next"), links.GetValueOrDefault("last"));
+            (string? FirstUrl, string? PrevUrl, string? NextUrl, string? LastUrl)  result = (links.GetValueOrDefault("first"), links.GetValueOrDefault("prev"), links.GetValueOrDefault("next"), links.GetValueOrDefault("last"));
+
+            if(_logger.IsTraceEnabled())
+            {
+                _logger.LogTrace("Parsed Pagination from LinkValue (LinkValue = '{LinkValue}', FirstUrl = '{FirstUrl}', PrevUrl = '{PrevUrl}', NextUrl = '{NextUrl}', LastUrl = '{LastUrl}')",
+                    linkValue, result.FirstUrl, result.PrevUrl, result.NextUrl, result.LastUrl);
+            }
+
+            return result;
         }
 
         private string GetLinkType(string source)
         {
             _logger.TraceMethodEntry();
 
-            return source
+            var linkType = source
                 .Replace("rel=\"", string.Empty)
                 .Replace("\"", string.Empty);
+
+            if (_logger.IsTraceEnabled())
+            {
+                _logger.LogTrace("LinkType '{LinkType}' extracted from Source '{SourceLinkType}'", linkType, source);
+            }
+
+            return linkType;
         }
 
         private string GetLinkValue(string source)
         {
             _logger.TraceMethodEntry();
 
-            return source
+            var linkValue = source
                 .Replace("<", string.Empty)
                 .Replace(">", string.Empty);
+
+            if (_logger.IsTraceEnabled())
+            {
+                _logger.LogTrace("Extracted LinkValue '{LinkValue}' from Source '{SourceLinkValue}'", linkValue, source);
+            }
+
+            return linkValue;
         }
 
         protected virtual void Dispose(bool disposing)
