@@ -4,9 +4,7 @@ This repository implements a Code Search Engine using ASP.NET Core and Elasticse
 to index repositories from GitHub, Codeberg, GitLab and other sources. It comes with a Blazor 
 Frontend built upon FluentUI Components.
 
-## What's in this repository? ##
-
-There is a Page to get an overview for your Elasticsearch index:
+There is a Page to get an overview pfor your Elasticsearch index:
 
 <a href="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_SearchClusterOverview.jpg">
     <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_SearchClusterOverview.jpg" alt="The final Code Search with the Blazor Frontend" width="100%" />
