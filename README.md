@@ -1,7 +1,7 @@
-# Elasticsearch Code Search Experiments #
+# Elasticsearch Code Search #
 
 This repository implements a Code Search Engine using ASP.NET Core and Elasticsearch. You can use it 
-to index GitHub, Codeberg, GitLab Repositories and from other Git services. It comes with a Blazor 
+to index repositories from GitHub, Codeberg, GitLab and other sources. It comes with a Blazor 
 Frontend built upon FluentUI Components.
 
 ## What's in this repository? ##
