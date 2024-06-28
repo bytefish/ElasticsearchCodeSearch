@@ -1,9 +1,8 @@
 # Elasticsearch Code Search Experiments #
 
-This repository is an Elasticsearch experiment to see how to build a code search engine. I wanted to learn about Powershell and the recent updates to the 
-Elasticsearch .NET client.
+This repository implements a Code Search Engine using Elasticsearch and ASP.NET Core.
 
-## What's in this Repository ##
+## What's in this repository? ##
 
 There is a Page to get an overview for your Elasticsearch index:
 
@@ -19,12 +18,13 @@ And there's a page to query the Elasticsearch index:
 
 ## Getting Started ##
 
-Getting started is as simple as cloning this repository and running:
+Getting started is as simple as cloning this repository and running the following command:
 
 ```
 docker compose --profile dev up
 ```
- 
+
+
 
 ## How it's done ##
 

@@ -15,7 +15,7 @@ services:
       start_period: 30s
     profiles:  ["elastic", "dev"]
     env_file:
-      - ./.env
+      - ./docker/.env
     environment:
       - node.name=es01
       - discovery.type=single-node
@@ -36,46 +36,46 @@ services:
         soft: -1
         hard: -1
     volumes:
-      - ./elasticsearch/elastic-data:/usr/share/elasticsearch/data
-      - ./elasticsearch/elastic-cert:/usr/share/elasticsearch/config/cert
+      - ./docker/elasticsearch/elastic-data:/usr/share/elasticsearch/data
+      - ./docker/elasticsearch/elastic-cert:/usr/share/elasticsearch/config/cert
     ports:
       - "9200:9200"
       - "9300:9300"
   codesearch-api:
     container_name: codesearch-api
     build:
-      context: ..
+      context: .
       dockerfile: ./docker/codesearch-api/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_HTTPS_PORTS=5000
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
       - ASPNETCORE_Kestrel__Certificates__Default__Password=SuperStrongPassword
-    profiles:  ["dev"]
+    profiles:  ["api", "dev"]
     env_file:
-      - ./.env
+      - ./docker/.env
     depends_on:
       elasticsearch:
         condition: service_healthy
     ports:
       - "5000:5000"
     volumes:
-      - ./codesearch/codesearch-data:/codesearch-data
+      - ./docker/codesearch/codesearch-data:/codesearch-data
       - ~/.aspnet/https:/https:ro      
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
   codesearch-web:
     container_name: codesearch-web
     build:
-      context: ..
+      context: .
       dockerfile: ./docker/codesearch-web/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_HTTPS_PORTS=5001
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
       - ASPNETCORE_Kestrel__Certificates__Default__Password=SuperStrongPassword
-    profiles:  ["dev"]
+    profiles:  ["web", "dev"]
     env_file:
-      - ./.env
+      - ./docker/.env
     depends_on:
       elasticsearch:
         condition: service_healthy
