@@ -1,0 +1,32 @@
+﻿@page "/CodeSearch"
+
+@using ElasticsearchCodeSearch.Web.Client.Components
+@using ElasticsearchCodeSearch.Web.Client.Extensions;
+@using ElasticsearchCodeSearch.Web.Client.Infrastructure;
+@using ElasticsearchCodeSearch.Shared.Dto;
+
+<PageTitle>Elasticsearch Code Search Experiments</PageTitle>
+
+<div class="search-container">
+    <div class="search-header">
+
+        <div class="search-box">
+            <FluentSearch @bind-Value="_queryString" @onkeyup="@EnterSubmit" Class="w-100" />
+            <FluentButton @onclick=@QueryAsync>Search</FluentButton>
+            <SortOptionSelector SortOptions="_sortOptions" @bind-SortOption="_selectedSortOption">
+            </SortOptionSelector>
+        </div>
+    </div>
+    <div class="search-results-total">
+        <span>@_totalItemCount Results (@_tookInSeconds seconds)</span>
+    </div>
+    <div class="search-results">
+        @foreach (var searchResult in _codeSearchResults)
+        {
+            <SearchResult Item="@searchResult"></SearchResult>
+        }
+    </div>
+    <div class="search-paginator">
+        <Paginator State="@_pagination"></Paginator>
+    </div>
+</div>

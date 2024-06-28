@@ -1,0 +1,37 @@
+﻿@namespace ElasticsearchCodeSearch.Web.Client.Components
+
+@using ElasticsearchCodeSearch.Shared.Dto;
+
+<div class="code-box">
+    <div class="code-box-title">
+        <strong>@Item.Owner/@Item.Repository</strong> - <a href="@Item.Permalink">@Item.Path</a> - (Updated at @Item.LatestCommitDate.ToString("g"))
+    </div>
+    <div class="code-box-content">
+        @foreach (var line in @Item.Content)
+        {
+            <div class="code-line @codeLineClass(line)">
+                <div class="code-line-number">
+                    <div>
+                        <span class="noselect">@line.LineNo</span>
+                    </div>
+                </div>
+                <div class="code-line-content">@line.Content</div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Determines the classes to add for the Line.
+    /// </summary>
+    /// <param name="highlightedContent">Highlighted Content</param>
+    /// <returns></returns>
+    string codeLineClass(HighlightedContentDto highlightedContent) => highlightedContent.IsHighlight ? "highlighted-line" : string.Empty;
+
+    /// <summary>
+    /// Filename.
+    /// </summary>
+    [Parameter]
+    public required CodeSearchResultDto Item { get; set; }
+}

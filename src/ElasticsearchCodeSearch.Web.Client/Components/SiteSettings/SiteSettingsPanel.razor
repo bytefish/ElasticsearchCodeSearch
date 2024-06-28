@@ -1,0 +1,42 @@
+﻿@namespace ElasticsearchCodeSearch.Web.Client.Components
+@using Microsoft.FluentUI.AspNetCore.Components.Extensions
+@implements IDialogContentComponent
+
+<div>
+    <FluentDesignTheme @bind-Mode="@Mode"
+                       @bind-OfficeColor="@OfficeColor"
+                       Direction="@(Direction ? LocalizationDirection.LeftToRight : LocalizationDirection.RightToLeft)"
+                       StorageName="theme" />
+
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="0">
+        <FluentSelect Label="Theme"
+                      Style="margin-bottom: 30px;"
+                      Items="@AllModes"
+                      @bind-SelectedOption="@Mode" />
+
+        <FluentSelect Label="Color"
+                      Style="margin-bottom: 30px;"
+                      Items="@AllOfficeColors"
+                      Height="200px"
+                      @bind-SelectedOption="@OfficeColor">
+            <OptionTemplate>
+                <FluentStack>
+                    <FluentIcon Value="@(new Icons.Filled.Size20.RectangleLandscape())"
+                                Color="Color.Custom"
+                                CustomColor="@context.ToAttributeValue()" />
+                    <FluentLabel>@context</FluentLabel>
+                </FluentStack>
+            </OptionTemplate>
+        </FluentSelect>
+
+        <FluentSwitch Label="Direction"
+                      Style="margin-bottom: 30px;"
+                      CheckedMessage="Left to Right"
+                      UncheckedMessage="Right to Left"
+                      @bind-Value="@Direction" />
+        <FluentLabel>
+            These values (except for Direction) are persisted in the LocalStorage.
+            You can recover this style during your next visits.
+        </FluentLabel>
+    </FluentStack>
+</div>

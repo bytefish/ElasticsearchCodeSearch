@@ -63,3 +63,24 @@ services:
       - ./codesearch/codesearch-data:/codesearch-data
       - ~/.aspnet/https:/https:ro      
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+  frontend:
+    container_name: codesearch_frontend
+    build:
+      context: ..
+      dockerfile: ./docker/codesearch-frontend/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_HTTPS_PORTS=5001
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=SuperStrongPassword
+    profiles:  ["dev"]
+    env_file:
+      - ./.env
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    ports:
+      - "5001:5001"
+    volumes:
+      - ~/.aspnet/https:/https:ro      
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro

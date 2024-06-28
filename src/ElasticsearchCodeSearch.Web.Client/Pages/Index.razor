@@ -1,0 +1,20 @@
+﻿@using ElasticsearchCodeSearch.Web.Client.Infrastructure;
+@page "/"
+
+<PageTitle>Search Cluster Overview</PageTitle>
+
+<h1>Search Cluster Overview</h1>
+
+<p>
+    This page gives you an overview for all indices in your Elasticsearch cluster.
+</p>
+
+@foreach (var indexMetric in _elasticsearchIndexMetrics)
+{
+    <h2>Index "@indexMetric.Index"</h2>
+
+    <FluentDataGrid Items="@indexMetric?.Metrics.AsQueryable()" ResizableColumns=true style="height: 500px; overflow:auto;">
+        <PropertyColumn Title="Metric" Property="@(c => c.Name)" Sortable="true" Align="Align.Start" />
+        <PropertyColumn Title="Value" Property="@(c => c.Value)" Sortable="true" Align="Align.Start" />
+    </FluentDataGrid>
+}

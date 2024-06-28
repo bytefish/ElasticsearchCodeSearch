@@ -1,0 +1,44 @@
+﻿@page "/IndexGitHubRepository"
+
+@using ElasticsearchCodeSearch.Web.Client.Components
+@using ElasticsearchCodeSearch.Web.Client.Extensions;
+@using ElasticsearchCodeSearch.Web.Client.Infrastructure;
+@using ElasticsearchCodeSearch.Models
+@using ElasticsearchCodeSearch.Shared.Dto;
+@using ElasticsearchCodeSearch.Shared.Services
+
+@inject ElasticsearchCodeSearchService ElasticsearchCodeSearchService
+@inject IStringLocalizer<SharedResource> Loc
+
+<PageTitle>Index GitHub Repository</PageTitle>
+
+<EditForm Model="@CurrentGitRepository" OnValidSubmit="@(async () => await HandleValidSubmitAsync())" FormName="git_repository_index" novalidate>
+    <SimpleValidator TModel=IndexGitHubRepositoryRequestDto ValidationFunc="ValidateGitRepository" />
+    <FluentStack Orientation="Orientation.Vertical">
+        <div>
+            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                <div>
+                    <FluentTextField Style="@("width: 300px;")" Name="owner" @bind-Value="CurrentGitRepository.Owner" Label=@Loc["GitRepository_Owner"] Required />
+                </div>
+                <FluentValidationMessage For="@(() => CurrentGitRepository.Owner)" />
+            </FluentStack>
+         </div>
+        <div>
+            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                <div>
+                    <FluentTextField Style="@("width: 300px;")" Name="name" @bind-Value="CurrentGitRepository.Repository" Label=@Loc["GitRepository_Repository"] Required />
+                </div>
+                <FluentValidationMessage For="@(() => CurrentGitRepository.Repository)" />
+            </FluentStack>
+         </div>
+        <div>
+            <FluentStack Orientation="Orientation.Horizontal">
+                <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">Submit Repository to Index</FluentButton>
+                <FluentButton Appearance="Appearance.Accent" OnClick="@(async () => await HandleDiscardAsync())">Discard Changes</FluentButton>
+            </FluentStack>
+        </div>
+        <div>
+            <FluentValidationSummary />
+        </div>        
+    </FluentStack>
+</EditForm>

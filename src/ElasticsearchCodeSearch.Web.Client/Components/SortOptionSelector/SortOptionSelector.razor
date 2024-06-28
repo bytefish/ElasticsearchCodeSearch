@@ -1,0 +1,18 @@
+﻿@namespace ElasticsearchCodeSearch.Web.Client.Components
+
+@using ElasticsearchCodeSearch.Web.Client.Infrastructure;
+@using ElasticsearchCodeSearch.Web.Client.Models;
+
+@inherits FluentComponentBase
+<FluentSelect @attributes="AdditionalAttributes" class="@Class" style="@Style"
+              Id="@Id"
+              Title="@Title"
+              Disabled="@Disabled"
+              Items="@SortOptions"
+              OptionText="@(i => Loc.TranslateEnum(i))"
+              OptionValue="@(i => i.ToString())"
+              TOption=SortOptionEnum
+              Value=@_value
+              SelectedOption=@_sortOption
+              SelectedOptionChanged="OnSelectedValueChanged">
+</FluentSelect>

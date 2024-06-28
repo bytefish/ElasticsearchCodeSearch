@@ -1,0 +1,82 @@
+﻿@page "/IndexGitRepository"
+
+@using ElasticsearchCodeSearch.Web.Client.Components
+@using ElasticsearchCodeSearch.Web.Client.Extensions;
+@using ElasticsearchCodeSearch.Web.Client.Infrastructure;
+@using ElasticsearchCodeSearch.Models
+@using ElasticsearchCodeSearch.Shared.Constants
+@using ElasticsearchCodeSearch.Shared.Dto;
+@using ElasticsearchCodeSearch.Shared.Services
+
+@inject ElasticsearchCodeSearchService ElasticsearchCodeSearchService
+@inject IStringLocalizer<SharedResource> Loc
+
+<PageTitle>Index Git Repository</PageTitle>
+
+<EditForm Model="@CurrentGitRepository" OnValidSubmit="@(async () => await HandleValidSubmitAsync())" FormName="git_repository_index" novalidate>
+    <SimpleValidator TModel=GitRepositoryMetadataDto ValidationFunc="ValidateGitRepository" />
+    <FluentStack Orientation="Orientation.Vertical">
+        <div>
+            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                <div>
+                    <FluentTextField Style="@("width: 300px;")" Name="owner" @bind-Value="CurrentGitRepository.Owner" Label=@Loc["GitRepository_Owner"] Required />
+                </div>
+                <FluentValidationMessage For="@(() => CurrentGitRepository.Owner)" />
+            </FluentStack> 
+        </div>
+        <div>
+            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                <div>
+                    <FluentTextField Style="@("width: 300px;")" Name="name" @bind-Value="CurrentGitRepository.Name" Label=@Loc["GitRepository_Name"] Required />
+                </div>
+                <FluentValidationMessage For="@(() => CurrentGitRepository.Name)" />
+            </FluentStack>
+        </div>
+        <div>
+            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                <div>
+                    <FluentTextField Style="@("width: 300px;")" Name="branch" @bind-Value="CurrentGitRepository.Branch" Label=@Loc["GitRepository_Branch"] Required />
+                </div>
+                <FluentValidationMessage For="@(() => CurrentGitRepository.Branch)" />
+            </FluentStack>
+        </div>
+        <div>
+            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                <div>
+                    <FluentTextField Style="@("width: 300px;")" Name="cloneUrl" @bind-Value="CurrentGitRepository.CloneUrl" Label=@Loc["GitRepository_CloneUrl"] Required />
+                </div>
+                <FluentValidationMessage For="@(() => CurrentGitRepository.CloneUrl)" />
+            </FluentStack>
+         </div>
+        <div>
+            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                <div>
+                    <FluentTextField Style="@("width: 300px;")" Name="language" @bind-Value="CurrentGitRepository.Language" Label=@Loc["GitRepository_Language"] />
+                </div>
+                <FluentValidationMessage For="@(() => CurrentGitRepository.Language)" />
+            </FluentStack>
+        </div>
+        <div>
+            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                <div>
+                    <FluentSelect Style="@("width: 300px;")" @bind-Value="CurrentGitRepository.Source" TOption="string" Label="@Loc["GitRepository_Source"]" Required>
+                        <FluentOption Value="@SourceSystems.GitHub" Selected="true">@Loc["SourceSystems_GitHub"]</FluentOption>
+                        <FluentOption Value="@SourceSystems.GitLab">@Loc["SourceSystems_GitLab"]</FluentOption>
+                        <FluentOption Value="@SourceSystems.Codeberg">@Loc["SourceSystems_Codeberg"]</FluentOption>
+                        <FluentOption Value="@SourceSystems.Unknown">@Loc["SourceSystems_Custom"]</FluentOption>
+                    </FluentSelect>
+                </div>
+                <FluentValidationMessage For="@(() => CurrentGitRepository.Source)" />
+            </FluentStack>
+        </div>
+        <div>
+            <FluentStack Orientation="Orientation.Horizontal">
+                <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">Submit Repository to Index</FluentButton>
+                <FluentButton Appearance="Appearance.Accent" OnClick="@(async () => await HandleDiscardAsync())">Discard Changes</FluentButton>
+            </FluentStack>
+        </div>
+        <div>
+            <FluentValidationSummary />
+        </div>
+    </FluentStack>
+</EditForm>

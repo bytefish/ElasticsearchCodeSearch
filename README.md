@@ -3,6 +3,8 @@
 This repository is an Elasticsearch experiment to see how to build a code search engine. I wanted to learn about Powershell and the recent updates to the 
 Elasticsearch .NET client.
 
+## What's in this Repository ##
+
 There is a Page to get an overview for your Elasticsearch index:
 
 <a href="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_Home_Light.jpg">
@@ -15,37 +17,14 @@ And there's a page to query the Elasticsearch index:
     <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_Search_Light.jpg" alt="The final Code Search with the Blazor Frontend" width="100%" />
 </a>
 
-The Git Repositories are read by a Powershell script in `ElasticsearchCodeSearch\ElasticsearchCodeSearch.Indexer\git_indexer.ps1`, 
-which sends the data to an ASP.NET Core Backend. The ASP.NET Core Backend then sends a Bulk Indexing Request to the Elasticsearch 
-server.
+## Getting Started ##
 
-You'll need to adjust the `Username`, `Password` and `CertificateFingerprint` for your Elasticsearch 
-instance. See the Elasticsearch "Getting Started" guide on Elasticsearch.NET to learn how to obtain 
-these values:
+Getting started is as simple as cloning this repository and running:
 
-* [https://www.elastic.co/guide/en/elasticsearch/client/net-api/current/introduction.html](https://www.elastic.co/guide/en/elasticsearch/client/net-api/current/introduction.html)
-
-You configure the Credentials in the `ElasticsearchCodeSearch\ElasticsearchCodeSearch\appsettings.json`:
-
-```json
-{
-  "Elasticsearch": {
-    "Uri": "https://localhost:9200",
-    "IndexName": "documents",
-    "Username": "elastic",
-    "Password": "Sya9P0cOKK9yknjhHJKW",
-    "CertificateFingerprint": "a6390608f670486f1bc31fe6e8d78fdb93f6026bd9ce58f0732961d362fd9f82"
-  },
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft": "Warning",
-      "Microsoft.Hosting.Lifetime": "Information"
-    }
-  },
-  "AllowedHosts": "*"
-}
 ```
+docker compose --profile dev up
+```
+ 
 
 ## How it's done ##
 
