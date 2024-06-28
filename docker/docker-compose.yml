@@ -41,11 +41,11 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
-  codesearch:
-    container_name: codesearch
+  codesearch-api:
+    container_name: codesearch-api
     build:
       context: ..
-      dockerfile: ./docker/codesearch/Dockerfile
+      dockerfile: ./docker/codesearch-api/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_HTTPS_PORTS=5000
@@ -63,11 +63,11 @@ services:
       - ./codesearch/codesearch-data:/codesearch-data
       - ~/.aspnet/https:/https:ro      
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
-  frontend:
-    container_name: codesearch_frontend
+  codesearch-web:
+    container_name: codesearch-web
     build:
       context: ..
-      dockerfile: ./docker/codesearch-frontend/Dockerfile
+      dockerfile: ./docker/codesearch-web/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_HTTPS_PORTS=5001
