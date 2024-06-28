@@ -2,7 +2,6 @@
 
 using ElasticsearchCodeSearch.Web.Client.Localization;
 using Microsoft.Extensions.Localization;
-using RebacExperiments.Blazor.Localization;
 
 namespace ElasticsearchCodeSearch.Web.Client.Infrastructure
 {

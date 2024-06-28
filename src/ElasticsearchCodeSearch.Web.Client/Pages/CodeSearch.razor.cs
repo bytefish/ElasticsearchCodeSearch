@@ -7,7 +7,6 @@ using ElasticsearchCodeSearch.Shared.Services;
 using ElasticsearchCodeSearch.Web.Client.Components;
 using ElasticsearchCodeSearch.Web.Client.Models;
 using ElasticsearchCodeSearch.Shared.Dto;
-using Microsoft.FluentUI.AspNetCore.Components;
 
 namespace ElasticsearchCodeSearch.Web.Client.Pages
 {
