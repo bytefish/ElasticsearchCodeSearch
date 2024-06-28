@@ -10,7 +10,7 @@ There is a Page to get an overview for your Elasticsearch index:
     <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_SearchClusterOverview.jpg" alt="The final Code Search with the Blazor Frontend" width="100%" />
 </a>
 
-And there's a page to query the Elasticsearch index:
+And there's a page to search for code using the Elasticsearch index:
 
 <a href="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_SearchCode.jpg">
     <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_SearchCode.jpg" alt="The final Code Search with the Blazor Frontend" width="100%" />
