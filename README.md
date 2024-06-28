@@ -232,9 +232,7 @@ Next is setting the GH Token for the Client:
 dotnet user-secrets set "GitHubClient:AccessToken" "<Your GH Token Here>"
 ```
 
-Why is it a User Secret? Because I want to be 100% sure I am not accidentally leak my 
-GitHub Token. If you want to do something similar in Production, you might want to 
-consider using Azure KeyVault, Consul, ... or any safe secret store.
+If you need to manage secrets in Production, you should consider using Docker Secrets, Azure KeyVault, Consul, ... or any other safe secret store.
 
 ## Contributions ##
 
