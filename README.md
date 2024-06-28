@@ -40,9 +40,9 @@ There are 4 Docker Profiles:
     * Starts all 3 services.
 * `elastic`
     * Starts the Elasticsearch Server.
-* api
+* `api`
     * Starts the ElasticsearchCodeSearch API
-* web
+* `web`
     * Starts the ElasticsearchCodeSearch Blazor App
 
 To only run the Elasticsearch Server you would pass the `elastic` profile:
