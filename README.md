@@ -1,20 +1,28 @@
 # Elasticsearch Code Search Experiments #
 
-This repository implements a Code Search Engine using Elasticsearch and ASP.NET Core.
+This repository implements a Code Search Engine using ASP.NET Core and Elasticsearch. You can use it 
+to index GitHub, Codeberg, GitLab Repositories and from other Git services. It comes with a Blazor 
+Frontend built upon FluentUI Components.
 
 ## What's in this repository? ##
 
 There is a Page to get an overview for your Elasticsearch index:
 
-<a href="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_Home_Light.jpg">
-    <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_Home_Light.jpg" alt="The final Code Search with the Blazor Frontend" width="100%" />
+<a href="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_SearchClusterOverview.jpg">
+    <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_SearchClusterOverview.jpg" alt="The final Code Search with the Blazor Frontend" width="100%" />
 </a>
 
 And there's a page to query the Elasticsearch index:
 
-<a href="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_Search_Light.jpg">
-    <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_Search_Light.jpg" alt="The final Code Search with the Blazor Frontend" width="100%" />
+<a href="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_SearchCode.jpg">
+    <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_SearchCode.jpg" alt="The final Code Search with the Blazor Frontend" width="100%" />
 </a>
+
+There are more pages, like:
+
+* <a href="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_IndexGitRepository.jpg">Page for indexing a Git Repository</a>
+* <a href="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_IndexGitHubRepository.jpg">Page for indexing a GitHub Repository</a>
+* <a href="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_DebuggingManageIndex.jpg">Page for Managing the Elasticsearch Index</a>
 
 ## Getting Started ##
 
@@ -24,10 +32,36 @@ Getting started is as simple as cloning this repository and running the followin
 docker compose --profile dev up
 ```
 
+You can then navigate to `https://localhost:5001` and start searching and indexing Git Repositories.
 
+### Docker Profiles ###
 
-## How it's done ##
+There are 4 Docker Profiles:
 
+* `dev`
+    * Starts all 3 services.
+* `elastic`
+    * Starts the Elasticsearch Server.
+* api
+    * Starts the ElasticsearchCodeSearch API
+* web
+    * Starts the ElasticsearchCodeSearch Blazor App
+
+To only run the Elasticsearch Server you would pass the `elastic` profile:
+
+```
+docker compose --profile elastic up
+```
+
+To run the Elasticsearch Server and the Code Search API you would pass the `elastic` and `api` profiles:
+
+```
+docker compose --profile elastic --profile api up
+```
+
+This is super useful, if you want to locally debug the ASP.NET Core services.
+
+## How it was done ##
 
 ### Configuring HTTPS for Elasticsearch ###
 
@@ -64,7 +98,7 @@ elasticsearch-certutil cert --silent --pem -out ./certs.zip --in ./instances.yml
 
 In an `.env` file we are defining the Environment variables as:
 
-```
+```ini
 ELASTIC_HOSTNAME=es01
 ELASTIC_USERNAME=elastic
 ELASTIC_PASSWORD=secret
@@ -153,7 +187,35 @@ And get our Certificate Fingerprint as:
 31a63ffca5275df7ea7d6fc7e92b42cfa774a0feed7d7fa8488c5e46ea9ade3f
 ```
 
-Nice!
+And that's it.
+
+In the .NET application I can then create the `ElasticsearchClient` like this:
+
+```csharp
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+// ...
+
+namespace ElasticsearchCodeSearch.Shared.Elasticsearch
+{
+    public class ElasticCodeSearchClient
+    {
+    
+        // ...
+    
+        public virtual ElasticsearchClient CreateClient(ElasticCodeSearchOptions options)
+        {
+            var settings = new ElasticsearchClientSettings(new Uri(options.Uri))
+                .CertificateFingerprint(options.CertificateFingerprint)
+                .Authentication(new BasicAuthentication(options.Username, options.Password));
+
+            return new ElasticsearchClient(settings);
+        }
+        
+        // ...
+    }
+}
+```
 
 ### Setting up HTTPS Communication in ASP.NET Core with Docker ###
 
@@ -180,7 +242,7 @@ This is an Open Source project, feel free to contribute!
 
 ## Articles ##
 
-The Search Engine has been introduced in a three articles: 
+The Search Engine has been introduced in three articles so far: 
 
 * [Implementing a Code Search: Elasticsearch and ASP.NET Core Backend (Part 1)](https://www.bytefish.de/blog/elasticsearch_code_search_part1_backend_elasticsearch.html)
 * [Implementing a Code Search: Indexing Git Repositories using PowerShell (Part 2)](https://www.bytefish.de/blog/elasticsearch_code_search_part2_indexer_powershell.html)
@@ -190,7 +252,7 @@ The Search Engine has been introduced in a three articles:
 
 The code in this repository is licensed under MIT License.
 
-The Pagination component has been taken from the Fluent UI project.
+The Pagination component and project structure have been taken from the Fluent UI project.
 
 ```
 MIT License
