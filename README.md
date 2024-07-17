@@ -1,10 +1,8 @@
-# Elasticsearch Code Search Experiments #
+# Elasticsearch Code Search #
 
 This repository implements a Code Search Engine using ASP.NET Core and Elasticsearch. You can use it 
-to index GitHub, Codeberg, GitLab Repositories and from other Git services. It comes with a Blazor 
+to index repositories from GitHub, Codeberg, GitLab and other sources. It comes with a Blazor 
 Frontend built upon FluentUI Components.
-
-## What's in this repository? ##
 
 There is a Page to get an overview for your Elasticsearch index:
 
@@ -12,7 +10,7 @@ There is a Page to get an overview for your Elasticsearch index:
     <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_SearchClusterOverview.jpg" alt="The final Code Search with the Blazor Frontend" width="100%" />
 </a>
 
-And there's a page to query the Elasticsearch index:
+And there's a page to search for code using the Elasticsearch index:
 
 <a href="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_SearchCode.jpg">
     <img src="https://raw.githubusercontent.com/bytefish/ElasticsearchCodeSearch/main/doc/img/ElasticsearchCodeSearch_SearchCode.jpg" alt="The final Code Search with the Blazor Frontend" width="100%" />
@@ -42,9 +40,9 @@ There are 4 Docker Profiles:
     * Starts all 3 services.
 * `elastic`
     * Starts the Elasticsearch Server.
-* api
+* `api`
     * Starts the ElasticsearchCodeSearch API
-* web
+* `web`
     * Starts the ElasticsearchCodeSearch Blazor App
 
 To only run the Elasticsearch Server you would pass the `elastic` profile:
@@ -232,9 +230,7 @@ Next is setting the GH Token for the Client:
 dotnet user-secrets set "GitHubClient:AccessToken" "<Your GH Token Here>"
 ```
 
-Why is it a User Secret? Because I want to be 100% sure I am not accidentally leak my 
-GitHub Token. If you want to do something similar in Production, you might want to 
-consider using Azure KeyVault, Consul, ... or any safe secret store.
+If you need to manage secrets in Production, you should consider using Docker Secrets, Azure KeyVault, Consul, ... or any other safe secret store.
 
 ## Contributions ##
 
